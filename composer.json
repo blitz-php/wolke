@@ -1,0 +1,64 @@
+{
+    "name": "blitz-php/wolke",
+    "description": "A fast ORM for BlitzPHP framework",
+    "keywords": ["database", "blitz php", "orm"],
+    "type": "library",
+    "license": "MIT",
+    "support": {
+        "issues": "https://github.com/blitz-php/wolke/issues",
+        "source": "https://github.com/blitz-php/wolke"
+    },
+    "authors": [
+        {
+            "name": "Dimitri Sitchet Tomkeu",
+            "email": "devcode.dst@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=8.0",
+        "blitz-php/database": "*"
+    },
+    "require-dev": {
+        "blitz-php/coding-standard": "^1.1",
+        "phpstan/phpstan": "^1.4.7",
+        "scrutinizer/ocular": "^1.8.1",
+        "kahlan/kahlan": "^5.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "BlitzPHP\\Wolke\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BlitzPHP\\Wolke\\Spec\\": "tests"
+        }
+    },
+    "scripts": {
+        "analyze": "phpstan analyse",
+        "test": "kahlan",
+        "test-coverage": "kahlan --coverage=3 --reporter=verbose --clover=clover.xml",
+        "cs": [
+            "php-cs-fixer fix --ansi --verbose --dry-run --diff"
+        ],
+        "cs-fix": [
+            "php-cs-fixer fix --ansi --verbose --diff"
+        ]
+    },
+    "scripts-descriptions": {
+        "analyze": "Lance l'analyse statique du code du framework",
+        "test": "Execute les tests unitaires",
+        "cs": "Vérifie les normes de codage",
+        "cs-fix": "Corrigle le style de codage"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        }
+    },
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}
