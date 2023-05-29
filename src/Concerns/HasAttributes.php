@@ -465,7 +465,7 @@ trait HasAttributes
     }
 
     /**
-     * Cast an attribute to a native PHP type.
+     * Attribuez un attribut à un type PHP natif.
      */
     protected function castAttribute(string $key, mixed $value): mixed
     {
@@ -475,13 +475,20 @@ trait HasAttributes
             return $value;
         }
 
-        // If the key is one of the encrypted castable types, we'll first decrypt
-        // the value and update the cast type so we may leverage the following
-        // logic for casting this value to any additionally specified types.
+        // Si la clé est l'un des types de castable crypté, nous allons d'abord déchiffrer la valeur et 
+        // mettre à jour le type de cast afin que nous pouvons exploiter la logique suivante pour 
+        // le casting de cette valeur à tous les types spécifiés en plus.
         if ($this->isEncryptedCastable($key)) {
             $value = $this->fromEncryptedString($value);
 
             $castType = Text::after($castType, 'encrypted:');
+        }
+
+        if ($castType[0] === '?') {
+            if ($value === null) {
+                return null;
+            }
+            $castType = substr($castType, 1);
         }
 
         switch ($castType) {
@@ -1102,9 +1109,14 @@ trait HasAttributes
      */
     protected function parseCasterClass(string $class): string
     {
-        return strpos($class, ':') === false
+        $class = strpos($class, ':') === false
                         ? $class
                         : explode(':', $class, 2)[0];
+        if ($class[0] === '?') {
+            $class = substr($class, 1);
+        }
+
+        return $class;
     }
 
     /**

@@ -14,6 +14,7 @@ namespace BlitzPHP\Wolke\Casts;
 use BlitzPHP\Utilities\String\Text;
 use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsAttributes;
+use BlitzPHP\Wolke\Model;
 
 class AsStringable implements Castable
 {
@@ -23,12 +24,12 @@ class AsStringable implements Castable
     public static function castUsing(array $arguments): CastsAttributes
     {
         return new class () implements CastsAttributes {
-            public function get($model, $key, $value, $attributes)
+            public function get(Model $model, string $key, mixed $value, array $attributes): mixed
             {
                 return isset($value) ? Text::of($value) : null;
             }
 
-            public function set($model, $key, $value, $attributes)
+            public function set(Model $model, string $key, mixed $value, array $attributes): mixed
             {
                 return isset($value) ? (string) $value : null;
             }

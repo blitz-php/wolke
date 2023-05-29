@@ -1256,7 +1256,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     }
 
     /**
-     * Set the connection associated with the model.
+     * Définissez la connexion associée au modèle.
      */
     public function setConnection(?string $name): self
     {
@@ -1266,7 +1266,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     }
 
     /**
-     * Resolve a connection instance.
+     * Résoudre une instance de connexion.
      */
     public static function resolveConnection(?string $connection = null): BaseConnection
     {
@@ -1298,15 +1298,15 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     }
 
     /**
-     * Get the table associated with the model.
+     * Obtenir la table associée au modèle.
      */
     public function getTable(): string
     {
-        return $this->table ?? Text::snake(Text::pluralStudly(Helpers::classBasename($this)));
+        return $this->table ?: Text::snake(Text::pluralStudly(Helpers::classBasename($this)));
     }
 
     /**
-     * Set the table associated with the model.
+     * Définir la table associée au modèle.
      */
     public function setTable(string $table): self
     {
@@ -1316,7 +1316,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     }
 
     /**
-     * Get the primary key for the model.
+     * Obtenir la clé primaire pour le modèle.
      */
     public function getKeyName(): string
     {
@@ -1324,7 +1324,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     }
 
     /**
-     * Set the primary key for the model.
+     * Définissez la clé primaire du modèle.
      */
     public function setKeyName(string $key): self
     {
