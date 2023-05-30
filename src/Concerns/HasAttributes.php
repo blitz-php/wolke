@@ -86,7 +86,7 @@ trait HasAttributes
     /**
      * The storage format of the model's date columns.
      */
-    protected string $dateFormat = 'yyyy-MM-dd';
+    protected string $dateFormat = 'Y-m-d H:i:s';
 
     /**
      * The accessors to append to the model's array form.

@@ -408,9 +408,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
      *
      * @param  array|...string  $columns
      *
-     * @return Collection|static[]
+     * @return Collection<static>
      */
-    public static function all(array|string $columns = ['*'])
+    public static function all(array|string $columns = ['*']): Collection
     {
         return static::query()->get(
             is_array($columns) ? $columns : func_get_args()

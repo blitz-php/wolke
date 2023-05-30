@@ -311,7 +311,7 @@ class Builder
         // passed to the method, we will assume that the operator is an equals sign
         // and keep going. Otherwise, we'll require the operator to be passed in.
         [$value, $operator] = $this->prepareValueAndOperator(
-            $value,
+            (string) $value,
             $operator,
             func_num_args() === 2
         );
@@ -571,10 +571,18 @@ class Builder
 
     /**
      * Execute the query as a "select" statement.
-     *
-     * @return Collection|static[]
      */
-    public function get(array|string $columns = [])
+    public function all(array|string $columns = ['*']): array
+    {
+        return $this->get($columns)->all();
+    }
+
+    /**
+     * Execute the query as a "select" statement.
+     *
+     * @return Collection<Model>
+     */
+    public function get(array|string $columns = []): Collection
     {
         $builder = $this->applyScopes();
 
