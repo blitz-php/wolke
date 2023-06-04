@@ -295,7 +295,7 @@ abstract class Relation
      */
     protected function whereInMethod(Model $model, string $key): string
     {
-        return $model->getKeyName() === end($parts = explode('.', $key))
+        return $model->getKeyName() === last(explode('.', $key))
                     && in_array($model->getKeyType(), ['int', 'integer'], true)
                         ? 'whereIn'
                         : 'whereIn';

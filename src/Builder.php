@@ -1211,6 +1211,10 @@ class Builder
             });
         }
 
+        if (empty(Invader::make($builder->query)->table)) {
+            $builder->query->from($this->getModel()->getTable());
+        }
+        
         return $builder;
     }
 
@@ -1226,13 +1230,13 @@ class Builder
         // We will keep track of how many wheres are on the query before running the
         // scope so that we can properly group the added scope constraints in the
         // query as their own isolated nested where statement and avoid issues.
-        $originalWhereCount = null === $query->getCompiledQBWhere()
+        $originalWhereCount = [] === $query->getCompiledWhere()
             ? 0
-            : count($query->getCompiledQBWhere());
+            : count($query->getCompiledWhere());
 
         $result = $scope(...array_values($parameters)) ?? $this;
 
-        if (count((array) $query->getCompiledQBWhere()) > $originalWhereCount) {
+        if (count((array) $query->getCompiledWhere()) > $originalWhereCount) {
             $this->addNewWheresWithinGroup($query, $originalWhereCount);
         }
 
@@ -1255,7 +1259,7 @@ class Builder
         // Here, we totally remove all of the where clauses since we are going to
         // rebuild them as nested queries by slicing the groups of wheres into
         // their own sections. This is to prevent any confusing logic order.
-        $allWheres = $query->getCompiledQBWhere();
+        $allWheres = $query->getCompiledWhere();
 
         // @todo implementation d'un tableau de where au niveau de basebuilder
 
@@ -1283,12 +1287,12 @@ class Builder
         // booleans and in this case create a nested where expression. That way
         // we don't add any unnecessary nesting thus keeping the query clean.
         if ($whereBooleans->contains('or')) {
-            Invader::make($query)->QBWhere[] = $this->createNestedWhere(
+            Invader::make($query)->compileWhere[] = $this->createNestedWhere(
                 $whereSlice,
                 $whereBooleans->first()
             );
         } else {
-            Invader::make($query)->QBWhere = array_merge($query->getCompiledQBWhere(), $whereSlice);
+            Invader::make($query)->compileWhere = array_merge($query->getCompiledWhere(), $whereSlice);
         }
     }
 
@@ -1578,7 +1582,11 @@ class Builder
             return $this->toBase()->{$method}(...$parameters);
         }
 
-        $this->forwardCallTo($this->query, $method, $parameters);
+        $result = $this->forwardCallTo($this->query, $method, $parameters);
+        
+        if ($result instanceof BaseBuilder) {
+            $this->query = $result;
+        }
 
         return $this;
     }

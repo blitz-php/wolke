@@ -153,6 +153,8 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
         if ($this->hasMorePages()) {
             return $this->url($this->currentPage() + 1);
         }
+
+        return null;
     }
 
     /**

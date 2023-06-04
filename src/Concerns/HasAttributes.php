@@ -944,7 +944,7 @@ trait HasAttributes
      */
     protected function serializeDate(DateTimeInterface $date): string
     {
-        return Date::createFromInstance($date)->toJSON();
+        return Date::createFromInstance($date)->format('Y-m-d H:i:s');
     }
 
     /**
@@ -961,7 +961,7 @@ trait HasAttributes
             $this->getUpdatedAtColumn(),
         ];
 
-        return array_unique(array_merge($this->dates, $defaults));
+        return array_unique(array_merge($this->dates ?: [], $defaults));
     }
 
     /**

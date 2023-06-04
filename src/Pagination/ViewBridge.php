@@ -11,12 +11,12 @@
 
 namespace BlitzPHP\Wolke\Pagination;
 
-use CodeIgniter\Config\Services;
+use BlitzPHP\Loader\Services;
 
 class ViewBridge
 {
     public function make($view, $data = [])
     {
-        return Services::renderer()->setData($data)->render($view);
+        return Services::viewer()->setData($data)->display($view)->render();
     }
 }
