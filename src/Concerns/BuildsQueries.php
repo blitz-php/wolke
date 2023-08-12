@@ -96,9 +96,9 @@ trait BuildsQueries
     /**
      * Retrieve the "count" result of the query.
      */
-    public function count(string $columns = '*'): bool
+    public function count(string $columns = '*'): int
     {
-        return $this->query->select($columns)->countAllResults();
+        return $this->query->count($columns);
     }
 
     /**

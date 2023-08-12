@@ -11,7 +11,7 @@
 
 namespace BlitzPHP\Wolke\Pagination;
 
-use BlitzPHP\Loader\Services;
+use BlitzPHP\Container\Services;
 
 class ViewBridge
 {
