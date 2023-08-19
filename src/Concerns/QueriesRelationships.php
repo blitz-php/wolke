@@ -11,14 +11,20 @@
 
 namespace BlitzPHP\Wolke\Concerns;
 
+use BadMethodCallException;
 use BlitzPHP\Database\Builder\BaseBuilder;
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\String\Text;
 use BlitzPHP\Utilities\Support\Invader;
 use BlitzPHP\Wolke\Builder;
+use BlitzPHP\Wolke\Collection;
+use BlitzPHP\Wolke\Exceptions\RelationNotFoundException;
+use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\BelongsTo;
 use BlitzPHP\Wolke\Relations\MorphTo;
 use BlitzPHP\Wolke\Relations\Relation;
 use Closure;
+use InvalidArgumentException;
 
 trait QueriesRelationships
 {
@@ -32,7 +38,7 @@ trait QueriesRelationships
     public function has(Relation|string $relation, string $operator = '>=', int $count = 1, string $boolean = 'and', ?Closure $callback = null)
     {
         if (is_string($relation)) {
-            if (strpos($relation, '.') !== false) {
+            if (str_contains($relation, '.')) {
                 return $this->hasNested($relation, $operator, $count, $boolean, $callback);
             }
 
@@ -142,6 +148,19 @@ trait QueriesRelationships
     }
 
     /**
+     * Add a relationship count / exists condition to the query with where clauses.
+     *
+     * Also load the relationship with same condition.
+     *
+     * @return Builder|static
+     */
+    public function withWhereHas(string $relation, ?Closure $callback = null, string $operator = '>=', int $count = 1)
+    {
+        return $this->whereHas(Text::before($relation, ':'), $callback, $operator, $count)
+            ->with($callback ? [$relation => static fn ($query) => $callback($query)] : $relation);
+    }
+
+    /**
      * Add a relationship count / exists condition to the query with where clauses and an "or".
      *
      * @return Builder|static
@@ -176,7 +195,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function hasMorph(MorphTo|string $relation, string|array $types, string $operator = '>=', int $count = 1, string $boolean = 'and', ?Closure $callback = null)
+    public function hasMorph(MorphTo|string $relation, array|string $types, string $operator = '>=', int $count = 1, string $boolean = 'and', ?Closure $callback = null)
     {
         if (is_string($relation)) {
             $relation = $this->getRelationWithoutConstraints($relation);
@@ -231,7 +250,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function orHasMorph(MorphTo|string $relation, string|array $types, string $operator = '>=', int $count = 1)
+    public function orHasMorph(MorphTo|string $relation, array|string $types, string $operator = '>=', int $count = 1)
     {
         return $this->hasMorph($relation, $types, $operator, $count, 'or');
     }
@@ -241,7 +260,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function doesntHaveMorph(MorphTo|string $relation, string|array $types, string $boolean = 'and', ?Closure $callback = null)
+    public function doesntHaveMorph(MorphTo|string $relation, array|string $types, string $boolean = 'and', ?Closure $callback = null)
     {
         return $this->hasMorph($relation, $types, '<', 1, $boolean, $callback);
     }
@@ -251,7 +270,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function orDoesntHaveMorph(MorphTo|string $relation, string|array $types)
+    public function orDoesntHaveMorph(MorphTo|string $relation, array|string $types)
     {
         return $this->doesntHaveMorph($relation, $types, 'or');
     }
@@ -261,7 +280,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function whereHasMorph(MorphTo|string $relation, string|array $types, ?Closure $callback = null, string $operator = '>=', int $count = 1)
+    public function whereHasMorph(MorphTo|string $relation, array|string $types, ?Closure $callback = null, string $operator = '>=', int $count = 1)
     {
         return $this->hasMorph($relation, $types, $operator, $count, 'and', $callback);
     }
@@ -271,7 +290,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function orWhereHasMorph(MorphTo|string $relation, string|array $types, ?Closure $callback = null, string $operator = '>=', int $count = 1)
+    public function orWhereHasMorph(MorphTo|string $relation, array|string $types, ?Closure $callback = null, string $operator = '>=', int $count = 1)
     {
         return $this->hasMorph($relation, $types, $operator, $count, 'or', $callback);
     }
@@ -281,7 +300,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function whereDoesntHaveMorph(MorphTo|string $relation, string|array $types, ?Closure $callback = null)
+    public function whereDoesntHaveMorph(MorphTo|string $relation, array|string $types, ?Closure $callback = null)
     {
         return $this->doesntHaveMorph($relation, $types, 'and', $callback);
     }
@@ -291,9 +310,209 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function orWhereDoesntHaveMorph(MorphTo|string $relation, string|array $types, ?Closure $callback = null)
+    public function orWhereDoesntHaveMorph(MorphTo|string $relation, array|string $types, ?Closure $callback = null)
     {
         return $this->doesntHaveMorph($relation, $types, 'or', $callback);
+    }
+
+    /**
+     * Add a basic where clause to a relationship query.
+     *
+     * @param array|Closure|string $column
+     * @param mixed                $operator
+     *
+     * @return Builder|static
+     */
+    public function whereRelation(string $relation, $column, $operator = null, mixed $value = null)
+    {
+        return $this->whereHas($relation, static function ($query) use ($column, $operator, $value) {
+            if ($column instanceof Closure) {
+                $column($query);
+            } else {
+                $query->where($column, $operator, $value);
+            }
+        });
+    }
+
+    /**
+     * Add an "or where" clause to a relationship query.
+     *
+     * @param array|Closure|string $column
+     * @param mixed                $operator
+     *
+     * @return Builder|static
+     */
+    public function orWhereRelation(string $relation, $column, $operator = null, mixed $value = null)
+    {
+        return $this->orWhereHas($relation, static function ($query) use ($column, $operator, $value) {
+            if ($column instanceof Closure) {
+                $column($query);
+            } else {
+                $query->where($column, $operator, $value);
+            }
+        });
+    }
+
+    /**
+     * Add a polymorphic relationship condition to the query with a where clause.
+     *
+     * @param array|Closure|string $column
+     * @param mixed                $operator
+     *
+     * @return Builder|static
+     */
+    public function whereMorphRelation(MorphTo|string $relation, array|string $types, $column, $operator = null, mixed $value = null)
+    {
+        return $this->whereHasMorph($relation, $types, static function ($query) use ($column, $operator, $value) {
+            $query->where($column, $operator, $value);
+        });
+    }
+
+    /**
+     * Add a polymorphic relationship condition to the query with an "or where" clause.
+     *
+     * @param array|Closure|string $column
+     * @param mixed                $operator
+     *
+     * @return Builder|static
+     */
+    public function orWhereMorphRelation(MorphTo|string $relation, array|string $types, $column, $operator = null, mixed $value = null)
+    {
+        return $this->orWhereHasMorph($relation, $types, static function ($query) use ($column, $operator, $value) {
+            $query->where($column, $operator, $value);
+        });
+    }
+
+    /**
+     * Add a morph-to relationship condition to the query.
+     *
+     * @return Builder|static
+     */
+    public function whereMorphedTo(MorphTo|string $relation, null|Model|string $model, string $boolean = 'and')
+    {
+        if (is_string($relation)) {
+            $relation = $this->getRelationWithoutConstraints($relation);
+        }
+
+        if (null === $model) {
+            return $this->whereNull($relation->getMorphType(), $boolean);
+        }
+
+        if (is_string($model)) {
+            $morphMap = Relation::morphMap();
+
+            if (! empty($morphMap) && in_array($model, $morphMap, true)) {
+                $model = array_search($model, $morphMap, true);
+            }
+
+            return $this->where($relation->getMorphType(), $model, null, $boolean);
+        }
+
+        return $this->where(static function ($query) use ($relation, $model) {
+            $query->where($relation->getMorphType(), $model->getMorphClass())
+                ->where($relation->getForeignKeyName(), $model->getKey());
+        }, null, null, $boolean);
+    }
+
+    /**
+     * Add a not morph-to relationship condition to the query.
+     *
+     * @return Builder|static
+     */
+    public function whereNotMorphedTo(MorphTo|string $relation, Model|string $model, string $boolean = 'and')
+    {
+        if (is_string($relation)) {
+            $relation = $this->getRelationWithoutConstraints($relation);
+        }
+
+        if (is_string($model)) {
+            $morphMap = Relation::morphMap();
+
+            if (! empty($morphMap) && in_array($model, $morphMap, true)) {
+                $model = array_search($model, $morphMap, true);
+            }
+
+            return $this->whereNot($relation->getMorphType(), '<=>', $model, $boolean);
+        }
+
+        return $this->whereNot(static function ($query) use ($relation, $model) {
+            $query->where($relation->getMorphType(), '<=>', $model->getMorphClass())
+                ->where($relation->getForeignKeyName(), '<=>', $model->getKey());
+        }, null, null, $boolean);
+    }
+
+    /**
+     * Add a morph-to relationship condition to the query with an "or where" clause.
+     *
+     * @return Builder|static
+     */
+    public function orWhereMorphedTo(MorphTo|string $relation, null|Model|string $model)
+    {
+        return $this->whereMorphedTo($relation, $model, 'or');
+    }
+
+    /**
+     * Add a not morph-to relationship condition to the query with an "or where" clause.
+     *
+     * @return Builder|static
+     */
+    public function orWhereNotMorphedTo(MorphTo|string $relation, Model|string $model)
+    {
+        return $this->whereNotMorphedTo($relation, $model, 'or');
+    }
+
+    /**
+     * Add a "belongs to" relationship where clause to the query.
+     *
+     * @param Collection<Model>|Model $related
+     *
+     * @throws RelationNotFoundException
+     */
+    public function whereBelongsTo(Collection|Model $related, ?string $relationshipName = null, string $boolean = 'and'): self
+    {
+        if (! $related instanceof Collection) {
+            $relatedCollection = $related->newCollection([$related]);
+        } else {
+            $relatedCollection = $related;
+
+            $related = $relatedCollection->first();
+        }
+
+        if ($relatedCollection->isEmpty()) {
+            throw new InvalidArgumentException('Collection given to whereBelongsTo method may not be empty.');
+        }
+
+        if ($relationshipName === null) {
+            $relationshipName = Text::camel(Helpers::classBasename($related));
+        }
+
+        try {
+            $relationship = $this->model->{$relationshipName}();
+        } catch (BadMethodCallException) {
+            throw RelationNotFoundException::make($this->model, $relationshipName);
+        }
+
+        if (! $relationship instanceof BelongsTo) {
+            throw RelationNotFoundException::make($this->model, $relationshipName, BelongsTo::class);
+        }
+
+        $this->whereIn(
+            $relationship->getQualifiedForeignKeyName(),
+            $relatedCollection->pluck($relationship->getOwnerKeyName())->toArray(),
+            $boolean,
+        );
+
+        return $this;
+    }
+
+    /**
+     * Add an "BelongsTo" relationship with an "or where" clause to the query.
+     *
+     * @throws RuntimeException
+     */
+    public function orWhereBelongsTo(Model $related, ?string $relationshipName = null): self
+    {
+        return $this->whereBelongsTo($related, $relationshipName, 'or');
     }
 
     /**
@@ -326,9 +545,7 @@ trait QueriesRelationships
             $relation = $this->getRelationWithoutConstraints($name);
 
             if ($function) {
-                $hashedColumn = $this->getQuery()->getTable() === $relation->getQuery()->getQuery()->getTable()
-                    ? "{$relation->getRelationCountHash(false)}.{$column}"
-                    : $column;
+                $hashedColumn = $this->getRelationHashedColumn($column, $relation);
 
                 $wrappedColumn = $column === '*' ? $column : $relation->getRelated()->qualifyColumn($hashedColumn);
 
@@ -385,6 +602,22 @@ trait QueriesRelationships
     }
 
     /**
+     * Get the relation hashed column name for the given column and relation.
+     *
+     * @param Relationship $relation
+     */
+    protected function getRelationHashedColumn(string $column, $relation): string
+    {
+        if (str_contains($column, '.')) {
+            return $column;
+        }
+
+        return $this->getQuery()->getTable() === $relation->getQuery()->getQuery()->getTable()
+            ? "{$relation->getRelationCountHash(false)}.{$column}"
+            : $column;
+    }
+
+    /**
      * Add subselect queries to count the relations.
      */
     public function withCount(mixed $relations): self
@@ -395,7 +628,7 @@ trait QueriesRelationships
     /**
      * Add subselect queries to include the max of the relation's column.
      */
-    public function withMax(string|array $relation, string $column): self
+    public function withMax(array|string $relation, string $column): self
     {
         return $this->withAggregate($relation, $column, 'max');
     }
@@ -403,7 +636,7 @@ trait QueriesRelationships
     /**
      * Add subselect queries to include the min of the relation's column.
      */
-    public function withMin(string|array $relation, string $column): self
+    public function withMin(array|string $relation, string $column): self
     {
         return $this->withAggregate($relation, $column, 'min');
     }
@@ -411,7 +644,7 @@ trait QueriesRelationships
     /**
      * Add subselect queries to include the sum of the relation's column.
      */
-    public function withSum(string|array $relation, string $column): self
+    public function withSum(array|string $relation, string $column): self
     {
         return $this->withAggregate($relation, $column, 'sum');
     }
@@ -419,7 +652,7 @@ trait QueriesRelationships
     /**
      * Add subselect queries to include the average of the relation's column.
      */
-    public function withAvg(string|array $relation, string $column): self
+    public function withAvg(array|string $relation, string $column): self
     {
         return $this->withAggregate($relation, $column, 'avg');
     }
@@ -427,7 +660,7 @@ trait QueriesRelationships
     /**
      * Add subselect queries to include the existence of related models.
      */
-    public function withExists(string|array $relation): self
+    public function withExists(array|string $relation): self
     {
         return $this->withAggregate($relation, '*', 'exists');
     }
@@ -453,7 +686,14 @@ trait QueriesRelationships
      */
     public function mergeConstraintsFrom(Builder $from)
     {
-        $whereBindings = $from->getQuery()->getCompiledQBWhere() ?? [];
+        $whereBindings = $from->getQuery()->getCompiledWhere() ?? [];
+
+        $wheres = $from->getQuery()->getTable() !== $this->getQuery()->getTable()
+            ? $this->requalifyWhereTables(
+                $from->getQuery()->getCompiledWhere(),
+                $from->getQuery()->getTable(),
+                $this->getModel()->getTable()
+            ) : $from->getQuery()->getCompiledWhere();
 
         // Here we have some other query that we want to merge the where constraints from. We will
         // copy over any where constraints on the query as well as remove any global scopes the
@@ -461,9 +701,23 @@ trait QueriesRelationships
         return $this->withoutGlobalScopes(
             $from->removedScopes()
         )->mergeWheres(
-            $from->getQuery()->getCompiledQBWhere(),
+            $wheres,
             $whereBindings
         );
+    }
+
+    /**
+     * Updates the table name for any columns with a new qualified name.
+     */
+    protected function requalifyWhereTables(array $wheres, string $from, string $to): array
+    {
+        return Helpers::collect($wheres)->map(static function ($where) use ($from, $to) {
+            return Helpers::collect($where)->map(static function ($value) use ($from, $to) {
+                return is_string($value) && str_starts_with($value, $from . '.')
+                    ? $to . '.' . Text::afterLast($value, '.')
+                    : $value;
+            });
+        })->toArray();
     }
 
     /**

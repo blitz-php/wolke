@@ -15,7 +15,6 @@ use BlitzPHP\Database\Builder\BaseBuilder;
 use BlitzPHP\Traits\Macroable;
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Utilities\Helpers;
-use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Exceptions\ModelNotFoundException;
@@ -35,9 +34,14 @@ abstract class Relation
     /**
      * The related model instance.
      *
-     * @var \BlitzPHP\Wolke\Model
+     * @var Model
      */
     protected $related;
+
+    /**
+     * Indicates whether the eagerly loaded relation should implicitly return an empty collection.
+     */
+    protected bool $eagerKeysWereEmpty = false;
 
     /**
      * Indicates if the relation is adding constraints.
@@ -48,6 +52,11 @@ abstract class Relation
      * An array to map class names to their morph names in the database.
      */
     public static array $morphMap = [];
+
+    /**
+     * Prevents morph relationships without a morph map.
+     */
+    protected static bool $requireMorphMap = false;
 
     /**
      * The count of self joins.
@@ -118,7 +127,9 @@ abstract class Relation
      */
     public function getEager(): Collection
     {
-        return $this->get();
+        return $this->eagerKeysWereEmpty
+            ? $this->query->getModel()->newCollection()
+            : $this->get();
     }
 
     /**
@@ -131,12 +142,14 @@ abstract class Relation
     {
         $result = $this->limit(2)->get($columns);
 
-        if ($result->isEmpty()) {
+        $count = $result->count();
+
+        if ($count === 0) {
             throw (new ModelNotFoundException())->setModel(get_class($this->related));
         }
 
-        if ($result->count() > 1) {
-            throw new MultipleRecordsFoundException();
+        if ($count > 1) {
+            throw new MultipleRecordsFoundException($count);
         }
 
         return $result->first();
@@ -243,6 +256,14 @@ abstract class Relation
     }
 
     /**
+     * Get a base query builder instance.
+     */
+    public function toBase(): BaseBuilder
+    {
+        return $this->query->toBase();
+    }
+
+    /**
      * Get the parent model of the relation.
      */
     public function getParent(): Model
@@ -291,14 +312,52 @@ abstract class Relation
     }
 
     /**
+     * Add a whereIn eager constraint for the given set of model keys to be loaded.
+     */
+    protected function whereInEager(string $whereIn, string $key, array $modelKeys, ?Builder $query = null): void
+    {
+        ($query ?? $this->query)->{$whereIn}($key, $modelKeys);
+
+        if ($modelKeys === []) {
+            $this->eagerKeysWereEmpty = true;
+        }
+    }
+
+    /**
      * Get the name of the "where in" method for eager loading.
      */
     protected function whereInMethod(Model $model, string $key): string
     {
-        return $model->getKeyName() === last(explode('.', $key))
+        return $model->getKeyName() === end($parts = explode('.', $key))
                     && in_array($model->getKeyType(), ['int', 'integer'], true)
                         ? 'whereIn'
                         : 'whereIn';
+    }
+
+    /**
+     * Prevent polymorphic relationships from being used without model mappings.
+     */
+    public static function requireMorphMap(bool $requireMorphMap = true): void
+    {
+        static::$requireMorphMap = $requireMorphMap;
+    }
+
+    /**
+     * Determine if polymorphic relationships require explicit model mapping.
+     */
+    public static function requiresMorphMap(): bool
+    {
+        return static::$requireMorphMap;
+    }
+
+    /**
+     * Define the morph map for polymorphic relations and require all morphed models to be explicitly mapped.
+     */
+    public static function enforceMorphMap(array $map, bool $merge = true): array
+    {
+        static::requireMorphMap();
+
+        return static::morphMap($map, $merge);
     }
 
     /**
@@ -323,7 +382,7 @@ abstract class Relation
      */
     protected static function buildMorphMapFromModels(?array $models = null): ?array
     {
-        if (null === $models || Arr::isAssoc($models)) {
+        if (null === $models || ! array_is_list($models)) {
             return $models;
         }
 

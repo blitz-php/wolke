@@ -25,7 +25,7 @@ class AsIntBool implements Castable
         return new class () implements CastsAttributes {
             public function get(Model $model, string $key, mixed $value, array $attributes): mixed
             {
-				return (bool) $attributes[$key];
+                return (bool) $attributes[$key];
             }
 
             public function set(Model $model, string $key, mixed $value, array $attributes): mixed

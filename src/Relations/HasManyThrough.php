@@ -22,7 +22,6 @@ use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\Concerns\InteractsWithDictionary;
 use BlitzPHP\Wolke\SoftDeletes;
 use Closure;
-use Generator;
 
 class HasManyThrough extends Relation
 {
@@ -41,6 +40,22 @@ class HasManyThrough extends Relation
     public function __construct(Builder $query, protected Model $farParent, protected Model $throughParent, protected string $firstKey, protected string $secondKey, protected string $localKey, protected string $secondLocalKey)
     {
         parent::__construct($query, $throughParent);
+    }
+
+    /**
+     * Convert the relationship to a "has one through" relationship.
+     */
+    public function one(): HasOneThrough
+    {
+        return HasOneThrough::noConstraints(fn () => new HasOneThrough(
+            $this->getQuery(),
+            $this->farParent,
+            $this->throughParent,
+            $this->getFirstKeyName(),
+            $this->secondKey,
+            $this->getLocalKeyName(),
+            $this->getSecondLocalKeyName(),
+        ));
     }
 
     /**
@@ -66,7 +81,7 @@ class HasManyThrough extends Relation
 
         $farKey = $this->getQualifiedFarKeyName();
 
-        $query->join($this->throughParent->getTable(), "{$this->getQualifiedParentKeyName()} = {$farKey}");
+        $query->join($this->throughParent->getTable(), [$this->getQualifiedParentKeyName() => $farKey]);
 
         if ($this->throughParentSoftDeletes()) {
             $query->withGlobalScope('SoftDeletableHasManyThrough', function ($query) {
@@ -108,7 +123,8 @@ class HasManyThrough extends Relation
     {
         $whereIn = $this->whereInMethod($this->farParent, $this->localKey);
 
-        $this->query->{$whereIn}(
+        $this->whereInEager(
+            $whereIn,
             $this->getQualifiedFirstKeyName(),
             $this->getKeys($models, $this->localKey)
         );
@@ -159,7 +175,7 @@ class HasManyThrough extends Relation
         // relationship as this will allow us to quickly access all of the related
         // models without having to do nested looping which will be quite slow.
         foreach ($results as $result) {
-            $dictionary[$result->laravel_through_key][] = $result;
+            $dictionary[$result->blitz_through_key][] = $result;
         }
 
         return $dictionary;
@@ -194,7 +210,7 @@ class HasManyThrough extends Relation
      *
      * @return Model|static
      */
-    public function firstWhere(Closure|string|array $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+    public function firstWhere(array|Closure|string $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
     {
         return $this->where($column, $operator, $value, $boolean)->first();
     }
@@ -226,6 +242,26 @@ class HasManyThrough extends Relation
     }
 
     /**
+     * Execute the query and get the first result or call a callback.
+     *
+     * @return mixed|Model|static
+     */
+    public function firstOr(array|Closure $columns = ['*'], ?Closure $callback = null)
+    {
+        if ($columns instanceof Closure) {
+            $callback = $columns;
+
+            $columns = ['*'];
+        }
+
+        if (null !== ($model = $this->first($columns))) {
+            return $model;
+        }
+
+        return $callback();
+    }
+
+    /**
      * Find a related model by its primary key.
      *
      * @return Collection|Model|null
@@ -246,7 +282,7 @@ class HasManyThrough extends Relation
     /**
      * Find multiple related models by their primary keys.
      */
-    public function findMany(Arrayable|array $ids, array $columns = ['*']): Collection
+    public function findMany(array|Arrayable $ids, array $columns = ['*']): Collection
     {
         $ids = $ids instanceof Arrayable ? $ids->toArray() : $ids;
 
@@ -285,6 +321,34 @@ class HasManyThrough extends Relation
     }
 
     /**
+     * Find a related model by its primary key or call a callback.
+     *
+     * @return Collection|mixed|Model
+     */
+    public function findOr(mixed $id, array|Closure $columns = ['*'], ?Closure $callback = null)
+    {
+        if ($columns instanceof Closure) {
+            $callback = $columns;
+
+            $columns = ['*'];
+        }
+
+        $result = $this->find($id, $columns);
+
+        $id = $id instanceof Arrayable ? $id->toArray() : $id;
+
+        if (is_array($id)) {
+            if (count($result) === count(array_unique($id))) {
+                return $result;
+            }
+        } elseif (null !== $result) {
+            return $result;
+        }
+
+        return $callback();
+    }
+
+    /**
      * Get the results of the relationship.
      */
     public function getResults(): mixed
@@ -320,7 +384,7 @@ class HasManyThrough extends Relation
      */
     public function paginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null)
     {
-        $this->query->addSelect($this->shouldSelect($columns));
+        $this->query->select($this->shouldSelect($columns));
 
         return $this->query->paginate($perPage, $columns, $pageName, $page);
     }
@@ -332,9 +396,21 @@ class HasManyThrough extends Relation
      */
     public function simplePaginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null)
     {
-        $this->query->addSelect($this->shouldSelect($columns));
+        $this->query->select($this->shouldSelect($columns));
 
         return $this->query->simplePaginate($perPage, $columns, $pageName, $page);
+    }
+
+    /**
+     * Paginate the given query into a cursor paginator.
+     *
+     * @return \BlitzPHP\Wolke\Contracts\CursorPaginator
+     */
+    public function cursorPaginate(?int $perPage = null, array $columns = ['*'], string $cursorName = 'cursor', ?string $cursor = null)
+    {
+        $this->query->select($this->shouldSelect($columns));
+
+        return $this->query->cursorPaginate($perPage, $columns, $cursorName, $cursor);
     }
 
     /**
@@ -346,7 +422,7 @@ class HasManyThrough extends Relation
             $columns = [$this->related->getTable() . '.*'];
         }
 
-        return array_merge($columns, [$this->getQualifiedFirstKeyName() . ' as laravel_through_key']);
+        return array_merge($columns, [$this->getQualifiedFirstKeyName() . ' as blitz_through_key']);
     }
 
     /**
@@ -370,11 +446,21 @@ class HasManyThrough extends Relation
     }
 
     /**
-     * Get a generator for the given query.
-     *
-     * @return Generator
+     * Execute a callback over each item while chunking by ID.
      */
-    public function cursor()
+    public function eachById(callable $callback, int $count = 1000, ?string $column = null, ?string $alias = null): bool
+    {
+        $column ??= $this->getRelated()->getQualifiedKeyName();
+
+        $alias ??= $this->getRelated()->getKeyName();
+
+        return $this->prepareQueryBuilder()->eachById($callback, $count, $column, $alias);
+    }
+
+    /**
+     * Get a generator for the given query.
+     */
+    public function cursor(): LazyCollection
     {
         return $this->prepareQueryBuilder()->cursor();
     }
@@ -390,6 +476,8 @@ class HasManyThrough extends Relation
                     return false;
                 }
             }
+
+            return true;
         });
     }
 
@@ -459,7 +547,7 @@ class HasManyThrough extends Relation
     {
         $query->from($query->getModel()->getTable() . ' as ' . $hash = $this->getRelationCountHash());
 
-        $query->join($this->throughParent->getTable(), $this->getQualifiedParentKeyName(), '=', $hash . '.' . $this->secondKey);
+        $query->join($this->throughParent->getTable(), [$this->getQualifiedParentKeyName() => $hash . '.' . $this->secondKey]);
 
         if ($this->throughParentSoftDeletes()) {
             $query->whereNull($this->throughParent->getQualifiedDeletedAtColumn());
@@ -483,7 +571,7 @@ class HasManyThrough extends Relation
     {
         $table = $this->throughParent->getTable() . ' as ' . $hash = $this->getRelationCountHash();
 
-        $query->join($table, $hash . '.' . $this->secondLocalKey, '=', $this->getQualifiedFarKeyName());
+        $query->join($table, [$hash . '.' . $this->secondLocalKey => $this->getQualifiedFarKeyName()]);
 
         if ($this->throughParentSoftDeletes()) {
             $query->whereNull($hash . '.' . $this->throughParent->getDeletedAtColumn());

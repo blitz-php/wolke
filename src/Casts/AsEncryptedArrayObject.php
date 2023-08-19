@@ -11,10 +11,11 @@
 
 namespace BlitzPHP\Wolke\Casts;
 
+use BlitzPHP\Container\Services;
 use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsAttributes;
+use BlitzPHP\Wolke\Contracts\SerializesCastableAttributes;
 use BlitzPHP\Wolke\Model;
-use CodeIgniter\Config\Services;
 
 class AsEncryptedArrayObject implements Castable
 {
@@ -23,20 +24,28 @@ class AsEncryptedArrayObject implements Castable
      */
     public static function castUsing(array $arguments): CastsAttributes
     {
-        return new class () implements CastsAttributes {
+        return new class () implements CastsAttributes, SerializesCastableAttributes {
             public function get(Model $model, string $key, mixed $value, array $attributes): mixed
             {
-                return new ArrayObject(json_decode(Services::encrypter()->decrypt($attributes[$key]), true));
+                if (isset($attributes[$key])) {
+                    return new ArrayObject(Json::decode(Services::encrypter()->decrypt($attributes[$key])));
+                }
+
+                return null;
             }
 
             public function set(Model $model, string $key, mixed $value, array $attributes): mixed
             {
-                return [$key => Services::encrypter()->encrypt(json_encode($value))];
+                if (null !== $value) {
+                    return [$key => Services::encrypter()->encrypt(Json::encode($value))];
+                }
+
+                return null;
             }
 
             public function serialize($model, string $key, $value, array $attributes)
             {
-                return $value->getArrayCopy();
+                return null !== $value ? $value->getArrayCopy() : null;
             }
         };
     }

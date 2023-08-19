@@ -15,6 +15,7 @@ use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsAttributes;
 use BlitzPHP\Wolke\Model;
+use InvalidArgumentException;
 
 class AsCollection implements Castable
 {
@@ -23,15 +24,31 @@ class AsCollection implements Castable
      */
     public static function castUsing(array $arguments): CastsAttributes
     {
-        return new class () implements CastsAttributes {
+        return new class ($arguments) implements CastsAttributes {
+            public function __construct(protected array $arguments)
+            {
+            }
+
             public function get(Model $model, string $key, mixed $value, array $attributes): mixed
             {
-                return isset($attributes[$key]) ? new Collection(json_decode($attributes[$key], true)) : null;
+                if (! isset($attributes[$key])) {
+                    return null;
+                }
+
+                $data = Json::decode($attributes[$key]);
+
+                $collectionClass = $this->arguments[0] ?? Collection::class;
+
+                if (! is_a($collectionClass, Collection::class, true)) {
+                    throw new InvalidArgumentException('La classe fournie doit étendre [' . Collection::class . '].');
+                }
+
+                return is_array($data) ? new $collectionClass($data) : null;
             }
 
             public function set(Model $model, string $key, mixed $value, array $attributes): mixed
             {
-                return [$key => json_encode($value)];
+                return [$key => Json::encode($value)];
             }
         };
     }

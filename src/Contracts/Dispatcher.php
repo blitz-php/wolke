@@ -18,7 +18,7 @@ interface Dispatcher
     /**
      * Register an event listener with the dispatcher.
      */
-    public function listen(Closure|string|array $events, Closure|string|array|null $listener = null): void;
+    public function listen(array|Closure|string $events, null|array|Closure|string $listener = null): void;
 
     /**
      * Determine if a given event has listeners.
@@ -33,7 +33,7 @@ interface Dispatcher
     /**
      * Dispatch an event until the first non-null response is returned.
      */
-    public function until(string|object $event, mixed $payload = []): ?array;
+    public function until(object|string $event, mixed $payload = []): mixed;
 
     /**
      * Dispatch an event and call the listeners.

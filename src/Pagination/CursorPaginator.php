@@ -101,6 +101,14 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
+     * Determine if the paginator is on the last page.
+     */
+    public function onLastPage(): bool
+    {
+        return ! $this->hasMorePages();
+    }
+
+    /**
      * Get the instance as an array.
      */
     public function toArray(): array
@@ -109,7 +117,9 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
             'data'          => $this->items->toArray(),
             'path'          => $this->path(),
             'per_page'      => $this->perPage(),
+            'next_cursor'   => $this->nextCursor()?->encode(),
             'next_page_url' => $this->nextPageUrl(),
+            'prev_cursor'   => $this->previousCursor()?->encode(),
             'prev_page_url' => $this->previousPageUrl(),
         ];
     }

@@ -83,7 +83,7 @@ trait HidesAttributes
     /**
      * Make the given, typically hidden, attributes visible if the given truth test passes.
      */
-    public function makeVisibleIf(bool|Closure $condition, array|string|null $attributes): self
+    public function makeVisibleIf(bool|Closure $condition, null|array|string $attributes): self
     {
         return Helpers::value($condition, $this) ? $this->makeVisible($attributes) : $this;
     }
@@ -106,7 +106,7 @@ trait HidesAttributes
     /**
      * Make the given, typically visible, attributes hidden if the given truth test passes.
      */
-    public function makeHiddenIf(bool|Closure $condition, array|string|null $attributes): self
+    public function makeHiddenIf(bool|Closure $condition, null|array|string $attributes): self
     {
         return Helpers::value($condition, $this) ? $this->makeHidden($attributes) : $this;
     }

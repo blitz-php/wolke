@@ -32,16 +32,17 @@ class RelationNotFoundException extends RuntimeException
     /**
      * Create a new exception instance.
      *
-     * @param object $model
-     * @param string $relation
-     *
      * @return static
      */
-    public static function make($model, $relation)
+    public static function make(object $model, string $relation, ?string $type = null)
     {
         $class = get_class($model);
 
-        $instance = new static("Call to undefined relationship [{$relation}] on model [{$class}].");
+        $instance = new static(
+            null === $type
+                ? "Call to undefined relationship [{$relation}] on model [{$class}]."
+                : "Call to undefined relationship [{$relation}] on model [{$class}] of type [{$type}].",
+        );
 
         $instance->model    = $class;
         $instance->relation = $relation;

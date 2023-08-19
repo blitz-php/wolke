@@ -75,7 +75,10 @@ trait AsPivot
 
         $instance->timestamps = $instance->hasTimestampAttributes($attributes);
 
-        $instance->setRawAttributes($attributes, $exists);
+        $instance->setRawAttributes(
+            array_merge($instance->getRawOriginal(), $attributes),
+            $exists
+        );
 
         return $instance;
     }
@@ -111,14 +114,14 @@ trait AsPivot
     /**
      * Delete the pivot model record from the database.
      */
-    public function delete(): ?bool
+    public function delete(): int
     {
         if (isset($this->attributes[$this->getKeyName()])) {
             return (int) parent::delete();
         }
 
         if ($this->fireModelEvent('deleting') === false) {
-            return false;
+            return 0;
         }
 
         $this->touchOwners();
@@ -250,7 +253,7 @@ trait AsPivot
             return $this->newQueryForCollectionRestoration($ids);
         }
 
-        if (! Text::contains($ids, ':')) {
+        if (! str_contains($ids, ':')) {
             return parent::newQueryForRestoration($ids);
         }
 
@@ -270,7 +273,7 @@ trait AsPivot
     {
         $ids = array_values($ids);
 
-        if (! Text::contains($ids[0], ':')) {
+        if (! str_contains($ids[0], ':')) {
             return parent::newQueryForRestoration($ids);
         }
 

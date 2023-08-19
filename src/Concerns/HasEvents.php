@@ -46,7 +46,7 @@ trait HasEvents
      *
      * @throws RuntimeException
      */
-    public static function observe(object|array|string $classes): void
+    public static function observe(array|object|string $classes): void
     {
         $instance = new static();
 

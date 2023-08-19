@@ -20,10 +20,17 @@ interface SupportsPartialRelations
      *
      * @return static
      */
-    public function ofMany(Closure|array|string|null $column = 'id', Closure|string|null $aggregate = 'MAX', ?string $relation = null);
+    public function ofMany(null|array|Closure|string $column = 'id', null|Closure|string $aggregate = 'MAX', ?string $relation = null);
 
     /**
      * Determine whether the relationship is a one-of-many relationship.
      */
     public function isOneOfMany(): bool;
+
+    /**
+     * Get the one of many inner join subselect query builder instance.
+     *
+     * @return \BlitzPHP\Wolke\Builder|void
+     */
+    public function getOneOfManySubQuery();
 }

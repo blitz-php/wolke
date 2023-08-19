@@ -11,6 +11,8 @@
 
 namespace BlitzPHP\Wolke\Pagination;
 
+use BlitzPHP\Container\Services;
+
 class PaginationState
 {
     /**
@@ -23,7 +25,7 @@ class PaginationState
         Paginator::currentPathResolver(static fn () => current_url());
 
         Paginator::currentPageResolver(static function ($pageName = 'page') {
-            $page = Services::request()->getVar($pageName);
+            $page = Services::request()->get($pageName);
 
             if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
                 return (int) $page;
@@ -34,6 +36,6 @@ class PaginationState
 
         Paginator::queryStringResolver(static fn () => Services::uri()->getQuery());
 
-        CursorPaginator::currentCursorResolver(static fn ($cursorName = 'cursor') => Cursor::fromEncoded(Services::request()->getVar($cursorName)));
+        CursorPaginator::currentCursorResolver(static fn ($cursorName = 'cursor') => Cursor::fromEncoded(Services::request()->get($cursorName)));
     }
 }

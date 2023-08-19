@@ -28,7 +28,7 @@ trait HasGlobalScopes
      *
      * @throws InvalidArgumentException
      */
-    public static function addGlobalScope(Scope|Closure|string $scope, ?Closure $implementation = null): mixed
+    public static function addGlobalScope(Closure|Scope|string $scope, ?Closure $implementation = null): mixed
     {
         if (is_string($scope) && null !== $implementation) {
             return static::$globalScopes[static::class][$scope] = $implementation;
@@ -66,6 +66,22 @@ trait HasGlobalScopes
             static::$globalScopes,
             static::class . '.' . get_class($scope)
         );
+    }
+
+    /**
+     * Get all of the global scopes that are currently registered.
+     */
+    public static function getAllGlobalScopes(): array
+    {
+        return static::$globalScopes;
+    }
+
+    /**
+     * Set the current global scopes.
+     */
+    public static function setAllGlobalScopes(array $scopes): void
+    {
+        static::$globalScopes = $scopes;
     }
 
     /**

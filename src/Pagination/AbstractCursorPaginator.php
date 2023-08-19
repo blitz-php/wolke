@@ -207,7 +207,7 @@ abstract class AbstractCursorPaginator
     /**
      * Add a set of query string values to the paginator.
      */
-    public function appends(array|string|null $key, ?string $value = null): self
+    public function appends(null|array|string $key, ?string $value = null): self
     {
         if (null === $key) {
             return $this;

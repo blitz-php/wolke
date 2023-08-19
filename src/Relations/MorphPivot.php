@@ -12,7 +12,6 @@
 namespace BlitzPHP\Wolke\Relations;
 
 use BlitzPHP\Utilities\Helpers;
-use BlitzPHP\Utilities\String\Text;
 use BlitzPHP\Wolke\Builder;
 
 class MorphPivot extends Pivot
@@ -58,23 +57,21 @@ class MorphPivot extends Pivot
     /**
      * Delete the pivot model record from the database.
      */
-    public function delete(): ?bool
+    public function delete(): int
     {
         if (isset($this->attributes[$this->getKeyName()])) {
             return (int) parent::delete();
         }
 
         if ($this->fireModelEvent('deleting') === false) {
-            return false;
+            return 0;
         }
 
         $query = $this->getDeleteQuery();
 
         $query->where($this->morphType, $this->morphClass);
 
-        return Helpers::tap($query->delete(), function () {
-            $this->fireModelEvent('deleted', false);
-        });
+        return Helpers::tap($query->delete(), fn () => $this->fireModelEvent('deleted', false));
     }
 
     /**
@@ -136,7 +133,7 @@ class MorphPivot extends Pivot
             return $this->newQueryForCollectionRestoration($ids);
         }
 
-        if (! Text::contains($ids, ':')) {
+        if (! str_contains($ids, ':')) {
             return parent::newQueryForRestoration($ids);
         }
 
@@ -152,7 +149,7 @@ class MorphPivot extends Pivot
     {
         $ids = array_values($ids);
 
-        if (! Text::contains($ids[0], ':')) {
+        if (! str_contains($ids[0], ':')) {
             return parent::newQueryForRestoration($ids);
         }
 

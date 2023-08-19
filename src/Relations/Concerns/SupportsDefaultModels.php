@@ -33,7 +33,7 @@ trait SupportsDefaultModels
     /**
      * Return a new model instance in case the relationship does not exist.
      */
-    public function withDefault(Closure|array|bool $callback = true): self
+    public function withDefault(array|bool|Closure $callback = true): self
     {
         $this->withDefault = $callback;
 

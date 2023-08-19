@@ -25,7 +25,7 @@ interface CursorPaginator
      *
      * @return $this
      */
-    public function appends(array|string|null $key, ?string $value = null);
+    public function appends(null|array|string $key, ?string $value = null);
 
     /**
      * Get / set the URL fragment to be appended to URLs.
@@ -33,6 +33,13 @@ interface CursorPaginator
      * @return $this|string|null
      */
     public function fragment(?string $fragment = null);
+
+    /**
+     * Add all current query string values to the paginator.
+     *
+     * @return $this
+     */
+    public function withQueryString();
 
     /**
      * Get the URL for the previous page, or null.

@@ -11,6 +11,7 @@
 
 namespace BlitzPHP\Wolke;
 
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Support\Invader;
 use BlitzPHP\Wolke\Contracts\Scope;
 
@@ -21,7 +22,7 @@ class SoftDeletingScope implements Scope
      *
      * @var string[]
      */
-    protected array $extensions = ['Restore', 'WithTrashed', 'WithoutTrashed', 'OnlyTrashed'];
+    protected array $extensions = ['Restore', 'RestoreOrCreate', 'WithTrashed', 'WithoutTrashed', 'OnlyTrashed'];
 
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -70,6 +71,20 @@ class SoftDeletingScope implements Scope
             $builder->withTrashed();
 
             return $builder->update([$builder->getModel()->getDeletedAtColumn() => null]);
+        });
+    }
+
+    /**
+     * Add the restore-or-create extension to the builder.
+     */
+    protected function addRestoreOrCreate(Builder $builder): void
+    {
+        $builder->macro('restoreOrCreate', static function (Builder $builder, array $attributes = [], array $values = []) {
+            $builder->withTrashed();
+
+            return Helpers::tap($builder->firstOrCreate($attributes, $values), static function ($instance) {
+                $instance->restore();
+            });
         });
     }
 

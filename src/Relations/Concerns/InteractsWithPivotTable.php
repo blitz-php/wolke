@@ -98,17 +98,19 @@ trait InteractsWithPivotTable
         $current = $this->getCurrentlyAttachedPivots()
             ->pluck($this->relatedPivotKey)->all();
 
-        $detach = array_diff($current, array_keys(
-            $records = $this->formatRecordsList($this->parseIds($ids))
-        ));
+        $records = $this->formatRecordsList($this->parseIds($ids));
 
         // Next, we will take the differences of the currents and given IDs and detach
         // all of the entities that exist in the "current" array but are not in the
         // array of the new IDs given to the method which will complete the sync.
-        if ($detaching && count($detach) > 0) {
-            $this->detach($detach);
+        if ($detaching) {
+            $detach = array_diff($current, array_keys($records));
 
-            $changes['detached'] = $this->castKeys($detach);
+            if (count($detach) > 0) {
+                $this->detach($detach);
+
+                $changes['detached'] = $this->castKeys($detach);
+            }
         }
 
         // Now we are finally ready to attach the new records. Note that we'll disable
@@ -122,10 +124,9 @@ trait InteractsWithPivotTable
         // Once we have finished attaching or detaching the records, we will see if we
         // have done any attaching or detaching, and if we have we will touch these
         // relationships if they are configured to touch on any database updates.
-        if (
-            count($changes['attached'])
+        if (count($changes['attached'])
             || count($changes['updated'])
-        ) {
+            || count($changes['detached'])) {
             $this->touchIfTouching();
         }
 
@@ -201,7 +202,7 @@ trait InteractsWithPivotTable
             return $this->updateExistingPivotUsingCustomClass($id, $attributes, $touch);
         }
 
-        if (in_array($this->updatedAt(), $this->pivotColumns, true)) {
+        if ($this->hasPivotColumn($this->updatedAt())) {
             $attributes = $this->addTimestampsToAttachment($attributes, true);
         }
 
@@ -457,6 +458,8 @@ trait InteractsWithPivotTable
      */
     public function newPivot(array $attributes = [], bool $exists = false): Pivot
     {
+        $attributes = array_merge(array_column($this->pivotValues, 'value', 'column'), $attributes);
+
         $pivot = $this->related->newPivot(
             $this->parent,
             $attributes,
@@ -481,7 +484,7 @@ trait InteractsWithPivotTable
      */
     public function newPivotStatement(): BaseBuilder
     {
-        return (fn () => $this->reset())->call($this->query->getQuery())->from($this->table);
+        return $this->query->getQuery()->newQuery()->from($this->table);
     }
 
     /**
@@ -591,21 +594,11 @@ trait InteractsWithPivotTable
      */
     protected function getTypeSwapValue(string $type, mixed $value): mixed
     {
-        switch (strtolower($type)) {
-            case 'int':
-            case 'integer':
-                return (int) $value;
-
-            case 'real':
-            case 'float':
-            case 'double':
-                return (float) $value;
-
-            case 'string':
-                return (string) $value;
-
-            default:
-                return $value;
-        }
+        return match (strtolower($type)) {
+            'int', 'integer' => (int) $value,
+            'real', 'float', 'double' => (float) $value,
+            'string' => (string) $value,
+            default  => $value,
+        };
     }
 }

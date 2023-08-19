@@ -41,7 +41,7 @@ class Dispatcher implements DispatcherContract
     /**
      * Register an event listener with the dispatcher.
      */
-    public function listen(Closure|string|array $events, Closure|string|array|null $listener = null): void
+    public function listen(array|Closure|string $events, null|array|Closure|string $listener = null): void
     {
         if ($events instanceof Closure) {
             $this->listen($this->firstClosureParameterType($events), $events);
@@ -136,7 +136,7 @@ class Dispatcher implements DispatcherContract
     /**
      * Resolve the subscriber instance.
      */
-    protected function resolveSubscriber(string|object $subscriber): object
+    protected function resolveSubscriber(object|string $subscriber): object
     {
         if (is_string($subscriber)) {
             return new $subscriber();
@@ -148,7 +148,7 @@ class Dispatcher implements DispatcherContract
     /**
      * Fire an event until the first non-null response is returned.
      */
-    public function until(string|object $event, mixed $payload = []): ?array
+    public function until(object|string $event, mixed $payload = []): ?array
     {
         return $this->dispatch($event, $payload, true);
     }
@@ -156,7 +156,7 @@ class Dispatcher implements DispatcherContract
     /**
      * Fire an event and call the listeners.
      */
-    public function dispatch(string|object $event, mixed $payload = [], bool $halt = false): ?array
+    public function dispatch(object|string $event, mixed $payload = [], bool $halt = false): ?array
     {
         // When the given "event" is actually an object we will assume it is an event
         // object and use the class as the event name and this event itself as the

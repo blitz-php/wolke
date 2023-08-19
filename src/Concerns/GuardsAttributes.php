@@ -11,8 +11,6 @@
 
 namespace BlitzPHP\Wolke\Concerns;
 
-use BlitzPHP\Utilities\String\Text;
-
 trait GuardsAttributes
 {
     /**
@@ -79,6 +77,8 @@ trait GuardsAttributes
 
     /**
      * Set the guarded attributes for the model.
+     *
+     * @param string[] $guarded
      */
     public function guard(array $guarded): self
     {
@@ -89,6 +89,8 @@ trait GuardsAttributes
 
     /**
      * Merge new guarded attributes with existing guarded attributes on the model.
+     *
+     * @param string[] $guarded
      */
     public function mergeGuarded(array $guarded): self
     {
@@ -163,8 +165,8 @@ trait GuardsAttributes
         }
 
         return empty($this->getFillable())
-            && strpos($key, '.') === false
-            && ! Text::startsWith($key, '_');
+            && ! str_contains($key, '.')
+            && ! str_starts_with($key, '_');
     }
 
     /**
@@ -187,9 +189,14 @@ trait GuardsAttributes
     protected function isGuardableColumn(string $key): bool
     {
         if (! isset(static::$guardableColumns[static::class])) {
-            static::$guardableColumns[static::class] = $this->getConnection()
+            $columns = $this->getConnection()
                 ->getSchemaBuilder()
                 ->getColumnListing($this->getTable());
+
+            if (empty($columns)) {
+                return true;
+            }
+            static::$guardableColumns[static::class] = $columns;
         }
 
         return in_array($key, static::$guardableColumns[static::class], true);

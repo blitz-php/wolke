@@ -53,7 +53,7 @@ class BelongsTo extends Relation
      */
     public function getResults(): mixed
     {
-        if (null === $this->child->{$this->foreignKey}) {
+        if (null === $this->getForeignKeyFrom($this->child)) {
             return $this->getDefaultFor($this->parent);
         }
 
@@ -71,7 +71,7 @@ class BelongsTo extends Relation
             // of the related models matching on the foreign key that's on a parent.
             $table = $this->related->getTable();
 
-            $this->query->where($table . '.' . $this->ownerKey, '=', $this->child->{$this->foreignKey});
+            $this->query->where($table . '.' . $this->ownerKey, '=', $this->getForeignKeyFrom($this->child));
         }
     }
 
@@ -87,7 +87,7 @@ class BelongsTo extends Relation
 
         $whereIn = $this->whereInMethod($this->related, $this->ownerKey);
 
-        $this->query->{$whereIn}($key, $this->getEagerModelKeys($models));
+        $this->whereInEager($whereIn, $key, $this->getEagerModelKeys($models));
     }
 
     /**
@@ -101,7 +101,7 @@ class BelongsTo extends Relation
         // to query for via the eager loading query. We will add them to an array then
         // execute a "where in" statement to gather up all of those related records.
         foreach ($models as $model) {
-            if (null !== ($value = $model->{$this->foreignKey})) {
+            if (null !== ($value = $this->getForeignKeyFrom($model))) {
                 $keys[] = $value;
             }
         }
@@ -160,7 +160,7 @@ class BelongsTo extends Relation
     /**
      * Associate the model instance to the given parent.
      *
-     * @param \BlitzPHP\Wolke\Model|int|string $model
+     * @param int|Model|string $model
      */
     public function associate($model): Model
     {
@@ -277,7 +277,7 @@ class BelongsTo extends Relation
      */
     public function getParentKey(): mixed
     {
-        return $this->child->{$this->foreignKey};
+        return $this->getForeignKeyFrom($this->child);
     }
 
     /**
@@ -302,6 +302,14 @@ class BelongsTo extends Relation
     protected function getRelatedKeyFrom(Model $model): mixed
     {
         return $model->{$this->ownerKey};
+    }
+
+    /**
+     * Get the value of the model's foreign key.
+     */
+    protected function getForeignKeyFrom(Model $model): mixed
+    {
+        return $model->{$this->foreignKey};
     }
 
     /**

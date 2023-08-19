@@ -15,16 +15,28 @@ use ArrayAccess;
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
-use BlitzPHP\Utilities\String\Text;
+use BlitzPHP\Wolke\Relations\Concerns\InteractsWithDictionary;
 use Closure;
 use LogicException;
 
+/**
+ * @template TKey of array-key
+ * @template TModel of \BlitzPHP\Wolke\Model
+ *
+ * @extends \BlitzPHP\Utilities\Iterable\Collection<TKey, TModel>
+ */
 class Collection extends IterableCollection
 {
+    use InteractsWithDictionary;
+
     /**
      * Find a model in the collection by key.
      *
-     * @return Model|static|null
+     * @template TFindDefault
+     *
+     * @param TFindDefault $default
+     *
+     * @return static<TKey, TModel>|TFindDefault|TModel
      */
     public function find(mixed $key, mixed $default = null)
     {
@@ -49,6 +61,8 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of relationships onto the collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function load(array|string $relations): self
     {
@@ -67,6 +81,8 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of aggregations over relationship's column onto the collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function loadAggregate(array|string $relations, string $column, ?string $function = null): self
     {
@@ -89,7 +105,9 @@ class Collection extends IterableCollection
         $this->each(static function ($model) use ($models, $attributes) {
             $extraAttributes = Arr::only($models->get($model->getKey())->getAttributes(), $attributes);
 
-            $model->forceFill($extraAttributes)->syncOriginalAttributes($attributes);
+            $model->forceFill($extraAttributes)
+                ->syncOriginalAttributes($attributes)
+                ->mergeCasts($models->get($model->getKey())->getCasts());
         });
 
         return $this;
@@ -97,6 +115,8 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of relationship counts onto the collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function loadCount(array|string $relations): self
     {
@@ -105,6 +125,8 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of relationship's max column values onto the collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function loadMax(array|string $relations, string $column): self
     {
@@ -113,6 +135,8 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of relationship's min column values onto the collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function loadMin(array|string $relations, string $column): self
     {
@@ -121,6 +145,8 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of relationship's column summations onto the collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function loadSum(array|string $relations, string $column): self
     {
@@ -129,6 +155,8 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of relationship's average column values onto the collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function loadAvg(array|string $relations, string $column): self
     {
@@ -137,6 +165,8 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of related existences onto the collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function loadExists(array|string $relations): self
     {
@@ -146,7 +176,7 @@ class Collection extends IterableCollection
     /**
      * Load a set of relationships onto the collection if they are not already eager loaded.
      *
-     * @param  array|...string  $relations
+     * @param array<array-key, (callable(Builder): mixed)|string>|string $relations
      */
     public function loadMissing($relations): self
     {
@@ -161,7 +191,7 @@ class Collection extends IterableCollection
 
             $segments = explode('.', explode(':', $key)[0]);
 
-            if (Text::contains($key, ':')) {
+            if (str_contains($key, ':')) {
                 $segments[count($segments) - 1] .= ':' . explode(':', $key)[1];
             }
 
@@ -200,7 +230,7 @@ class Collection extends IterableCollection
             return;
         }
 
-        $models = $models->pluck($name);
+        $models = $models->pluck($name)->whereNotNull();
 
         if ($models->first() instanceof IterableCollection) {
             $models = $models->collapse();
@@ -211,30 +241,30 @@ class Collection extends IterableCollection
 
     /**
      * Load a set of relationships onto the mixed relationship collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string> $relations
      */
     public function loadMorph(string $relation, array $relations): self
     {
         $this->pluck($relation)
             ->filter()
             ->groupBy(static fn ($model) => get_class($model))
-            ->each(static function ($models, $className) use ($relations) {
-                static::make($models)->load($relations[$className] ?? []);
-            });
+            ->each(static fn ($models, $className) => static::make($models)->load($relations[$className] ?? []));
 
         return $this;
     }
 
     /**
      * Load a set of relationship counts onto the mixed relationship collection.
+     *
+     * @param array<array-key, (callable(Builder): mixed)|string> $relations
      */
     public function loadMorphCount(string $relation, array $relations): self
     {
         $this->pluck($relation)
             ->filter()
             ->groupBy(static fn ($model) => get_class($model))
-            ->each(static function ($models, $className) use ($relations) {
-                static::make($models)->loadCount($relations[$className] ?? []);
-            });
+            ->each(static fn ($models, $className) => static::make($models)->loadCount($relations[$className] ?? []));
 
         return $this;
     }
@@ -259,6 +289,8 @@ class Collection extends IterableCollection
 
     /**
      * Get the array of primary keys.
+     *
+     * @return array<int, array-key>
      */
     public function modelKeys(): array
     {
@@ -268,7 +300,7 @@ class Collection extends IterableCollection
     /**
      * Merge the collection with the given items.
      *
-     * @param array|ArrayAccess $items
+     * @param iterable<array-key, TModel> $items
      *
      * @return static
      */
@@ -277,7 +309,7 @@ class Collection extends IterableCollection
         $dictionary = $this->getDictionary();
 
         foreach ($items as $item) {
-            $dictionary[$item->getKey()] = $item;
+            $dictionary[$this->geDictionaryKey($item->getKey())] = $item;
         }
 
         return new static(array_values($dictionary));
@@ -286,7 +318,11 @@ class Collection extends IterableCollection
     /**
      * Run a map over each of the items.
      *
-     * @return IterableCollection|static
+     * @template TMapValue
+     *
+     * @param callable(TModel, TKey): TMapValue $callback
+     *
+     * @return IterableCollection<TKey, TMapValue>|static<TKey, TMapValue>
      */
     public function map(callable $callback)
     {
@@ -300,7 +336,12 @@ class Collection extends IterableCollection
      *
      * The callback should return an associative array with a single key / value pair.
      *
-     * @return IterableCollection|static
+     * @template TMapWithKeysKey of array-key
+     * @template TMapWithKeysValue
+     *
+     * @param callable(TModel, TKey): array<TMapWithKeysKey, TMapWithKeysValue> $callback
+     *
+     * @return IterableCollection<TMapWithKeysKey, TMapWithKeysValue>|static<TMapWithKeysKey, TMapWithKeysValue>
      */
     public function mapWithKeys(callable $callback)
     {
@@ -312,7 +353,7 @@ class Collection extends IterableCollection
     /**
      * Reload a fresh model instance from the database for all the entities.
      *
-     * @param  array|...string  $with
+     * @param array<array-key, string>|string $with
      *
      * @return static
      */
@@ -335,7 +376,9 @@ class Collection extends IterableCollection
     }
 
     /**
-     * {@inheritDoc}
+     * Diff the collection with the given items.
+     *
+     * @param iterable<array-key, TModel> $items
      */
     public function diff($items)
     {
@@ -344,7 +387,7 @@ class Collection extends IterableCollection
         $dictionary = $this->getDictionary($items);
 
         foreach ($this->items as $item) {
-            if (! isset($dictionary[$item->getKey()])) {
+            if (! isset($dictionary[$this->getDictionaryKey($item->getKey())])) {
                 $diff->add($item);
             }
         }
@@ -353,7 +396,9 @@ class Collection extends IterableCollection
     }
 
     /**
-     * {@inheritDoc}
+     * Intersect the collection with the given items.
+     *
+     * @param iterable<array-key, TModel> $items
      */
     public function intersect($items)
     {
@@ -366,7 +411,7 @@ class Collection extends IterableCollection
         $dictionary = $this->getDictionary($items);
 
         foreach ($this->items as $item) {
-            if (isset($dictionary[$item->getKey()])) {
+            if (isset($dictionary[$this->getDictionaryKey($item->getKey())])) {
                 $intersect->add($item);
             }
         }
@@ -375,7 +420,11 @@ class Collection extends IterableCollection
     }
 
     /**
-     * {@inheritDoc}
+     * Return only unique items from the collection.
+     *
+     * @param (callable(TModel, TKey): mixed)|string|null $key
+     *
+     * @return static<int, TModel>
      */
     public function unique($key = null, bool $strict = false)
     {
@@ -387,7 +436,11 @@ class Collection extends IterableCollection
     }
 
     /**
-     * {@inheritDoc}
+     * Returns only the models from the collection with the specified keys.
+     *
+     * @param array<array-key, mixed>|null $keys
+     *
+     * @return static<int, TModel>
      */
     public function only($keys)
     {
@@ -395,23 +448,33 @@ class Collection extends IterableCollection
             return new static($this->items);
         }
 
-        $dictionary = Arr::only($this->getDictionary(), $keys);
+        $dictionary = Arr::only($this->getDictionary(), array_map($this->getDictionaryKey(...), (array) $keys));
 
         return new static(array_values($dictionary));
     }
 
     /**
-     * {@inheritDoc}
+     * Returns all models in the collection except the models with specified keys.
+     *
+     * @param array<array-key, mixed>|null $keys
+     *
+     * @return static<int, TModel>
      */
     public function except($keys)
     {
-        $dictionary = Arr::except($this->getDictionary(), $keys);
+        if (null === $keys) {
+            return new static($this->items);
+        }
+
+        $dictionary = Arr::except($this->getDictionary(), array_map($this->getDictionaryKey(...), (array) $keys));
 
         return new static(array_values($dictionary));
     }
 
     /**
      * Make the given, typically visible, attributes hidden across the entire collection.
+     *
+     * @param array<array-key, string>|string $attributes
      */
     public function makeHidden(array|string $attributes): self
     {
@@ -420,6 +483,8 @@ class Collection extends IterableCollection
 
     /**
      * Make the given, typically hidden, attributes visible across the entire collection.
+     *
+     * @param array<array-key, string>|string $attributes
      */
     public function makeVisible(array|string $attributes): self
     {
@@ -427,7 +492,29 @@ class Collection extends IterableCollection
     }
 
     /**
+     * Set the visible attributes across the entire collection.
+     *
+     * @param array<int, string> $visible
+     */
+    public function setVisible($visible): self
+    {
+        return $this->each->setVisible($visible);
+    }
+
+    /**
+     * Set the hidden attributes across the entire collection.
+     *
+     * @param array<int, string> $hidden
+     */
+    public function setHidden($hidden): self
+    {
+        return $this->each->setHidden($hidden);
+    }
+
+    /**
      * Append an attribute across the entire collection.
+     *
+     * @param array<array-key, string>|string $attributes
      */
     public function append(array|string $attributes): self
     {
@@ -436,15 +523,19 @@ class Collection extends IterableCollection
 
     /**
      * Get a dictionary keyed by primary keys.
+     *
+     * @param iterable<array-key, TModel>|null $items
+     *
+     * @return array<array-key, TModel>
      */
-    public function getDictionary(ArrayAccess|iterable|null $items = null): array
+    public function getDictionary(null|ArrayAccess|iterable $items = null): array
     {
         $items = null === $items ? $this->items : $items;
 
         $dictionary = [];
 
         foreach ($items as $value) {
-            $dictionary[$value->getKey()] = $value;
+            $dictionary[$this->getDictionaryKey($value->getKey())] = $value;
         }
 
         return $dictionary;
@@ -453,13 +544,27 @@ class Collection extends IterableCollection
     /**
      * The following methods are intercepted to always return base collections.
      *
-     * @param mixed $value
+     * @param mixed|null $countBy
      */
+
+    /**
+     * Count the number of items in the collection by a field or using a callback.
+     *
+     * @param (callable(TModel, TKey): array-key)|string|null $countBy
+     *
+     * @return IterableCollection<array-key, int>
+     */
+    public function countBy($countBy = null)
+    {
+        return $this->toBase()->countBy($countBy);
+    }
 
     /**
      * {@inheritDoc}
      *
-     * @return IterableCollection
+     * @param array<array-key, string>|string $value
+     *
+     * @return IterableCollection<array-key, mixed>
      */
     public function pluck($value, ?string $key = null)
     {
@@ -479,7 +584,11 @@ class Collection extends IterableCollection
     /**
      * {@inheritDoc}
      *
-     * @return IterableCollection
+     * @template TZipValue
+     *
+     * @param \BlitzPHP\Contracts\Support\Arrayable<array-key, TZipValue>|iterable<array-key, TZipValue> ...$items
+     *
+     * @return IterableCollection<int, IterableCollection<int, TModel|TZipValue>>
      */
     public function zip($items)
     {
@@ -528,6 +637,8 @@ class Collection extends IterableCollection
 
     /**
      * {@inheritDoc}
+     *
+     * @return callable(TModel, TModel): bool
      */
     protected function duplicateComparator(bool $strict): Closure
     {
@@ -545,15 +656,25 @@ class Collection extends IterableCollection
             return null;
         }
 
-        $class = get_class($this->first());
+        $class = $this->getQueueableModelClass($this->first());
 
-        $this->each(static function ($model) use ($class) {
-            if (get_class($model) !== $class) {
+        $this->each(function ($model) use ($class) {
+            if ($this->getQueueableModelClass($model) !== $class) {
                 throw new LogicException('La mise en file d\'attente de collections avec plusieurs types de modèles n\'est pas prise en charge.');
             }
         });
 
         return $class;
+    }
+
+    /**
+     * Get the queueable class name for the given model.
+     */
+    protected function getQueueableModelClass(Model $model): string
+    {
+        return method_exists($model, 'getQueueableClassName')
+                ? $model->getQueueableClassName()
+                : get_class($model);
     }
 
     /**
@@ -586,7 +707,7 @@ class Collection extends IterableCollection
             return reset($relations);
         }
 
-        return array_intersect(...$relations);
+        return array_intersect(...array_values($relations));
     }
 
     /**

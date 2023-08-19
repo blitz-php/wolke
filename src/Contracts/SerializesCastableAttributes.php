@@ -11,12 +11,12 @@
 
 namespace BlitzPHP\Wolke\Contracts;
 
-interface Castable
+use BlitzPHP\Wolke\Model;
+
+interface SerializesCastableAttributes
 {
     /**
-     * Get the name of the caster class to use when casting from / to this cast target.
-     *
-     * @return CastsAttributes|CastsInboundAttributes|class-string<CastsAttributes|CastsInboundAttributes>
+     * Serialize the attribute when converting the model to an array.
      */
-    public static function castUsing(array $arguments);
+    public function serialize(Model $model, string $key, mixed $value, array $attributes): mixed;
 }

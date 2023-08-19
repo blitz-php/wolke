@@ -12,9 +12,13 @@
 namespace BlitzPHP\Wolke\Concerns;
 
 use BlitzPHP\Database\Builder\BaseBuilder;
+use BlitzPHP\Traits\Conditionable;
+use BlitzPHP\Utilities\Helpers;
+use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Utilities\Iterable\LazyCollection;
 use BlitzPHP\Utilities\Support\Invader;
+use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Exceptions\MultipleRecordsFoundException;
 use BlitzPHP\Wolke\Exceptions\RecordsNotFoundException;
 use BlitzPHP\Wolke\Pagination\Cursor;
@@ -26,6 +30,8 @@ use RuntimeException;
 
 trait BuildsQueries
 {
+    use Conditionable;
+
     /**
      * Merge an array of where clauses and bindings.
      */
@@ -222,6 +228,8 @@ trait BuildsQueries
                     return false;
                 }
             }
+
+            return true;
         });
     }
 
@@ -259,7 +267,7 @@ trait BuildsQueries
                 return false;
             }
 
-            $lastId = $results->last()->{$alias};
+            $lastId = Arr::dataGet($results->last(), $alias);
 
             if ($lastId === null) {
                 throw new RuntimeException("The chunkById operation was aborted because the [{$alias}] column is not present in the query result.");
@@ -284,6 +292,8 @@ trait BuildsQueries
                     return false;
                 }
             }
+
+            return true;
         }, $column, $alias);
     }
 
@@ -324,6 +334,26 @@ trait BuildsQueries
      */
     public function lazyById(int $chunkSize = 1000, ?string $column = null, ?string $alias = null): LazyCollection
     {
+        return $this->orderedLazyById($chunkSize, $column, $alias);
+    }
+
+    /**
+     * Query lazily, by chunking the results of a query by comparing IDs in descending order.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function lazyByIdDesc(int $chunkSize = 1000, ?string $column = null, ?string $alias = null): LazyCollection
+    {
+        return $this->orderedLazyById($chunkSize, $column, $alias, true);
+    }
+
+    /**
+     * Query lazily, by chunking the results of a query by comparing IDs in a given order.
+     *
+     * @throws InvalidArgumentException
+     */
+    protected function orderedLazyById(int $chunkSize = 1000, ?string $column = null, ?string $alias = null, bool $descending = false): LazyCollection
+    {
         if ($chunkSize < 1) {
             throw new InvalidArgumentException('The chunk size should be at least 1');
         }
@@ -332,13 +362,17 @@ trait BuildsQueries
 
         $alias ??= $column;
 
-        return LazyCollection::make(function () use ($chunkSize, $column, $alias) {
+        return LazyCollection::make(function () use ($chunkSize, $column, $alias, $descending) {
             $lastId = null;
 
             while (true) {
                 $clone = clone $this;
 
-                $results = $clone->forPageAfterId($chunkSize, $lastId, $column)->get();
+                if ($descending) {
+                    $results = $clone->forPageBeforeId($chunkSize, $lastId, $column)->get();
+                } else {
+                    $results = $clone->forPageAfterId($chunkSize, $lastId, $column)->get();
+                }
 
                 foreach ($results as $result) {
                     yield $result;
@@ -375,32 +409,127 @@ trait BuildsQueries
     {
         $result = $this->limit(2)->get($columns);
 
-        if ($result->isEmpty()) {
+        $count = $result->count();
+
+        if ($count === 0) {
             throw new RecordsNotFoundException();
         }
 
-        if ($result->count() > 1) {
-            throw new MultipleRecordsFoundException();
+        if ($count > 1) {
+            throw new MultipleRecordsFoundException($count);
         }
 
         return $result->first();
     }
 
     /**
-     * Apply the callback's query changes if the given "value" is true.
-     *
-     * @return mixed|self
+     * Paginate the given query using a cursor paginator.
      */
-    public function when(mixed $value, callable $callback, ?callable $default = null): mixed
+    protected function paginateUsingCursor(int $perPage, array|string $columns = ['*'], string $cursorName = 'cursor', null|Cursor|string $cursor = null): CursorPaginator
     {
-        if ($value) {
-            return $callback($this, $value) ?: $this;
-        }
-        if ($default) {
-            return $default($this, $value) ?: $this;
+        if (! $cursor instanceof Cursor) {
+            $cursor = is_string($cursor)
+                ? Cursor::fromEncoded($cursor)
+                : CursorPaginator::resolveCurrentCursor($cursorName, $cursor);
         }
 
-        return $this;
+        $orders = $this->ensureOrderForCursorPagination(null !== $cursor && $cursor->pointsToPreviousItems());
+
+        if (null !== $cursor) {
+            $addCursorConditions = function (self $builder, $previousColumn, $i) use (&$addCursorConditions, $cursor, $orders) {
+                $unionBuilders = isset($builder->unions) ? Helpers::collect($builder->unions)->pluck('query') : Helpers::collect();
+
+                if (null !== $previousColumn) {
+                    $originalColumn = $this->getOriginalColumnNameForCursorPagination($this, $previousColumn);
+
+                    $builder->where(
+                        $originalColumn,
+                        '=',
+                        $cursor->parameter($previousColumn)
+                    );
+
+                    $unionBuilders->each(function ($unionBuilder) use ($previousColumn, $cursor) {
+                        $unionBuilder->where(
+                            $this->getOriginalColumnNameForCursorPagination($this, $previousColumn),
+                            '=',
+                            $cursor->parameter($previousColumn)
+                        );
+
+                        $this->addBinding($unionBuilder->getRawBindings()['where'], 'union');
+                    });
+                }
+
+                $builder->where(function (self $builder) use ($addCursorConditions, $cursor, $orders, $i, $unionBuilders) {
+                    ['column' => $column, 'direction' => $direction] = $orders[$i];
+
+                    $originalColumn = $this->getOriginalColumnNameForCursorPagination($this, $column);
+
+                    $builder->where(
+                        $originalColumn,
+                        $direction === 'asc' ? '>' : '<',
+                        $cursor->parameter($column)
+                    );
+
+                    if ($i < $orders->count() - 1) {
+                        $builder->orWhere(static function (self $builder) use ($addCursorConditions, $column, $i) {
+                            $addCursorConditions($builder, $column, $i + 1);
+                        });
+                    }
+
+                    $unionBuilders->each(function ($unionBuilder) use ($column, $direction, $cursor, $i, $orders, $addCursorConditions) {
+                        $unionBuilder->where(function ($unionBuilder) use ($column, $direction, $cursor, $i, $orders, $addCursorConditions) {
+                            $unionBuilder->where(
+                                $this->getOriginalColumnNameForCursorPagination($this, $column),
+                                $direction === 'asc' ? '>' : '<',
+                                $cursor->parameter($column)
+                            );
+
+                            if ($i < $orders->count() - 1) {
+                                $unionBuilder->orWhere(static function (self $builder) use ($addCursorConditions, $column, $i) {
+                                    $addCursorConditions($builder, $column, $i + 1);
+                                });
+                            }
+
+                            $this->addBinding($unionBuilder->getRawBindings()['where'], 'union');
+                        });
+                    });
+                });
+            };
+
+            $addCursorConditions($this, null, 0);
+        }
+
+        $this->limit($perPage + 1);
+
+        return $this->cursorPaginator($this->get($columns), $perPage, $cursor, [
+            'path'       => Paginator::resolveCurrentPath(),
+            'cursorName' => $cursorName,
+            'parameters' => $orders->pluck('column')->toArray(),
+        ]);
+    }
+
+    /**
+     * Get the original column name of the given column, without any aliasing.
+     */
+    protected function getOriginalColumnNameForCursorPagination(BaseBuilder|Builder $builder, string $parameter): string
+    {
+        $columns = $builder instanceof Builder ? Invader::make($builder->getQuery())->fields : Invader::make($builder)->fields;
+
+        if (! empty($columns)) {
+            foreach ($columns as $column) {
+                if (($position = strripos($column, ' as ')) !== false) {
+                    $original = substr($column, 0, $position);
+
+                    $alias = substr($column, $position + 4);
+
+                    if ($parameter === $alias) {
+                        return $original;
+                    }
+                }
+            }
+        }
+
+        return $parameter;
     }
 
     /**
@@ -410,7 +539,9 @@ trait BuildsQueries
      */
     public function tap(callable $callback)
     {
-        return $this->when(true, $callback);
+        $callback($this);
+
+        return $this;
     }
 
     /**

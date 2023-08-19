@@ -34,10 +34,8 @@ class BelongsToMany extends Relation
 
     /**
      * The intermediate table for the relation.
-     *
-     * @var string
      */
-    protected $table;
+    protected string $table;
 
     /**
      * The pivot table columns to retrieve.
@@ -126,7 +124,7 @@ class BelongsToMany extends Relation
      */
     protected function resolveTableName(string $table): string
     {
-        if (! Text::contains($table, '\\') || ! class_exists($table)) {
+        if (! str_contains($table, '\\') || ! class_exists($table)) {
             return $table;
         }
 
@@ -194,7 +192,8 @@ class BelongsToMany extends Relation
     {
         $whereIn = $this->whereInMethod($this->parent, $this->parentKey);
 
-        $this->query->{$whereIn}(
+        $this->whereInEager(
+            $whereIn,
             $this->getQualifiedForeignPivotKeyName(),
             $this->getKeys($models, $this->parentKey)
         );
@@ -354,7 +353,7 @@ class BelongsToMany extends Relation
      *
      * @throws InvalidArgumentException
      */
-    public function withPivotValue(string|array $column, mixed $value = null): self
+    public function withPivotValue(array|string $column, mixed $value = null): self
     {
         if (is_array($column)) {
             foreach ($column as $name => $value) {
@@ -456,10 +455,10 @@ class BelongsToMany extends Relation
     /**
      * Get the first related model record matching the attributes or instantiate it.
      */
-    public function firstOrNew(array $attributes): Model
+    public function firstOrNew(array $attributes, array $values = []): Model
     {
         if (null === ($instance = $this->where($attributes)->first())) {
-            $instance = $this->related->newInstance($attributes);
+            $instance = $this->related->newInstance(array_merge($attributes, $values));
         }
 
         return $instance;
@@ -468,10 +467,14 @@ class BelongsToMany extends Relation
     /**
      * Get the first related record matching the attributes or create it.
      */
-    public function firstOrCreate(array $attributes, array $joining = [], bool $touch = true): Model
+    public function firstOrCreate(array $attributes = [], array $values = [], array $joining = [], bool $touch = true): Model
     {
-        if (null === ($instance = $this->where($attributes)->first())) {
-            $instance = $this->create($attributes, $joining, $touch);
+        if (null === ($instance = (clone $this)->where($attributes)->first())) {
+            if (null === ($instance = $this->related->where($attributes)->first())) {
+                $instance = $this->create(array_merge($attributes, $values), $joining, $touch);
+            } else {
+                $this->attach($instance, $joining, $touch);
+            }
         }
 
         return $instance;
@@ -482,8 +485,12 @@ class BelongsToMany extends Relation
      */
     public function updateOrCreate(array $attributes, array $values = [], array $joining = [], bool $touch = true): Model
     {
-        if (null === ($instance = $this->where($attributes)->first())) {
-            return $this->create($values, $joining, $touch);
+        if (null === ($instance = (clone $this)->where($attributes)->first())) {
+            if (null === ($instance = $this->related->where($attributes)->first())) {
+                return $this->create(array_merge($attributes, $values), $joining, $touch);
+            }
+            $this->attach($instance, $joining, $touch);
+
         }
 
         $instance->fill($values);
@@ -514,7 +521,7 @@ class BelongsToMany extends Relation
     /**
      * Find multiple related models by their primary keys.
      */
-    public function findMany(Arrayable|array $ids, array $columns = ['*']): Collection
+    public function findMany(array|Arrayable $ids, array $columns = ['*']): Collection
     {
         $ids = $ids instanceof Arrayable ? $ids->toArray() : $ids;
 
@@ -522,8 +529,7 @@ class BelongsToMany extends Relation
             return $this->getRelated()->newCollection();
         }
 
-        return $this->whereIn(
-            $this->getRelated()->getQualifiedKeyName(),
+        return $this->whereKey(
             $this->parseIds($ids)
         )->get($columns);
     }
@@ -553,6 +559,34 @@ class BelongsToMany extends Relation
     }
 
     /**
+     * Find a related model by its primary key or call a callback.
+     *
+     * @return Collection|mixed|Model
+     */
+    public function findOr(mixed $id, array|Closure $columns = ['*'], ?Closure $callback = null)
+    {
+        if ($columns instanceof Closure) {
+            $callback = $columns;
+
+            $columns = ['*'];
+        }
+
+        $result = $this->find($id, $columns);
+
+        $id = $id instanceof Arrayable ? $id->toArray() : $id;
+
+        if (is_array($id)) {
+            if (count($result) === count(array_unique($id))) {
+                return $result;
+            }
+        } elseif (null !== $result) {
+            return $result;
+        }
+
+        return $callback();
+    }
+
+    /**
      * Add a basic where clause to the query, and return the first result.
      *
      * @param array|Closure|string $column
@@ -569,7 +603,7 @@ class BelongsToMany extends Relation
      */
     public function first(array $columns = ['*']): mixed
     {
-        $results = $this->take(1)->get($columns);
+        $results = $this->limit(1)->get($columns);
 
         return count($results) > 0 ? $results->first() : null;
     }
@@ -588,6 +622,26 @@ class BelongsToMany extends Relation
         }
 
         throw (new ModelNotFoundException())->setModel(get_class($this->related));
+    }
+
+    /**
+     * Execute the query and get the first result or call a callback.
+     *
+     * @return mixed|Model|static
+     */
+    public function firstOr(array|Closure $columns = ['*'], ?Closure $callback = null)
+    {
+        if ($columns instanceof Closure) {
+            $callback = $columns;
+
+            $columns = ['*'];
+        }
+
+        if (null !== ($model = $this->first($columns))) {
+            return $model;
+        }
+
+        return $callback();
     }
 
     /**
@@ -674,9 +728,23 @@ class BelongsToMany extends Relation
      */
     public function simplePaginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null)
     {
-        $this->query->addSelect($this->shouldSelect($columns));
+        $this->query->select($this->shouldSelect($columns));
 
         return Helpers::tap($this->query->simplePaginate($perPage, $columns, $pageName, $page), function ($paginator) {
+            $this->hydratePivotRelation($paginator->items());
+        });
+    }
+
+    /**
+     * Paginate the given query into a cursor paginator.
+     *
+     * @return \BlitzPHP\Wolke\Contracts\CursorPaginator
+     */
+    public function cursorPaginate(?int $perPage = null, array $columns = ['*'], string $cursorName = 'cursor', ?string $cursor = null)
+    {
+        $this->query->select($this->shouldSelect($columns));
+
+        return Helpers::tap($this->query->cursorPaginate($perPage, $columns, $cursorName, $cursor), function ($paginator) {
             $this->hydratePivotRelation($paginator->items());
         });
     }
@@ -724,6 +792,8 @@ class BelongsToMany extends Relation
                     return false;
                 }
             }
+
+            return true;
         });
     }
 
@@ -803,7 +873,7 @@ class BelongsToMany extends Relation
             // To get the pivots attributes we will just take any of the attributes which
             // begin with "pivot_" and add those to this arrays, as well as unsetting
             // them from the parent's models since they exist in a different table.
-            if (strpos($key, 'pivot_') === 0) {
+            if (str_starts_with($key, 'pivot_')) {
                 $values[substr($key, 6)] = $value;
 
                 unset($model->{$key});
@@ -848,8 +918,6 @@ class BelongsToMany extends Relation
      */
     public function touch(): void
     {
-        $key = $this->getRelated()->getKeyName();
-
         $columns = [
             $this->related->getUpdatedAtColumn() => $this->related->freshTimestampString(),
         ];
@@ -858,7 +926,7 @@ class BelongsToMany extends Relation
         // the related model's timestamps, to make sure these all reflect the changes
         // to the parent models. This will help us keep any caching synced up here.
         if (count($ids = $this->allRelatedIds()) > 0) {
-            $this->getRelated()->newQueryWithoutRelationships()->whereIn($key, $ids)->update($columns);
+            $this->getRelated()->newQueryWithoutRelationships()->whereKey($ids)->update($columns);
         }
     }
 
@@ -867,7 +935,7 @@ class BelongsToMany extends Relation
      */
     public function allRelatedIds(): IterableCollection
     {
-        return $this->newPivotQuery()->value($this->relatedPivotKey);
+        return Helpers::collect($this->newPivotQuery()->value($this->relatedPivotKey));
     }
 
     /**
@@ -883,11 +951,23 @@ class BelongsToMany extends Relation
     }
 
     /**
+     * Save a new model without raising any events and attach it to the parent model.
+     *
+     * @param mixed $touch
+     */
+    public function saveQuietly(Model $model, array $pivotAttributes = [], $touch = true): Model
+    {
+        return Model::withoutEvents(fn () => $this->save($model, $pivotAttributes, $touch));
+    }
+
+    /**
      * Save an array of new models and attach them to the parent model.
      *
      * @param Collection<Model>|Model[] $models
+     *
+     * @return Collection<Model>|Model[]
      */
-    public function saveMany(Collection|array $models, array $pivotAttributes = []): array
+    public function saveMany(array|Collection $models, array $pivotAttributes = [])
     {
         foreach ($models as $key => $model) {
             $this->save($model, (array) ($pivotAttributes[$key] ?? []), false);
@@ -896,6 +976,18 @@ class BelongsToMany extends Relation
         $this->touchIfTouching();
 
         return $models;
+    }
+
+    /**
+     * Save an array of new models without raising any events and attach them to the parent model.
+     *
+     * @param Collection<Model>|Model[] $models
+     *
+     * @return Collection<Model>|Model[]
+     */
+    public function saveManyQuietly(array|Collection $models, array $pivotAttributes = [])
+    {
+        return Model::withoutEvents(fn () => $this->saveMany($models, $pivotAttributes));
     }
 
     /**
@@ -917,6 +1009,8 @@ class BelongsToMany extends Relation
 
     /**
      * Create an array of new instances of the related models.
+     *
+     * @return Model[]
      */
     public function createMany(iterable $records, array $joinings = []): array
     {
@@ -1103,7 +1197,7 @@ class BelongsToMany extends Relation
      */
     public function qualifyPivotColumn(string $column): string
     {
-        return Text::contains($column, '.')
+        return str_contains($column, '.')
             ? $column
             : $this->table . '.' . $column;
     }

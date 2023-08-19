@@ -29,6 +29,7 @@ use BlitzPHP\Wolke\Relations\MorphTo;
 use BlitzPHP\Wolke\Relations\MorphToMany;
 use BlitzPHP\Wolke\Relations\Relation;
 use Closure;
+use RuntimeException;
 
 trait HasRelationships
 {
@@ -55,6 +56,22 @@ trait HasRelationships
      * The relation resolver callbacks.
      */
     protected static array $relationResolvers = [];
+
+    /**
+     * Get the dynamic relation resolver if defined or inherited, or return null.
+     */
+    public function relationResolver(string $class, string $key): mixed
+    {
+        if ($resolver = static::$relationResolvers[$class][$key] ?? null) {
+            return $resolver;
+        }
+
+        if ($parent = get_parent_class($class)) {
+            return $this->relationResolver($parent, $key);
+        }
+
+        return null;
+    }
 
     /**
      * Define a dynamic relation resolver.
@@ -94,7 +111,7 @@ trait HasRelationships
      */
     public function hasOneThrough(string $related, string $through, ?string $firstKey = null, ?string $secondKey = null, ?string $localKey = null, ?string $secondLocalKey = null): HasOneThrough
     {
-        $through = new $through();
+        $through = $this->newRelatedThroughInstance($through);
 
         $firstKey = $firstKey ?: $this->getForeignKey();
 
@@ -271,6 +288,22 @@ trait HasRelationships
     }
 
     /**
+     * Create a pending has-many-through or has-one-through relationship.
+     *
+     * @param \Illuminate\Database\Eloquent\Relations\HasMany|\Illuminate\Database\Eloquent\Relations\HasOne|string $relationship
+     *
+     * @return \Illuminate\Database\Eloquent\PendingHasThroughRelationship
+     */
+    public function through($relationship)
+    {
+        if (is_string($relationship)) {
+            $relationship = $this->{$relationship}();
+        }
+
+        return new PendingHasThroughRelationship($this, $relationship);
+    }
+
+    /**
      * Define a one-to-many relationship.
      */
     public function hasMany(string $related, ?string $foreignKey = null, ?string $localKey = null): HasMany
@@ -302,7 +335,7 @@ trait HasRelationships
      */
     public function hasManyThrough(string $related, string $through, ?string $firstKey = null, ?string $secondKey = null, ?string $localKey = null, ?string $secondLocalKey = null): HasManyThrough
     {
-        $through = new $through();
+        $through = $this->newRelatedThroughInstance($through);
 
         $firstKey = $firstKey ?: $this->getForeignKey();
 
@@ -428,9 +461,10 @@ trait HasRelationships
         ?string $relatedPivotKey = null,
         ?string $parentKey = null,
         ?string $relatedKey = null,
+        ?string $relation = null,
         bool $inverse = false
     ): MorphToMany {
-        $caller = $this->guessBelongsToManyRelation();
+        $relation = $relation ?: $this->guessBelongsToManyRelation();
 
         // First, we will need to determine the foreign key and "other key" for the
         // relationship. Once we have determined the keys we will make the query
@@ -461,7 +495,7 @@ trait HasRelationships
             $relatedPivotKey,
             $parentKey ?: $this->getKeyName(),
             $relatedKey ?: $instance->getKeyName(),
-            $caller,
+            $relation,
             $inverse
         );
     }
@@ -505,7 +539,8 @@ trait HasRelationships
         ?string $foreignPivotKey = null,
         ?string $relatedPivotKey = null,
         ?string $parentKey = null,
-        ?string $relatedKey = null
+        ?string $relatedKey = null,
+        ?string $relation = null
     ): MorphToMany {
         $foreignPivotKey = $foreignPivotKey ?: $this->getForeignKey();
 
@@ -522,6 +557,7 @@ trait HasRelationships
             $relatedPivotKey,
             $parentKey,
             $relatedKey,
+            $relation,
             true
         );
     }
@@ -617,6 +653,14 @@ trait HasRelationships
             return array_search(static::class, $morphMap, true);
         }
 
+        if (static::class === Pivot::class) {
+            return static::class;
+        }
+
+        if (Relation::requiresMorphMap()) {
+            throw new RuntimeException(sprintf('No morph map defined for model [%s].', static::class));
+        }
+
         return static::class;
     }
 
@@ -630,6 +674,14 @@ trait HasRelationships
                 $instance->setConnection($this->connection);
             }
         });
+    }
+
+    /**
+     * Create a new model instance for a related "through" model.
+     */
+    protected function newRelatedThroughInstance(string $class): object
+    {
+        return new $class();
     }
 
     /**

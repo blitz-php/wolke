@@ -21,10 +21,23 @@ trait HasTimestamps
     public bool $timestamps = true;
 
     /**
+     * The list of models classes that have timestamps temporarily disabled.
+     *
+     * @var array
+     */
+    protected static $ignoreTimestampsOn = [];
+
+    /**
      * Update the model's update timestamp.
      */
-    public function touch(): bool
+    public function touch(?string $attribute = null): bool
     {
+        if ($attribute) {
+            $this->{$attribute} = $this->freshTimestamp();
+
+            return $this->save();
+        }
+
         if (! $this->usesTimestamps()) {
             return false;
         }
@@ -35,9 +48,17 @@ trait HasTimestamps
     }
 
     /**
+     * Update the model's update timestamp without raising any events.
+     */
+    public function touchQuietly(?string $attribute = null): bool
+    {
+        return static::withoutEvents(fn () => $this->touch($attribute));
+    }
+
+    /**
      * Update the creation and update timestamps.
      */
-    public function updateTimestamps(): void
+    public function updateTimestamps(): self
     {
         $time = $this->freshTimestamp();
 
@@ -52,6 +73,8 @@ trait HasTimestamps
         if (! $this->exists && null !== $createdAtColumn && ! $this->isDirty($createdAtColumn)) {
             $this->setCreatedAt($time);
         }
+
+        return $this;
     }
 
     /**
@@ -95,7 +118,7 @@ trait HasTimestamps
      */
     public function usesTimestamps(): bool
     {
-        return $this->timestamps;
+        return $this->timestamps && ! static::isIgnoringTimestamps($this::class);
     }
 
     /**
@@ -128,5 +151,43 @@ trait HasTimestamps
     public function getQualifiedUpdatedAtColumn(): ?string
     {
         return $this->qualifyColumn($this->getUpdatedAtColumn());
+    }
+
+    /**
+     * Disable timestamps for the current class during the given callback scope.
+     */
+    public static function withoutTimestamps(callable $callback): mixed
+    {
+        return static::withoutTimestampsOn([static::class], $callback);
+    }
+
+    /**
+     * Disable timestamps for the given model classes during the given callback scope.
+     */
+    public static function withoutTimestampsOn(array $models, callable $callback): mixed
+    {
+        static::$ignoreTimestampsOn = array_values(array_merge(static::$ignoreTimestampsOn, $models));
+
+        try {
+            return $callback();
+        } finally {
+            static::$ignoreTimestampsOn = array_values(array_diff(static::$ignoreTimestampsOn, $models));
+        }
+    }
+
+    /**
+     * Determine if the given model is ignoring timestamps / touches.
+     */
+    public static function isIgnoringTimestamps(?string $class = null): bool
+    {
+        $class ??= static::class;
+
+        foreach (static::$ignoreTimestampsOn as $ignoredClass) {
+            if ($class === $ignoredClass || is_subclass_of($class, $ignoredClass)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

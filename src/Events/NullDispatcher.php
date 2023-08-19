@@ -33,7 +33,7 @@ class NullDispatcher implements DispatcherContract
      *
      * @return null
      */
-    public function dispatch(string|object $event, mixed $payload = [], bool $halt = false): ?array
+    public function dispatch(object|string $event, mixed $payload = [], bool $halt = false): ?array
     {
         return null;
     }
@@ -50,7 +50,7 @@ class NullDispatcher implements DispatcherContract
      *
      * @return null
      */
-    public function until(string|object $event, mixed $payload = []): ?array
+    public function until(object|string $event, mixed $payload = []): ?array
     {
         return null;
     }
@@ -58,7 +58,7 @@ class NullDispatcher implements DispatcherContract
     /**
      * Register an event listener with the dispatcher.
      */
-    public function listen(Closure|string|array $events, Closure|string|array|null $listener = null): void
+    public function listen(array|Closure|string $events, null|array|Closure|string $listener = null): void
     {
         $this->dispatcher->listen($events, $listener);
     }

@@ -159,6 +159,7 @@ class MorphTo extends BelongsTo
         return Helpers::tap(new $class(), static function ($instance) {
             if (! $instance->getConnectionName()) {
                 $instance->setConnection('default');
+                // $instance->setConnection($this->getConnection()->getName()); Todo: defini la methode getName() dans la baseconnection
             }
         });
     }
