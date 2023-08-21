@@ -21,16 +21,19 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class Listener implements EventListenerInterface
 {
-	public function __construct(protected ConnectionResolverInterface $resolver, protected ServerRequestInterface $request)
-	{		
-	}
-	
-	public function listen(EventManagerInterface $event): void
-	{
-		$event->attach('post_controller_constructor', function () {
-			AbstractPaginator::currentPathResolver(fn() => $this->request->getUri()->getPath());
-			AbstractPaginator::currentPageResolver(fn($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
-			Model::setConnectionResolver($this->resolver);
-		});
-	}
+    public function __construct(protected ConnectionResolverInterface $resolver, protected ServerRequestInterface $request)
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function listen(EventManagerInterface $event): void
+    {
+        $event->attach('post_controller_constructor', function () {
+            AbstractPaginator::currentPathResolver(fn () => $this->request->getUri()->getPath());
+            AbstractPaginator::currentPageResolver(fn ($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
+            Model::setConnectionResolver($this->resolver);
+        });
+    }
 }
