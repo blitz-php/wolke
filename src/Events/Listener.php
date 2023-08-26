@@ -30,7 +30,7 @@ class Listener implements EventListenerInterface
      */
     public function listen(EventManagerInterface $event): void
     {
-        $event->attach('post_controller_constructor', function () {
+        $event->attach('pre_system', function () {
             AbstractPaginator::currentPathResolver(fn () => $this->request->getUri()->getPath());
             AbstractPaginator::currentPageResolver(fn ($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
             Model::setConnectionResolver($this->resolver);
