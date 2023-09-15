@@ -112,7 +112,7 @@ trait BuildsQueries
      *
      * @throws InvalidArgumentException
      */
-    public function prepareValueAndOperator(string $value, string $operator, bool $useDefault = false): array
+    public function prepareValueAndOperator(string $value, ?string $operator, bool $useDefault = false): array
     {
         if ($useDefault) {
             return [$operator, '='];
