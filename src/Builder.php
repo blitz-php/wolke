@@ -869,7 +869,7 @@ class Builder
     /**
      * Strip off the table name or alias from a column identifier.
      */
-    protected function stripTableForPluck(string $column): ?string
+    protected function stripTableForPluck(?string $column): ?string
     {
         if (null === $column) {
             return $column;
@@ -877,13 +877,13 @@ class Builder
 
         $separator = strpos(strtolower($column), ' as ') !== false ? ' as ' : '\.';
 
-        return end(preg_split('~' . $separator . '~i', $column));
+        return Arr::last(preg_split('~' . $separator . '~i', $column));
     }
 
     /**
      * Retrieve column values from rows represented as arrays.
      */
-    protected function pluckFromArrayColumn(array $queryResult, string $column, string $key): IterableCollection
+    protected function pluckFromArrayColumn(iterable $queryResult, string $column, ?string $key): IterableCollection
     {
         $results = [];
 
@@ -903,7 +903,7 @@ class Builder
     /**
      * Retrieve column values from rows represented as objects.
      */
-    protected function pluckFromObjectColumn(array $queryResult, string $column, string $key): IterableCollection
+    protected function pluckFromObjectColumn(iterable $queryResult, string $column, ?string $key): IterableCollection
     {
         $results = [];
 
@@ -1407,6 +1407,9 @@ class Builder
      */
     protected function addNewWheresWithinGroup(BaseBuilder $query, int $originalWhereCount): void
     {
+        // @todo a verifier et COMPRENDRE car ne fonctionne pas
+        return;
+
         // Here, we totally remove all of the where clauses since we are going to
         // rebuild them as nested queries by slicing the groups of wheres into
         // their own sections. This is to prevent any confusing logic order.
@@ -1846,7 +1849,7 @@ class Builder
         }
 
         if (in_array($method, $this->passthru, true)) {
-            return $this->toBase()->{$method}(...$parameters);
+            return (clone $this->toBase())->{$method}(...$parameters);
         }
 
         $result = $this->forwardCallTo($this->query, $method, $parameters);

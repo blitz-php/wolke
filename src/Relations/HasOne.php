@@ -88,8 +88,10 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
 
     /**
      * Add join query constraints for one of many relationships.
+     * 
+     * @param string $on deprecated
      */
-    public function addOneOfManyJoinSubQueryConstraints(BaseBuilder $query): void
+    public function addOneOfManyJoinSubQueryConstraints(BaseBuilder $query, string $on): void
     {
         $query->join($query->getTable(), [$this->qualifySubSelectColumn($this->foreignKey) => $this->qualifyRelatedColumn($this->foreignKey)]);
     }

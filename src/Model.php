@@ -1188,8 +1188,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
 
     /**
      * Perform the actual delete query on this model instance.
+     * 
+     * @return void
      */
-    protected function performDeleteOnModel(): void
+    protected function performDeleteOnModel()
     {
         $this->setKeysForSaveQuery($this->newModelQuery())->delete();
 

@@ -74,8 +74,10 @@ trait SoftDeletes
 
     /**
      * Perform the actual delete query on this model instance.
+     * 
+     * @return mixed
      */
-    protected function performDeleteOnModel(): mixed
+    protected function performDeleteOnModel()
     {
         if ($this->forceDeleting) {
             return Helpers::tap($this->setKeysForSaveQuery($this->newModelQuery())->forceDelete(), function () {

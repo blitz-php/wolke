@@ -37,7 +37,7 @@ trait BuildsQueries
      */
     public function mergeWheres(array $wheres, array $bindings): void
     {
-        Invader::make($this->query)->QBWhere = array_merge($this->query->getCompiledQBWhere(), (array) $wheres);
+        Invader::make($this->query)->query_keys = array_merge(Invader::make($this->query)->query_keys, (array) $wheres);
 
         Invader::make($this->query)->query_values = array_merge(Invader::make($this->query)->query_values, (array) $bindings);
     }

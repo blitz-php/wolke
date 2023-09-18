@@ -15,6 +15,7 @@ use BlitzPHP\Database\Builder\BaseBuilder;
 use BlitzPHP\Traits\Macroable;
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Utilities\Helpers;
+use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Exceptions\ModelNotFoundException;
@@ -328,7 +329,7 @@ abstract class Relation
      */
     protected function whereInMethod(Model $model, string $key): string
     {
-        return $model->getKeyName() === end($parts = explode('.', $key))
+        return $model->getKeyName() === Arr::last(explode('.', $key))
                     && in_array($model->getKeyType(), ['int', 'integer'], true)
                         ? 'whereIn'
                         : 'whereIn';

@@ -561,7 +561,7 @@ trait QueriesRelationships
                 $relation->getRelated()->newQuery(),
                 $this,
                 $expression
-            )->setBindings([], 'select');
+            );
 
             $query->callScope($constraints);
 
@@ -571,7 +571,7 @@ trait QueriesRelationships
             // then we will remove those elements from the query so that it will execute properly
             // when given to the database. Otherwise, we may receive SQL errors or poor syntax.
             $query->orders = null;
-            $query->setBindings([], 'order');
+           // $query->setBindings([], 'order');
 
             if (count($query->columns) > 1) {
                 $query->columns            = [$query->columns[0]];
