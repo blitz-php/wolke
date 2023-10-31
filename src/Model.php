@@ -1188,7 +1188,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
 
     /**
      * Perform the actual delete query on this model instance.
-     * 
+     *
      * @return void
      */
     protected function performDeleteOnModel()

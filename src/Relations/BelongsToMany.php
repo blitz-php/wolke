@@ -490,7 +490,6 @@ class BelongsToMany extends Relation
                 return $this->create(array_merge($attributes, $values), $joining, $touch);
             }
             $this->attach($instance, $joining, $touch);
-
         }
 
         $instance->fill($values);

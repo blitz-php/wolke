@@ -875,7 +875,7 @@ class Builder
             return $column;
         }
 
-        $separator = strpos(strtolower($column), ' as ') !== false ? ' as ' : '\.';
+        $separator = str_contains(strtolower($column), ' as ') ? ' as ' : '\.';
 
         return Arr::last(preg_split('~' . $separator . '~i', $column));
     }
@@ -925,7 +925,7 @@ class Builder
      *
      * @throws InvalidArgumentException
      */
-    public function paginate(null|Closure|int $perPage = null, array|string $columns = [], string $pageName = 'page', null|int $page = null, null|Closure|int $total = null): LengthAwarePaginator
+    public function paginate(null|Closure|int $perPage = null, array|string $columns = [], string $pageName = 'page', ?int $page = null, null|Closure|int $total = null): LengthAwarePaginator
     {
         $page    = $page ?: Paginator::resolveCurrentPage($pageName);
         $total   = null !== $total ? Helpers::value($total) : $this->toBase()->count();
@@ -1409,7 +1409,6 @@ class Builder
     {
         // @todo a verifier et COMPRENDRE car ne fonctionne pas
         return;
-
         // Here, we totally remove all of the where clauses since we are going to
         // rebuild them as nested queries by slicing the groups of wheres into
         // their own sections. This is to prevent any confusing logic order.
@@ -1577,7 +1576,6 @@ class Builder
             $preparedRelationships[$prefix . $key] = $this->combineConstraints([
                 $value,
                 $preparedRelationships[$prefix . $key] ?? static function () {
-
                 },
             ]);
         }
@@ -1607,7 +1605,6 @@ class Builder
         return str_contains($name, ':')
             ? $this->createSelectWithConstraint($name)
             : [$name, static function () {
-
             }];
     }
 

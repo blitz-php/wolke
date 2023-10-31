@@ -90,7 +90,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
 
     /**
      * Add join query constraints for one of many relationships.
-     * 
+     *
      * @param string $on deprecated
      */
     public function addOneOfManyJoinSubQueryConstraints(BaseBuilder $query, string $on): void
