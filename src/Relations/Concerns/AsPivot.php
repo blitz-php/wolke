@@ -114,14 +114,14 @@ trait AsPivot
     /**
      * Delete the pivot model record from the database.
      */
-    public function delete(): int
+    public function delete(): ?bool
     {
         if (isset($this->attributes[$this->getKeyName()])) {
-            return (int) parent::delete();
+            return (bool) parent::delete();
         }
 
         if ($this->fireModelEvent('deleting') === false) {
-            return 0;
+            return false;
         }
 
         $this->touchOwners();
