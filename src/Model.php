@@ -969,6 +969,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
         // models are updated, giving them a chance to do any special processing.
         $dirty = $this->getDirty();
 
+        if (method_exists($this, 'beforeUpdate')) {
+            $dirty = call_user_func([$this, 'beforeUpdate'], $dirty);
+        }
+
         if (count($dirty) > 0) {
             $this->setKeysForSaveQuery($query)->update($dirty);
 
@@ -1040,6 +1044,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
         // the query builder, which will give us back the final inserted ID for this
         // table from the database. Not all tables have to be incrementing though.
         $attributes = $this->getAttributesForInsert();
+
+        if (method_exists($this, 'beforeCreate')) {
+            $attributes = call_user_func([$this, 'beforeCreate'], $attributes);
+        }
 
         $query->insert($attributes);
 
