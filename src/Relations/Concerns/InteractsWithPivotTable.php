@@ -484,7 +484,7 @@ trait InteractsWithPivotTable
      */
     public function newPivotStatement(): BaseBuilder
     {
-        return $this->query->getQuery()->newQuery()->from($this->table);
+        return (clone $this->query->getQuery())->reset()->from($this->table);
     }
 
     /**
