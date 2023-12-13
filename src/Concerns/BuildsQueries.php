@@ -35,11 +35,13 @@ trait BuildsQueries
     /**
      * Merge an array of where clauses and bindings.
      */
-    public function mergeWheres(array $wheres, array $bindings): void
+    public function mergeWheres(array $wheres, array $bindings): static
     {
         Invader::make($this->query)->query_keys = array_merge(Invader::make($this->query)->query_keys, (array) $wheres);
 
         Invader::make($this->query)->query_values = array_merge(Invader::make($this->query)->query_values, (array) $bindings);
+
+        return $this;
     }
 
     /**

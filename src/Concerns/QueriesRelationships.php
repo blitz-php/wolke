@@ -573,8 +573,10 @@ trait QueriesRelationships
             $query->orders = null;
             // $query->setBindings([], 'order');
 
-            if (count($query->columns) > 1) {
-                $query->columns            = [$query->columns[0]];
+            $fields = Invader::make($query)->fields;
+
+            if (count($fields) > 1) {
+                Invader::make($query)->fields           = [$fields[0]];
                 $query->bindings['select'] = [];
             }
 
