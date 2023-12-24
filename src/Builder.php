@@ -928,7 +928,7 @@ class Builder
     public function paginate(null|Closure|int $perPage = null, array|string $columns = [], string $pageName = 'page', ?int $page = null, null|Closure|int $total = null): LengthAwarePaginator
     {
         $page    = $page ?: Paginator::resolveCurrentPage($pageName);
-        $total   = null !== $total ? Helpers::value($total) : $this->toBase()->count();
+        $total   = null !== $total ? Helpers::value($total) : (clone $this->toBase())->count();
         $perPage = $perPage ?: $this->model->getPerPage();
 
         $results = $total
