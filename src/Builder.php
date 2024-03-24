@@ -102,6 +102,7 @@ class Builder
         'average',
         'avg',
         'count',
+        'db',
         'dd',
         'doesntExist',
         'doesntExistOr',

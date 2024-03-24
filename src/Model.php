@@ -1090,7 +1090,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     protected function insertAndSetId(Builder $query, array $attributes): void
     {
-        $this->setAttribute($this->getKeyName(), $query->getQuery()->db()->insertID());
+        if ($query->insert($attributes)) {
+            $this->setAttribute($this->getKeyName(), $query->db()->insertID());
+        }
     }
 
     /**

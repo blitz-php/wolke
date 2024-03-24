@@ -145,7 +145,7 @@ trait BuildsQueries
      *
      * Prevents using Null values with invalid operators.
      */
-    protected function invalidOperatorAndValue(string $operator, mixed $value): bool
+    protected function invalidOperatorAndValue(?string $operator, mixed $value): bool
     {
         return null === $value && in_array($operator, $this->operators, true)
              && ! in_array($operator, ['=', '<>', '!='], true);
