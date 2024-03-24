@@ -14,6 +14,7 @@ namespace BlitzPHP\Wolke\Events;
 use BlitzPHP\Contracts\Database\ConnectionResolverInterface;
 use BlitzPHP\Contracts\Event\EventListenerInterface;
 use BlitzPHP\Contracts\Event\EventManagerInterface;
+use BlitzPHP\Database\Connection\BaseConnection;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Pagination\AbstractPaginator;
@@ -23,6 +24,7 @@ class Listener implements EventListenerInterface
 {
     public function __construct(protected ConnectionResolverInterface $resolver, protected ServerRequestInterface $request)
     {
+        BaseConnection::$useHashedAliases = false;
     }
 
     /**
