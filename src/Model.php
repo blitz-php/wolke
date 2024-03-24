@@ -544,7 +544,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public static function onWriteConnection(): BaseBuilder
     {
-        return static::query()->useWritePdo();
+        return static::query()->getQuery();
     }
 
     /**
