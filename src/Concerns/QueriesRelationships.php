@@ -570,14 +570,16 @@ trait QueriesRelationships
             // If the query contains certain elements like orderings / more than one column selected
             // then we will remove those elements from the query so that it will execute properly
             // when given to the database. Otherwise, we may receive SQL errors or poor syntax.
-            $query->orders = null;
+            Invader::make($query)->order = '';
             // $query->setBindings([], 'order');
 
             $fields = Invader::make($query)->fields;
 
             if (count($fields) > 1) {
-                Invader::make($query)->fields           = [$fields[0]];
-                $query->bindings['select'] = [];
+                Invader::make($query)->fields       = [$fields[0]];
+                Invader::make($query)->compileWhere = [];
+                Invader::make($query)->query_values = [];
+                // $query->bindings['select'] = [];
             }
 
             // Finally, we will make the proper column alias to the query and run this sub-select on
@@ -589,8 +591,8 @@ trait QueriesRelationships
 
             if ($function === 'exists') {
                 $this->selectRaw(
-                    sprintf('exists(%s) as %s', $query->toSql(), $this->getQuery()->grammar->wrap($alias)),
-                    $query->getBindings()
+                    sprintf('exists(%s) as %s', $query->sql(), $this->getQuery()->grammar->wrap($alias)),
+                    $query->getCompiledWhere()
                 )->withCasts([$alias => 'bool']);
             } else {
                 $this->selectSub(
@@ -727,7 +729,7 @@ trait QueriesRelationships
      */
     protected function addWhereCountQuery(BaseBuilder $query, string $operator = '>=', int $count = 1, string $boolean = 'and'): self
     {
-        // $this->query->addBinding($query->getBindings(), 'where');
+        Invader::make($this->query)->compileWhere = $query->getCompiledWhere();
 
         return $this->where(
             '(' . $query->sql() . ')',

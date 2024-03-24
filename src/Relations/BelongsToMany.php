@@ -12,6 +12,7 @@
 namespace BlitzPHP\Wolke\Relations;
 
 use BlitzPHP\Contracts\Support\Arrayable;
+use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Utilities\Iterable\LazyCollection;
@@ -457,7 +458,7 @@ class BelongsToMany extends Relation
      */
     public function firstOrNew(array $attributes, array $values = []): Model
     {
-        if (null === ($instance = $this->where($attributes)->first())) {
+        if (null === ($instance = $this->related->where($attributes)->first())) {
             $instance = $this->related->newInstance(array_merge($attributes, $values));
         }
 
@@ -471,13 +472,37 @@ class BelongsToMany extends Relation
     {
         if (null === ($instance = (clone $this)->where($attributes)->first())) {
             if (null === ($instance = $this->related->where($attributes)->first())) {
-                $instance = $this->create(array_merge($attributes, $values), $joining, $touch);
+                $instance = $this->createOrFirst($attributes, $values, $joining, $touch);
             } else {
-                $this->attach($instance, $joining, $touch);
+                try {
+                    $this->getQuery()->withSavepointIfNeeded(fn () => $this->attach($instance, $joining, $touch));
+                } catch (UniqueConstraintViolationException) {
+                    // Nothing to do, the model was already attached...
+                }
             }
         }
 
         return $instance;
+    }
+
+    /**
+     * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     */
+    public function createOrFirst(array $attributes = [], array $values = [], array $joining = [], bool $touch = true): Model
+    {
+        try {
+            return $this->getQuery()->withSavePointIfNeeded(fn () => $this->create(array_merge($attributes, $values), $joining, $touch));
+        } catch (UniqueConstraintViolationException $e) {
+            // ...
+        }
+
+        try {
+            return Helpers::tap($this->related->where($attributes)->first() ?? throw $e, function ($instance) use ($joining, $touch) {
+                $this->getQuery()->withSavepointIfNeeded(fn () => $this->attach($instance, $joining, $touch));
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            return (clone $this)->useWritePdo()->where($attributes)->first() ?? throw $e;
+        }
     }
 
     /**
@@ -485,24 +510,19 @@ class BelongsToMany extends Relation
      */
     public function updateOrCreate(array $attributes, array $values = [], array $joining = [], bool $touch = true): Model
     {
-        if (null === ($instance = (clone $this)->where($attributes)->first())) {
-            if (null === ($instance = $this->related->where($attributes)->first())) {
-                return $this->create(array_merge($attributes, $values), $joining, $touch);
+        return Helpers::tap($this->firstOrCreate($attributes, $values, $joining, $touch), static function ($instance) use ($values) {
+            if (! $instance->wasRecentlyCreated) {
+                $instance->fill($values);
+
+                $instance->save(['touch' => false]);
             }
-            $this->attach($instance, $joining, $touch);
-        }
-
-        $instance->fill($values);
-
-        $instance->save(['touch' => false]);
-
-        return $instance;
+        });
     }
 
     /**
      * Find a related model by its primary key.
      *
-     * @return Collection|Model|null
+     * @return Collection<Model>|Model|null
      */
     public function find(mixed $id, array $columns = ['*'])
     {
@@ -519,6 +539,8 @@ class BelongsToMany extends Relation
 
     /**
      * Find multiple related models by their primary keys.
+     *
+     * @return Collection<Model>
      */
     public function findMany(array|Arrayable $ids, array $columns = ['*']): Collection
     {
@@ -536,7 +558,7 @@ class BelongsToMany extends Relation
     /**
      * Find a related model by its primary key or throw an exception.
      *
-     * @return Collection|Model
+     * @return Collection<Model>|Model
      *
      * @throws ModelNotFoundException
      */
@@ -560,7 +582,7 @@ class BelongsToMany extends Relation
     /**
      * Find a related model by its primary key or call a callback.
      *
-     * @return Collection|mixed|Model
+     * @return Collection<Model>|mixed|Model
      */
     public function findOr(mixed $id, array|Closure $columns = ['*'], ?Closure $callback = null)
     {
@@ -664,7 +686,7 @@ class BelongsToMany extends Relation
         $builder = $this->query->applyScopes();
 
         $fields  = Invader::make($builder->getQuery())->fields;
-        $columns = $fields !== [] ? $fields : $columns;
+        $columns = $fields !== [] ? [] : $columns;
 
         $models = $builder->select(
             $this->shouldSelect($columns)
@@ -917,6 +939,10 @@ class BelongsToMany extends Relation
      */
     public function touch(): void
     {
+        if ($this->related->isIgnoringTouch()) {
+            return;
+        }
+
         $columns = [
             $this->related->getUpdatedAtColumn() => $this->related->freshTimestampString(),
         ];
@@ -951,10 +977,8 @@ class BelongsToMany extends Relation
 
     /**
      * Save a new model without raising any events and attach it to the parent model.
-     *
-     * @param mixed $touch
      */
-    public function saveQuietly(Model $model, array $pivotAttributes = [], $touch = true): Model
+    public function saveQuietly(Model $model, array $pivotAttributes = [], bool $touch = true): Model
     {
         return Model::withoutEvents(fn () => $this->save($model, $pivotAttributes, $touch));
     }

@@ -13,7 +13,7 @@ namespace BlitzPHP\Wolke\Exceptions;
 
 use RuntimeException;
 
-class InvalidCastException extends RuntimeException
+class LazyLoadingViolationException extends RuntimeException
 {
     /**
      * The name of the affected Eloquent model.
@@ -25,16 +25,13 @@ class InvalidCastException extends RuntimeException
     /**
      * Create a new exception instance.
      *
-     * @param string $column   The name of the column.
-     * @param string $castType The name of the cast type.
-     *
-     * @return static
+     * @param string $relation The name of the relation.
      */
-    public function __construct(object $model, public string $column, public string $castType)
+    public function __construct(object $model, public string $relation)
     {
         $class = get_class($model);
 
-        parent::__construct("Call to undefined cast [{$castType}] on column [{$column}] in model [{$class}].");
+        parent::__construct("Attempted to lazy load [{$relation}] on model [{$class}] but lazy loading is disabled.");
 
         $this->model = $class;
     }

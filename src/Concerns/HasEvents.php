@@ -11,22 +11,18 @@
 
 namespace BlitzPHP\Wolke\Concerns;
 
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
+use BlitzPHP\Wolke\Attributes\ObservedBy;
 use BlitzPHP\Wolke\Contracts\Dispatcher;
 use BlitzPHP\Wolke\Events\NullDispatcher;
 use Closure;
 use InvalidArgumentException;
+use ReflectionClass;
 use RuntimeException;
 
 trait HasEvents
 {
-    /**
-     * The event dispatcher instance.
-     *
-     * @var Dispatcher
-     */
-    protected static $dispatcher;
-
     /**
      * The event map for the model.
      *
@@ -40,6 +36,29 @@ trait HasEvents
      * These are extra user-defined events observers may subscribe to.
      */
     protected array $observables = [];
+
+    /**
+     * Boot the has event trait for a model.
+     *
+     * @return void
+     */
+    public static function bootHasEvents()
+    {
+        static::observe(static::resolveObserveAttributes());
+    }
+
+    /**
+     * Resolve the observe class names from the attributes.
+     */
+    public static function resolveObserveAttributes(): array
+    {
+        $reflectionClass = new ReflectionClass(static::class);
+
+        return Helpers::collect($reflectionClass->getAttributes(ObservedBy::class))
+            ->map(static fn ($attribute) => $attribute->getArguments())
+            ->flatten()
+            ->all();
+    }
 
     /**
      * Register observers with the model.
@@ -151,19 +170,14 @@ trait HasEvents
         if (isset(static::$dispatcher)) {
             $name = static::class;
 
-            static::$dispatcher->listen("orm.{$event}: {$name}", $callback);
+            static::$dispatcher->listen("wolke.{$event}: {$name}", $callback);
         }
     }
 
     /**
      * Fire the given event for the model.
-     *
-     * @param string $event
-     * @param bool   $halt
-     *
-     * @return mixed
      */
-    protected function fireModelEvent($event, $halt = true)
+    protected function fireModelEvent(string $event, bool $halt = true): mixed
     {
         if (! isset(static::$dispatcher)) {
             return true;
@@ -184,18 +198,15 @@ trait HasEvents
 
         return ! empty($result)
             ? $result
-            : static::$dispatcher->{$method}("orm.{$event}: " . static::class, $this);
+            : static::$dispatcher->{$method}("wolke.{$event}: " . static::class, $this);
     }
 
     /**
      * Fire a custom model event for the given event.
      *
-     * @param string $event
-     * @param string $method
-     *
      * @return mixed|null
      */
-    protected function fireCustomModelEvent($event, $method)
+    protected function fireCustomModelEvent(string $event, string $method)
     {
         if (! isset($this->dispatchesEvents[$event])) {
             return;
@@ -210,12 +221,8 @@ trait HasEvents
 
     /**
      * Filter the model event results.
-     *
-     * @param mixed $result
-     *
-     * @return mixed
      */
-    protected function filterModelEventResults($result)
+    protected function filterModelEventResults(mixed $result): mixed
     {
         if (is_array($result)) {
             $result = array_filter($result, static fn ($response) => null !== $response);
@@ -226,130 +233,88 @@ trait HasEvents
 
     /**
      * Register a retrieved model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function retrieved($callback)
+    public static function retrieved(Closure|string $callback): void
     {
         static::registerModelEvent('retrieved', $callback);
     }
 
     /**
      * Register a saving model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function saving($callback)
+    public static function saving(Closure|string $callback): void
     {
         static::registerModelEvent('saving', $callback);
     }
 
     /**
      * Register a saved model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function saved($callback)
+    public static function saved(Closure|string $callback): void
     {
         static::registerModelEvent('saved', $callback);
     }
 
     /**
      * Register an updating model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function updating($callback)
+    public static function updating(Closure|string $callback): void
     {
         static::registerModelEvent('updating', $callback);
     }
 
     /**
      * Register an updated model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function updated($callback)
+    public static function updated(Closure|string $callback): void
     {
         static::registerModelEvent('updated', $callback);
     }
 
     /**
      * Register a creating model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function creating($callback)
+    public static function creating(Closure|string $callback): void
     {
         static::registerModelEvent('creating', $callback);
     }
 
     /**
      * Register a created model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function created($callback)
+    public static function created(Closure|string $callback): void
     {
         static::registerModelEvent('created', $callback);
     }
 
     /**
      * Register a replicating model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function replicating($callback)
+    public static function replicating(Closure|string $callback): void
     {
         static::registerModelEvent('replicating', $callback);
     }
 
     /**
      * Register a deleting model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function deleting($callback)
+    public static function deleting(Closure|string $callback): void
     {
         static::registerModelEvent('deleting', $callback);
     }
 
     /**
      * Register a deleted model event with the dispatcher.
-     *
-     * @param Closure|string $callback
-     *
-     * @return void
      */
-    public static function deleted($callback)
+    public static function deleted(Closure|string $callback): void
     {
         static::registerModelEvent('deleted', $callback);
     }
 
     /**
      * Remove all of the event listeners for the model.
-     *
-     * @return void
      */
-    public static function flushEventListeners()
+    public static function flushEventListeners(): void
     {
         if (! isset(static::$dispatcher)) {
             return;
@@ -358,7 +323,7 @@ trait HasEvents
         $instance = new static();
 
         foreach ($instance->getObservableEvents() as $event) {
-            static::$dispatcher->forget("orm.{$event}: " . static::class);
+            static::$dispatcher->forget("wolke.{$event}: " . static::class);
         }
 
         foreach (array_values($instance->dispatchesEvents) as $event) {
@@ -378,30 +343,24 @@ trait HasEvents
 
     /**
      * Set the event dispatcher instance.
-     *
-     * @return void
      */
-    public static function setEventDispatcher(Dispatcher $dispatcher)
+    public static function setEventDispatcher(Dispatcher $dispatcher): void
     {
         static::$dispatcher = $dispatcher;
     }
 
     /**
      * Unset the event dispatcher for models.
-     *
-     * @return void
      */
-    public static function unsetEventDispatcher()
+    public static function unsetEventDispatcher(): void
     {
         static::$dispatcher = null;
     }
 
     /**
      * Execute a callback without firing any model events for any model type.
-     *
-     * @return mixed
      */
-    public static function withoutEvents(callable $callback)
+    public static function withoutEvents(callable $callback): mixed
     {
         $dispatcher = static::getEventDispatcher();
 

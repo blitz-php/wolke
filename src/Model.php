@@ -13,6 +13,8 @@ namespace BlitzPHP\Wolke;
 
 use ArrayAccess;
 use BlitzPHP\Contracts\Database\ConnectionResolverInterface;
+use BlitzPHP\Contracts\Queue\QueueableCollection;
+use BlitzPHP\Contracts\Queue\QueueableEntity;
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Contracts\Support\Jsonable;
 use BlitzPHP\Database\Builder\BaseBuilder;
@@ -31,17 +33,18 @@ use BlitzPHP\Wolke\Concerns\HasRelationships;
 use BlitzPHP\Wolke\Concerns\HasTimestamps;
 use BlitzPHP\Wolke\Concerns\HasUniqueIds;
 use BlitzPHP\Wolke\Concerns\HidesAttributes;
+use BlitzPHP\Wolke\Contracts\Dispatcher;
 use BlitzPHP\Wolke\Contracts\Scope;
 use BlitzPHP\Wolke\Exceptions\JsonEncodingException;
 use BlitzPHP\Wolke\Exceptions\MassAssignmentException;
+use BlitzPHP\Wolke\Exceptions\MissingAttributeException;
 use BlitzPHP\Wolke\Relations\Concerns\AsPivot;
 use BlitzPHP\Wolke\Relations\Pivot;
-use Illuminate\Database\Eloquent\MissingAttributeException;
 use JsonSerializable;
 use LogicException;
 use Throwable;
 
-class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
+class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, QueueableEntity
 {
     use ForwardsCalls;
     use GuardsAttributes;
@@ -137,7 +140,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     /**
      * The event dispatcher instance.
      *
-     * @var \Illuminate\Contracts\Events\Dispatcher
+     * @var Dispatcher
      */
     protected static $dispatcher;
 
@@ -498,7 +501,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
 
         $model->mergeCasts($this->casts);
 
-        $model->fill((array) $attributes);
+        $model->fill($attributes);
 
         return $model;
     }
@@ -512,7 +515,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     {
         $model = $this->newInstance([], true);
 
-        $model->setRawAttributes((array) $attributes, true);
+        $model->setRawAttributes($attributes, true);
 
         $model->setConnection($connection ?: $this->getConnectionName());
 
@@ -738,24 +741,30 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
 
     /**
      * Increment a column's value by a given amount.
+     *
+     * @return false|float|int
      */
-    protected function increment(string $column, float|int $amount = 1, array $extra = []): int
+    protected function increment(string $column, float|int $amount = 1, array $extra = [])
     {
         return $this->incrementOrDecrement($column, $amount, $extra, 'increment');
     }
 
     /**
      * Decrement a column's value by a given amount.
+     *
+     * @return false|float|int
      */
-    protected function decrement(string $column, float|int $amount = 1, array $extra = []): int
+    protected function decrement(string $column, float|int $amount = 1, array $extra = [])
     {
         return $this->incrementOrDecrement($column, $amount, $extra, 'decrement');
     }
 
     /**
      * Run the increment or decrement method on the model.
+     *
+     * @return false|float|int
      */
-    protected function incrementOrDecrement(string $column, float|int $amount, array $extra, string $method): int
+    protected function incrementOrDecrement(string $column, float|int $amount, array $extra, string $method)
     {
         if (! $this->exists) {
             return $this->newQueryWithoutRelationships()->{$method}($column, $amount, $extra);
@@ -967,7 +976,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
         // Once we have run the update operation, we will fire the "updated" event for
         // this model instance. This will allow developers to hook into these after
         // models are updated, giving them a chance to do any special processing.
-        $dirty = $this->getDirty();
+        $dirty = $this->getDirtyForUpdate();
 
         if (method_exists($this, 'beforeUpdate')) {
             $dirty = call_user_func([$this, 'beforeUpdate'], $dirty);
@@ -1049,8 +1058,6 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
             $attributes = call_user_func([$this, 'beforeCreate'], $attributes);
         }
 
-        $query->insert($attributes);
-
         if ($this->getIncrementing()) {
             $this->insertAndSetId($query, $attributes);
         }
@@ -1126,9 +1133,11 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     /**
      * Delete the model from the database.
      *
+     * @return bool|null
+     *
      * @throws LogicException
      */
-    public function delete(): ?bool
+    public function delete()
     {
         $this->mergeAttributesFromCachedCasts();
 
@@ -1165,7 +1174,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     /**
      * Delete the model from the database without raising any events.
      */
-    public function deleteQuietly(): bool
+    public function deleteQuietly(): ?bool
     {
         return static::withoutEvents(fn () => $this->delete());
     }
@@ -1352,7 +1361,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     /**
      * Convert the object into something JSON serializable.
      */
-    public function jsonSerialize(): array
+    public function jsonSerialize(): mixed
     {
         return $this->toArray();
     }
@@ -1409,6 +1418,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
             $this->getKeyName(),
             $this->getCreatedAtColumn(),
             $this->getUpdatedAtColumn(),
+            ...$this->uniqueIds(),
         ]));
 
         $attributes = Arr::except(
@@ -1600,57 +1610,51 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
         return $this->getAttribute($this->getKeyName());
     }
 
-    // /**
-    //  * Get the queueable identity for the entity.
-    //  *
-    //  * @return mixed
-    //  */
-    // public function getQueueableId()
-    // {
-    //     return $this->getKey();
-    // }
+    /**
+     * Get the queueable identity for the entity.
+     */
+    public function getQueueableId(): mixed
+    {
+        return $this->getKey();
+    }
 
-    // /**
-    //  * Get the queueable relationships for the entity.
-    //  *
-    //  * @return array
-    //  */
-    // public function getQueueableRelations()
-    // {
-    //     $relations = [];
+    /**
+     * Get the queueable relationships for the entity.
+     */
+    public function getQueueableRelations(): array
+    {
+        $relations = [];
 
-    //     foreach ($this->getRelations() as $key => $relation) {
-    //         if (! method_exists($this, $key)) {
-    //             continue;
-    //         }
+        foreach ($this->getRelations() as $key => $relation) {
+            if (! method_exists($this, $key)) {
+                continue;
+            }
 
-    //         $relations[] = $key;
+            $relations[] = $key;
 
-    //         if ($relation instanceof QueueableCollection) {
-    //             foreach ($relation->getQueueableRelations() as $collectionValue) {
-    //                 $relations[] = $key . '.' . $collectionValue;
-    //             }
-    //         }
+            if ($relation instanceof QueueableCollection) {
+                foreach ($relation->getQueueableRelations() as $collectionValue) {
+                    $relations[] = $key . '.' . $collectionValue;
+                }
+            }
 
-    //         if ($relation instanceof QueueableEntity) {
-    //             foreach ($relation->getQueueableRelations() as $entityKey => $entityValue) {
-    //                 $relations[] = $key . '.' . $entityValue;
-    //             }
-    //         }
-    //     }
+            if ($relation instanceof QueueableEntity) {
+                foreach ($relation->getQueueableRelations() as $entityValue) {
+                    $relations[] = $key . '.' . $entityValue;
+                }
+            }
+        }
 
-    //     return array_unique($relations);
-    // }
+        return array_unique($relations);
+    }
 
-    // /**
-    //  * Get the queueable connection for the entity.
-    //  *
-    //  * @return string|null
-    //  */
-    // public function getQueueableConnection()
-    // {
-    //     return $this->getConnectionName();
-    // }
+    /**
+     * Get the queueable connection for the entity.
+     */
+    public function getQueueableConnection(): ?string
+    {
+        return $this->getConnectionName();
+    }
 
     /**
      * Get the default foreign key name for the model.
@@ -1805,7 +1809,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
     public function __toString(): string
     {
         return $this->escapeWhenCastingToString && function_exists('esc')
-            ? esc($this->toJson())
+            ? Helpers::esc($this->toJson())
             : $this->toJson();
     }
 

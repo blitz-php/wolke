@@ -12,17 +12,18 @@
 namespace BlitzPHP\Wolke\Pagination;
 
 use ArrayIterator;
+use BlitzPHP\Contracts\View\RendererInterface;
 use BlitzPHP\Traits\Support\ForwardsCalls;
+use BlitzPHP\Traits\Support\Tappable;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection;
-use BlitzPHP\Utilities\String\Text;
 use Closure;
-use ReturnTypeWillChange;
 
 abstract class AbstractPaginator
 {
     use ForwardsCalls;
+    use Tappable;
 
     /**
      * All of the items being paginated.
@@ -116,7 +117,7 @@ abstract class AbstractPaginator
     /**
      * Determine if the given value is a valid page number.
      */
-    protected function isValidPageNumber(int $page): bool
+    protected function isValidPageNumber(mixed $page): bool
     {
         return $page >= 1 && filter_var($page, FILTER_VALIDATE_INT) !== false;
     }
@@ -160,7 +161,7 @@ abstract class AbstractPaginator
         }
 
         return $this->path()
-                        . (Text::contains($this->path(), '?') ? '&' : '?')
+                        . (str_contains($this->path(), '?') ? '&' : '?')
                         . Arr::query($parameters)
                         . $this->buildFragment();
     }
@@ -411,13 +412,8 @@ abstract class AbstractPaginator
 
     /**
      * Resolve the current page or return the default value.
-     *
-     * @param string $pageName
-     * @param int    $default
-     *
-     * @return int
      */
-    public static function resolveCurrentPage($pageName = 'page', $default = 1)
+    public static function resolveCurrentPage(string $pageName = 'page', int $default = 1): int
     {
         if (isset(static::$currentPageResolver)) {
             return (int) call_user_func(static::$currentPageResolver, $pageName);
@@ -428,22 +424,16 @@ abstract class AbstractPaginator
 
     /**
      * Set the current page resolver callback.
-     *
-     * @return void
      */
-    public static function currentPageResolver(Closure $resolver)
+    public static function currentPageResolver(Closure $resolver): void
     {
         static::$currentPageResolver = $resolver;
     }
 
     /**
      * Resolve the query string or return the default value.
-     *
-     * @param array|string|null $default
-     *
-     * @return string
      */
-    public static function resolveQueryString($default = null)
+    public static function resolveQueryString(null|array|string $default = null): string
     {
         if (isset(static::$queryStringResolver)) {
             return (static::$queryStringResolver)();
@@ -462,10 +452,8 @@ abstract class AbstractPaginator
 
     /**
      * Get an instance of the view factory from the resolver.
-     *
-     * @return RendererInterface
      */
-    public static function viewFactory()
+    public static function viewFactory(): RendererInterface
     {
         return call_user_func(static::$viewFactoryResolver);
     }
@@ -499,8 +487,7 @@ abstract class AbstractPaginator
      */
     public static function useBootstrap(): void
     {
-        static::defaultView('BlitzPHP\Wolke\Pagination\Views\bootstrap-4');
-        static::defaultSimpleView('BlitzPHP\Wolke\Pagination\Views\simple-bootstrap-4');
+        static::useBootstrapFour();
     }
 
     /**
@@ -510,6 +497,24 @@ abstract class AbstractPaginator
     {
         static::defaultView('BlitzPHP\Wolke\Pagination\Views\default');
         static::defaultSimpleView('BlitzPHP\Wolke\Pagination\Views\simple-default');
+    }
+
+    /**
+     * Indicate that Bootstrap 4 styling should be used for generated links.
+     */
+    public static function useBootstrapFour(): void
+    {
+        static::defaultView('BlitzPHP\Wolke\Pagination\Views\bootstrap-4');
+        static::defaultSimpleView('BlitzPHP\Wolke\Pagination\Views\simple-bootstrap-4');
+    }
+
+    /**
+     * Indicate that Bootstrap 5 styling should be used for generated links.
+     */
+    public static function useBootstrapFive()
+    {
+        static::defaultView('BlitzPHP\Wolke\Pagination\Views\bootstrap-5');
+        static::defaultSimpleView('BlitzPHP\Wolke\Pagination\Views\simple-bootstrap-5');
     }
 
     /**
@@ -538,33 +543,24 @@ abstract class AbstractPaginator
 
     /**
      * Get the number of items for the current page.
-     *
-     * @return int
      */
-    #[ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
         return $this->items->count();
     }
 
     /**
      * Get the paginator's underlying collection.
-     *
-     * @return \Tightenco\Collect\Support\Collection
      */
-    public function getCollection()
+    public function getCollection(): Collection
     {
         return $this->items;
     }
 
     /**
      * Set the paginator's underlying collection.
-     *
-     * @param \Tightenco\Collect\Support\Collection $collection
-     *
-     * @return $this
      */
-    public function setCollection(Collection $collection)
+    public function setCollection(Collection $collection): self
     {
         $this->items = $collection;
 
@@ -573,86 +569,56 @@ abstract class AbstractPaginator
 
     /**
      * Get the paginator options.
-     *
-     * @return array
      */
-    public function getOptions()
+    public function getOptions(): array
     {
         return $this->options;
     }
 
     /**
      * Determine if the given item exists.
-     *
-     * @param mixed $key
-     *
-     * @return bool
      */
-    #[ReturnTypeWillChange]
-    public function offsetExists($key)
+    public function offsetExists(mixed $key): bool
     {
         return $this->items->has($key);
     }
 
     /**
      * Get the item at the given offset.
-     *
-     * @param mixed $key
-     *
-     * @return mixed
      */
-    #[ReturnTypeWillChange]
-    public function offsetGet($key)
+    public function offsetGet(mixed $key): mixed
     {
         return $this->items->get($key);
     }
 
     /**
      * Set the item at the given offset.
-     *
-     * @param mixed $key
-     * @param mixed $value
-     *
-     * @return void
      */
-    #[ReturnTypeWillChange]
-    public function offsetSet($key, $value)
+    public function offsetSet(mixed $key, mixed $value): void
     {
         $this->items->put($key, $value);
     }
 
     /**
      * Unset the item at the given key.
-     *
-     * @param mixed $key
-     *
-     * @return void
      */
-    #[ReturnTypeWillChange]
-    public function offsetUnset($key)
+    public function offsetUnset(mixed $key): void
     {
         $this->items->forget($key);
     }
 
     /**
      * Render the contents of the paginator to HTML.
-     *
-     * @return string
      */
-    public function toHtml()
+    public function toHtml(): string
     {
         return (string) $this->render();
     }
 
     /**
      * Make dynamic calls into the collection.
-     *
-     * @param string $method
-     * @param array  $parameters
-     *
-     * @return mixed
      */
-    public function __call($method, $parameters)
+    public function __call(string $method, array $parameters): mixed
     {
         return $this->forwardCallTo($this->getCollection(), $method, $parameters);
     }

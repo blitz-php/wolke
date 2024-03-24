@@ -11,6 +11,7 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
+use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Utilities\Support\Invader;
@@ -180,11 +181,23 @@ abstract class HasOneOrMany extends Relation
      */
     public function firstOrCreate(array $attributes = [], array $values = []): Model
     {
-        if (null === ($instance = $this->where($attributes)->first())) {
-            $instance = $this->create(array_merge($attributes, $values));
+        if (null === $instance = (clone $this)->where($attributes)->first()) {
+            $instance = $this->createOrFirst($attributes, $values);
         }
 
         return $instance;
+    }
+
+    /**
+     * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     */
+    public function createOrFirst(array $attributes = [], array $values = []): Model
+    {
+        try {
+            return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, $values)));
+        } catch (UniqueConstraintViolationException $e) {
+            return $this->useWritePdo()->where($attributes)->first() ?? throw $e;
+        }
     }
 
     /**
@@ -192,10 +205,10 @@ abstract class HasOneOrMany extends Relation
      */
     public function updateOrCreate(array $attributes, array $values = []): Model
     {
-        return Helpers::tap($this->firstOrNew($attributes), static function ($instance) use ($values) {
-            $instance->fill($values);
-
-            $instance->save();
+        return Helpers::tap($this->firstOrCreate($attributes, $values), static function ($instance) use ($values) {
+            if (! $instance->wasRecentlyCreated) {
+                $instance->fill($values)->save();
+            }
         });
     }
 

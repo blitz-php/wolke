@@ -24,13 +24,6 @@ use JsonSerializable;
 class LengthAwarePaginator extends AbstractPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, LengthAwarePaginatorContract
 {
     /**
-     * The total number of items before slicing.
-     *
-     * @var int
-     */
-    protected $total;
-
-    /**
      * The last available page.
      *
      * @var int
@@ -39,8 +32,10 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
 
     /**
      * Create a new paginator instance.
+     *
+     * @param int $total The total number of items before slicing.
      */
-    public function __construct(mixed $items, int $total, int $perPage, ?int $currentPage = null, array $options = [])
+    public function __construct(mixed $items, protected int $total, int $perPage, ?int $currentPage = null, array $options = [])
     {
         $this->options = $options;
 
@@ -48,7 +43,6 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
             $this->{$key} = $value;
         }
 
-        $this->total       = $total;
         $this->perPage     = $perPage;
         $this->lastPage    = max((int) ceil($total / $perPage), 1);
         $this->path        = $this->path !== '/' ? rtrim($this->path, '/') : $this->path;

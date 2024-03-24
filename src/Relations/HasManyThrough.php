@@ -12,6 +12,7 @@
 namespace BlitzPHP\Wolke\Relations;
 
 use BlitzPHP\Contracts\Support\Arrayable;
+use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\LazyCollection;
 use BlitzPHP\Utilities\Support\Invader;
@@ -184,13 +185,37 @@ class HasManyThrough extends Relation
     /**
      * Get the first related model record matching the attributes or instantiate it.
      */
-    public function firstOrNew(array $attributes): Model
+    public function firstOrNew(array $attributes = [], array $values = []): Model
     {
-        if (null === ($instance = $this->where($attributes)->first())) {
-            $instance = $this->related->newInstance($attributes);
+        if (null !== ($instance = $this->where($attributes)->first())) {
+            return $instance;
         }
 
-        return $instance;
+        return $this->related->newInstance(array_merge($attributes, $values));
+    }
+
+    /**
+     * Get the first record matching the attributes. If the record is not found, create it.
+     */
+    public function firstOrCreate(array $attributes = [], array $values = []): Model
+    {
+        if (null !== ($instance = (clone $this)->where($attributes)->first())) {
+            return $instance;
+        }
+
+        return $this->createOrFirst(array_merge($attributes, $values));
+    }
+
+    /**
+     * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     */
+    public function createOrFirst(array $attributes = [], array $values = []): Model
+    {
+        try {
+            return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, $values)));
+        } catch (UniqueConstraintViolationException $exception) {
+            return $this->where($attributes)->first() ?? throw $exception;
+        }
     }
 
     /**
@@ -198,11 +223,11 @@ class HasManyThrough extends Relation
      */
     public function updateOrCreate(array $attributes, array $values = []): Model
     {
-        $instance = $this->firstOrNew($attributes);
-
-        $instance->fill($values)->save();
-
-        return $instance;
+        return Helpers::tap($this->firstOrCreate($attributes, $values), static function ($instance) use ($values) {
+            if (! $instance->wasRecentlyCreated) {
+                $instance->fill($values)->save();
+            }
+        });
     }
 
     /**
@@ -299,7 +324,7 @@ class HasManyThrough extends Relation
     /**
      * Find a related model by its primary key or throw an exception.
      *
-     * @return Collection|Model
+     * @return Collection<Model>|Model
      *
      * @throws ModelNotFoundException
      */
@@ -323,7 +348,7 @@ class HasManyThrough extends Relation
     /**
      * Find a related model by its primary key or call a callback.
      *
-     * @return Collection|mixed|Model
+     * @return Collection<Model>|mixed|Model
      */
     public function findOr(mixed $id, array|Closure $columns = ['*'], ?Closure $callback = null)
     {
@@ -510,7 +535,7 @@ class HasManyThrough extends Relation
         $fields  = Invader::make($builder->getQuery())->fields;
 
         return $builder->select(
-            $this->shouldSelect($fields !== [] ? $fields : $columns)
+            $this->shouldSelect($fields !== [] ? [] : $columns)
         );
     }
 

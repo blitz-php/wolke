@@ -22,7 +22,7 @@ class SoftDeletingScope implements Scope
      *
      * @var string[]
      */
-    protected array $extensions = ['Restore', 'RestoreOrCreate', 'WithTrashed', 'WithoutTrashed', 'OnlyTrashed'];
+    protected array $extensions = ['Restore', 'RestoreOrCreate', 'CreateOrRestore', 'WithTrashed', 'WithoutTrashed', 'OnlyTrashed'];
 
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -83,6 +83,20 @@ class SoftDeletingScope implements Scope
             $builder->withTrashed();
 
             return Helpers::tap($builder->firstOrCreate($attributes, $values), static function ($instance) {
+                $instance->restore();
+            });
+        });
+    }
+
+    /**
+     * Add the create-or-restore extension to the builder.
+     */
+    protected function addCreateOrRestore(Builder $builder): void
+    {
+        $builder->macro('createOrRestore', static function (Builder $builder, array $attributes = [], array $values = []) {
+            $builder->withTrashed();
+
+            return Helpers::tap($builder->createOrFirst($attributes, $values), static function ($instance) {
                 $instance->restore();
             });
         });

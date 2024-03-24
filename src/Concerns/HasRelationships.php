@@ -17,6 +17,7 @@ use BlitzPHP\Utilities\String\Text;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Model;
+use BlitzPHP\Wolke\PendingHasThroughRelationship;
 use BlitzPHP\Wolke\Relations\BelongsTo;
 use BlitzPHP\Wolke\Relations\BelongsToMany;
 use BlitzPHP\Wolke\Relations\HasMany;
@@ -27,6 +28,7 @@ use BlitzPHP\Wolke\Relations\MorphMany;
 use BlitzPHP\Wolke\Relations\MorphOne;
 use BlitzPHP\Wolke\Relations\MorphTo;
 use BlitzPHP\Wolke\Relations\MorphToMany;
+use BlitzPHP\Wolke\Relations\Pivot;
 use BlitzPHP\Wolke\Relations\Relation;
 use Closure;
 use RuntimeException;
@@ -290,9 +292,9 @@ trait HasRelationships
     /**
      * Create a pending has-many-through or has-one-through relationship.
      *
-     * @param \Illuminate\Database\Eloquent\Relations\HasMany|\Illuminate\Database\Eloquent\Relations\HasOne|string $relationship
+     * @param HasMany|HasOne|string $relationship
      *
-     * @return \Illuminate\Database\Eloquent\PendingHasThroughRelationship
+     * @return PendingHasThroughRelationship
      */
     public function through($relationship)
     {
@@ -376,7 +378,13 @@ trait HasRelationships
 
         $localKey = $localKey ?: $this->getKeyName();
 
-        return $this->newMorphMany($instance->newQuery(), $this, $table . '.' . $type, $table . '.' . $id, $localKey);
+        return $this->newMorphMany(
+            $instance->newQuery(),
+            $this,
+            $table . '.' . $type,
+            $table . '.' . $id,
+            $localKey
+        );
     }
 
     /**

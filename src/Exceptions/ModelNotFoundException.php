@@ -32,13 +32,8 @@ class ModelNotFoundException extends Exception
 
     /**
      * Set the affected Eloquent model and instance ids.
-     *
-     * @param string    $model
-     * @param array|int $ids
-     *
-     * @return $this
      */
-    public function setModel($model, $ids = [])
+    public function setModel(string $model, array|int $ids = []): self
     {
         $this->model = $model;
         $this->ids   = Arr::wrap($ids);
@@ -55,17 +50,15 @@ class ModelNotFoundException extends Exception
     }
 
     /**
-     * Get the affected Eloquent model.
-     *
-     * @return string
+     * Get the affected Wolke model.
      */
-    public function getModel()
+    public function getModel(): string
     {
         return $this->model;
     }
 
     /**
-     * Get the affected Eloquent model IDs.
+     * Get the affected Wolke model IDs.
      *
      * @return array|int
      */

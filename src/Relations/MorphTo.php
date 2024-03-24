@@ -300,6 +300,51 @@ class MorphTo extends BelongsTo
     }
 
     /**
+     * Indicate that soft deleted models should be included in the results.
+     */
+    public function withTrashed(): self
+    {
+        $callback = static fn ($query) => $query->hasMacro('withTrashed') ? $query->withTrashed() : $query;
+
+        $this->macroBuffer[] = [
+            'method'     => 'when',
+            'parameters' => [true, $callback],
+        ];
+
+        return $this->when(true, $callback);
+    }
+
+    /**
+     * Indicate that soft deleted models should not be included in the results.
+     */
+    public function withoutTrashed(): self
+    {
+        $callback = static fn ($query) => $query->hasMacro('withoutTrashed') ? $query->withoutTrashed() : $query;
+
+        $this->macroBuffer[] = [
+            'method'     => 'when',
+            'parameters' => [true, $callback],
+        ];
+
+        return $this->when(true, $callback);
+    }
+
+    /**
+     * Indicate that only soft deleted models should be included in the results.
+     */
+    public function onlyTrashed(): self
+    {
+        $callback = static fn ($query) => $query->hasMacro('onlyTrashed') ? $query->onlyTrashed() : $query;
+
+        $this->macroBuffer[] = [
+            'method'     => 'when',
+            'parameters' => [true, $callback],
+        ];
+
+        return $this->when(true, $callback);
+    }
+
+    /**
      * Replay stored macro calls on the actual related instance.
      */
     protected function replayMacros(Builder $query): Builder

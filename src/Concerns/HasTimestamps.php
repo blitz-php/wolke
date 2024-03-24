@@ -22,10 +22,8 @@ trait HasTimestamps
 
     /**
      * The list of models classes that have timestamps temporarily disabled.
-     *
-     * @var array
      */
-    protected static $ignoreTimestampsOn = [];
+    protected static array $ignoreTimestampsOn = [];
 
     /**
      * Update the model's update timestamp.

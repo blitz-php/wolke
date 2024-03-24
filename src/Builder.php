@@ -14,6 +14,7 @@ namespace BlitzPHP\Wolke;
 use BadMethodCallException;
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Database\Builder\BaseBuilder;
+use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
 use BlitzPHP\Database\Result\BaseResult;
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Utilities\Helpers;
@@ -115,6 +116,7 @@ class Builder
         'insertGetId',
         'insertOrIgnore',
         'insertUsing',
+        'insertOrIgnoreUsing',
         'max',
         'min',
         'raw',
@@ -313,11 +315,13 @@ class Builder
 
     /**
      * Add a basic where clause to the query.
+     *
+     * @todo verifier le fonctionnement lors de l'ulisation des closure comme arguments
      */
     public function where(array|Closure|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and'): self
     {
         if ($column instanceof Closure) {
-            $column = $column($this);
+            $column($query = $this->model->newQueryWithoutRelationships());
         }
 
         // Here we will make some assumptions about the operator. If only 2 values are
@@ -347,7 +351,7 @@ class Builder
      */
     public function firstWhere(array|Closure|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and')
     {
-        return $this->where($column, $operator, $value, $boolean)->first();
+        return $this->where(...func_get_args())->first();
     }
 
     /**
@@ -383,7 +387,7 @@ class Builder
             $column = $this->model->getCreatedAtColumn() ?? 'created_at';
         }
 
-        $this->query->sortDesc($column);
+        $this->query->latest($column);
 
         return $this;
     }
@@ -397,7 +401,7 @@ class Builder
             $column = $this->model->getCreatedAtColumn() ?? 'created_at';
         }
 
-        $this->query->sortAsc($column);
+        $this->query->oldest($column);
 
         return $this;
     }
@@ -547,13 +551,25 @@ class Builder
      */
     public function firstOrCreate(array $attributes = [], array $values = [])
     {
-        if (null !== ($instance = $this->where($attributes)->first())) {
+        if (null !== ($instance = (clone $this)->where($attributes)->first())) {
             return $instance;
         }
 
-        return Helpers::tap($this->newModelInstance(array_merge($attributes, $values)), static function ($instance) {
-            $instance->save();
-        });
+        return $this->createOrFirst($attributes, $values);
+    }
+
+    /**
+     * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     *
+     * @return Model|static
+     */
+    public function createOrFirst(array $attributes = [], array $values = [])
+    {
+        try {
+            return $this->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, $values)));
+        } catch (UniqueConstraintViolationException $e) {
+            return $this->where($attributes)->first() ?? throw $e;
+        }
     }
 
     /**
@@ -563,8 +579,10 @@ class Builder
      */
     public function updateOrCreate(array $attributes, array $values = [])
     {
-        return Helpers::tap($this->firstOrNew($attributes), static function ($instance) use ($values) {
-            $instance->fill($values)->save();
+        return Helpers::tap($this->firstOrCreate($attributes), static function ($instance) use ($values) {
+            if (! $instance->wasRecentlyCreated) {
+                $instance->fill($values)->save();
+            }
         });
     }
 
@@ -929,7 +947,11 @@ class Builder
     {
         $page    = $page ?: Paginator::resolveCurrentPage($pageName);
         $total   = null !== $total ? Helpers::value($total) : (clone $this->toBase())->count();
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = (
+            $perPage instanceof Closure
+            ? $perPage($total)
+            : $perPage
+        ) ?: $this->model->getPerPage();
 
         $results = $total
             ? $this->forPage($page, $perPage)->get($columns)
@@ -1072,34 +1094,27 @@ class Builder
         return $this->toBase()->update($this->addUpdatedAtColumn($values));
     }
 
-    // /**
-    //  * Insert new records or update the existing ones.
-    //  *
-    //  * @param  array  $values
-    //  * @param  array|string  $uniqueBy
-    //  * @param  array|null  $update
-    //  * @return int
-    //  */
-    // public function upsert(array $values, $uniqueBy, $update = null)
-    // {
-    //     if (empty($values)) {
-    //         return 0;
-    //     }
+    /**
+     * Insert new records or update the existing ones.
+     */
+    public function upsert(array $values, array|string $uniqueBy, ?array $update = null): int
+    {
+        if (empty($values)) {
+            return 0;
+        }
+        if (! is_array(reset($values))) {
+            $values = [$values];
+        }
+        if (null === $update) {
+            $update = array_keys(reset($values));
+        }
 
-    //     if (! is_array(reset($values))) {
-    //         $values = [$values];
-    //     }
-
-    //     if (is_null($update)) {
-    //         $update = array_keys(reset($values));
-    //     }
-
-    //     return $this->toBase()->upsert(
-    //         $this->addTimestampsToUpsertValues($this->addUniqueIdsToUpsertValues($values)),
-    //         $uniqueBy,
-    //         $this->addUpdatedAtToUpsertColumns($update)
-    //     );
-    // }
+        return $this->toBase()->upsert(
+            $this->addTimestampsToUpsertValues($this->addUniqueIdsToUpsertValues($values)),
+            $uniqueBy,
+            $this->addUpdatedAtToUpsertColumns($update)
+        );
+    }
 
     /**
      * Update the column's update timestamp.
@@ -1185,7 +1200,7 @@ class Builder
             default  => end($segments) . '.' . $column
         };
 
-        $values[$qualifiedColumn] = $values[$column];
+        $values[$qualifiedColumn] = Arr::get($values, $qualifiedColumn, $values[$column]);
 
         unset($values[$column]);
 
@@ -1659,6 +1674,22 @@ class Builder
     }
 
     /**
+     * Execute the given Closure within a transaction savepoint if needed.
+     *
+     * @template TModelValue
+     *
+     * @param Closure(): TModelValue $scope
+     *
+     * @return TModelValue
+     */
+    public function withSavepointIfNeeded(Closure $scope): mixed
+    {
+        return $this->getQuery()->db()->transDepth > 0
+            ? $this->getQuery()->db()->transaction($scope)
+            : $scope();
+    }
+
+    /**
      * Get the underlying query builder instance.
      */
     public function getQuery(): BaseBuilder
@@ -1907,7 +1938,7 @@ class Builder
     }
 
     /**
-     * Clone the Orm query builder.
+     * Clone the Wolke query builder.
      *
      * @return static
      */

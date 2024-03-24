@@ -117,7 +117,7 @@ trait SoftDeletes
     /**
      * Restore a soft-deleted model instance.
      */
-    public function restore(): ?bool
+    public function restore(): bool
     {
         // If the restoring event does not return false, we will proceed with this
         // restore operation. Otherwise, we bail out so the developer will stop
@@ -138,6 +138,14 @@ trait SoftDeletes
         $this->fireModelEvent('restored', false);
 
         return $result;
+    }
+
+    /**
+     * Restore a soft-deleted model instance without raising any events.
+     */
+    public function restoreQuietly(): bool
+    {
+        return static::withoutEvents(fn () => $this->restore());
     }
 
     /**

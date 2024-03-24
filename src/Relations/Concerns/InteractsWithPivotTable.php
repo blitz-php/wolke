@@ -11,6 +11,7 @@
 
 namespace BlitzPHP\Wolke\Relations\Concerns;
 
+use BackedEnum;
 use BlitzPHP\Database\Builder\BaseBuilder;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
@@ -151,6 +152,10 @@ trait InteractsWithPivotTable
         return Helpers::collect($records)->mapWithKeys(static function ($attributes, $id) {
             if (! is_array($attributes)) {
                 [$id, $attributes] = [$attributes, []];
+            }
+
+            if ($id instanceof BackedEnum) {
+                $id = $id->value;
             }
 
             return [$id => $attributes];
@@ -356,7 +361,8 @@ trait InteractsWithPivotTable
         $fresh = $this->parent->freshTimestamp();
 
         if ($this->using) {
-            $pivotModel = new $this->using();
+            $using      = $this->using;
+            $pivotModel = new $using();
 
             $fresh = $fresh->format($pivotModel->getDateFormat());
         }

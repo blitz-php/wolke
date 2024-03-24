@@ -49,11 +49,11 @@ trait HasUuids
      */
     public function resolveRouteBindingQuery(Model|Relation $query, mixed $value, ?string $field = null): Relation
     {
-        if ($field && in_array($field, $this->uniqueIds(), true) && ! Str::isUuid($value)) {
+        if ($field && in_array($field, $this->uniqueIds(), true) && ! Text::isUuid($value)) {
             throw (new ModelNotFoundException())->setModel(static::class, $value);
         }
 
-        if (! $field && in_array($this->getRouteKeyName(), $this->uniqueIds(), true) && ! Str::isUuid($value)) {
+        if (! $field && in_array($this->getRouteKeyName(), $this->uniqueIds(), true) && ! Text::isUuid($value)) {
             throw (new ModelNotFoundException())->setModel(static::class, $value);
         }
 

@@ -13,11 +13,15 @@ namespace BlitzPHP\Wolke\Pagination;
 
 use ArrayAccess;
 use ArrayIterator;
+use BlitzPHP\Contracts\View\RendererInterface;
 use BlitzPHP\Traits\Support\ForwardsCalls;
+use BlitzPHP\Traits\Support\Tappable;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Utilities\String\Text;
+use BlitzPHP\Wolke\Model;
+use BlitzPHP\Wolke\Relations\Pivot;
 use Closure;
 use Exception;
 use stdClass;
@@ -25,6 +29,7 @@ use stdClass;
 abstract class AbstractCursorPaginator
 {
     use ForwardsCalls;
+    use Tappable;
 
     /**
      * Indicates whether there are more items in the data source.
@@ -104,7 +109,7 @@ abstract class AbstractCursorPaginator
         }
 
         return $this->path()
-            . (Text::contains($this->path(), '?') ? '&' : '?')
+            . (str_contains($this->path(), '?') ? '&' : '?')
             . Arr::query($parameters)
             . $this->buildFragment();
     }
@@ -143,6 +148,10 @@ abstract class AbstractCursorPaginator
             return null;
         }
 
+        if ($this->items->isEmpty()) {
+            return null;
+        }
+
         return $this->getCursorForItem($this->items->first(), false);
     }
 
@@ -153,6 +162,10 @@ abstract class AbstractCursorPaginator
     {
         if ((null === $this->cursor && ! $this->hasMore)
             || (null !== $this->cursor && $this->cursor->pointsToNextItems() && ! $this->hasMore)) {
+            return null;
+        }
+
+        if ($this->items->isEmpty()) {
             return null;
         }
 
@@ -176,16 +189,52 @@ abstract class AbstractCursorPaginator
     {
         return Helpers::collect($this->parameters)
             ->flip()
-            ->map(static function ($_, $parameterName) use ($item) {
+            ->map(function ($_, $parameterName) use ($item) {
+                if ($item instanceof Model
+                    && null !== ($parameter = $this->getPivotParameterForItem($item, $parameterName))) {
+                    return $parameter;
+                }
                 if ($item instanceof ArrayAccess || is_array($item)) {
-                    return $item[$parameterName] ?? $item[Text::afterLast($parameterName, '.')];
+                    return $this->ensureParameterIsPrimitive(
+                        $item[$parameterName] ?? $item[Text::afterLast($parameterName, '.')]
+                    );
                 }
                 if (is_object($item)) {
-                    return $item->{$parameterName} ?? $item->{Text::afterLast($parameterName, '.')};
+                    return $this->ensureParameterIsPrimitive(
+                        $item->{$parameterName} ?? $item->{Text::afterLast($parameterName, '.')}
+                    );
                 }
 
                 throw new Exception('Only arrays and objects are supported when cursor paginating items.');
             })->toArray();
+    }
+
+    /**
+     * Get the cursor parameter value from a pivot model if applicable.
+     */
+    protected function getPivotParameterForItem(Model $item, string $parameterName): ?string
+    {
+        $table = Text::beforeLast($parameterName, '.');
+
+        foreach ($item->getRelations() as $relation) {
+            if ($relation instanceof Pivot && $relation->getTable() === $table) {
+                return $this->ensureParameterIsPrimitive(
+                    $relation->getAttribute(Text::afterLast($parameterName, '.'))
+                );
+            }
+        }
+    }
+
+    /**
+     * Ensure the parameter is a primitive type.
+     *
+     * This can resolve issues that arise the developer uses a value object for an attribute.
+     */
+    protected function ensureParameterIsPrimitive(mixed $parameter): mixed
+    {
+        return is_object($parameter) && method_exists($parameter, '__toString')
+                        ? (string) $parameter
+                        : $parameter;
     }
 
     /**
@@ -388,10 +437,8 @@ abstract class AbstractCursorPaginator
 
     /**
      * Get an instance of the view factory from the resolver.
-     *
-     * @return \BlitzPHP\View\RendererInterface
      */
-    public static function viewFactory()
+    public static function viewFactory(): RendererInterface
     {
         return Paginator::viewFactory();
     }

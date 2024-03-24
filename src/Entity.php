@@ -15,9 +15,9 @@ abstract class Entity extends Model
 {
     /**
      * Juste pour la conformité du framework
-     * 
+     *
      * BlitzPHP a une terminologie differente des modeles par rapport à Laravel (qui a été utilisé pour ce package).
      * Chez BlitzPHP, les modeles sont utilisés pour l'ecriture des repositories (manipulation du query builder)
-     * Ce qu'on appel model chez Laravel est appelé entité chez BlitzPHP d'où la presence de cette classe 
-     */    
+     * Ce qu'on appel model chez Laravel est appelé entité chez BlitzPHP d'où la presence de cette classe
+     */
 }

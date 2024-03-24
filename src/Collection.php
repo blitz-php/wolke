@@ -12,6 +12,8 @@
 namespace BlitzPHP\Wolke;
 
 use ArrayAccess;
+use BlitzPHP\Contracts\Queue\QueueableCollection;
+use BlitzPHP\Contracts\Queue\QueueableEntity;
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
@@ -25,7 +27,7 @@ use LogicException;
  *
  * @extends \BlitzPHP\Utilities\Iterable\Collection<TKey, TModel>
  */
-class Collection extends IterableCollection
+class Collection extends IterableCollection implements QueueableCollection
 {
     use InteractsWithDictionary;
 
@@ -586,7 +588,7 @@ class Collection extends IterableCollection
      *
      * @template TZipValue
      *
-     * @param \BlitzPHP\Contracts\Support\Arrayable<array-key, TZipValue>|iterable<array-key, TZipValue> ...$items
+     * @param Arrayable<array-key, TZipValue>|iterable<array-key, TZipValue> ...$items
      *
      * @return IterableCollection<int, IterableCollection<int, TModel|TZipValue>>
      */
@@ -610,7 +612,7 @@ class Collection extends IterableCollection
      *
      * @return IterableCollection
      */
-    public function flatten(int $depth = INF)
+    public function flatten(float|int $depth = INF)
     {
         return $this->toBase()->flatten($depth);
     }
@@ -686,7 +688,9 @@ class Collection extends IterableCollection
             return [];
         }
 
-        return $this->modelKeys();
+        return $this->first() instanceof QueueableEntity
+                    ? $this->map->getQueueableId()->all()
+                    : $this->modelKeys();
     }
 
     /**
@@ -733,7 +737,7 @@ class Collection extends IterableCollection
     }
 
     /**
-     * Get the Eloquent query builder from the collection.
+     * Get the Wolke query builder from the collection.
      *
      * @throws LogicException
      */

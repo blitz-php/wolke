@@ -197,7 +197,8 @@ abstract class Relation
             $query,
             $parentQuery,
             'count(*)'
-        )->setBindings([], 'select');
+        );
+        // )->setBindings([], 'select');
     }
 
     /**

@@ -14,6 +14,7 @@ namespace BlitzPHP\Wolke\Relations\Concerns;
 use BlitzPHP\Database\Builder\BaseBuilder;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
+use BlitzPHP\Utilities\Support\Invader;
 use BlitzPHP\Wolke\Builder;
 use Closure;
 use InvalidArgumentException;
@@ -27,10 +28,8 @@ trait CanBeOneOfMany
 
     /**
      * The name of the relationship.
-     *
-     * @var string
      */
-    protected $relationName;
+    protected string $relationName = '';
 
     /**
      * The one of many inner join subselect query builder instance.
@@ -59,13 +58,9 @@ trait CanBeOneOfMany
      *
      * @throws InvalidArgumentException
      */
-    public function ofMany(null|array|Closure|string $column = 'id', null|Closure|string $aggregate = 'MAX', ?string $relation = null): self
+    public function ofMany(null|array|string $column = 'id', null|Closure|string $aggregate = 'MAX', ?string $relation = null): self
     {
         $this->isOneOfMany = true;
-
-        if ($column instanceof Closure) {
-            $column = $column();
-        }
 
         $this->relationName = $relation ?: $this->getDefaultOneOfManyJoinAlias(
             $this->guessRelationship()
@@ -93,8 +88,8 @@ trait CanBeOneOfMany
 
             $subQuery = $this->newOneOfManySubQuery(
                 $this->getOneOfManySubQuerySelectColumns(),
-                $column,
-                $aggregate
+                array_merge([$column], $previous['columns'] ?? []),
+                $aggregate,
             );
 
             if (isset($previous)) {
@@ -108,13 +103,25 @@ trait CanBeOneOfMany
             }
 
             if (array_key_last($columns) === $column) {
-                $this->addOneOfManyJoinSubQuery($this->query, $subQuery, $column);
+                $this->addOneOfManyJoinSubQuery(
+                    $this->query,
+                    $subQuery,
+                    array_merge([$column], $previous['columns'] ?? []),
+                );
             }
 
             $previous = [
                 'subQuery' => $subQuery,
-                'column'   => $column,
+                'columns'  => array_merge([$column], $previous['columns'] ?? []),
             ];
+        }
+
+        $this->addConstraints();
+
+        $columns = Invader::make($this->query->getQuery())->fields;
+
+        if (null === $columns || $columns === ['*']) {
+            $this->select([$this->qualifyColumn('*')]);
         }
 
         return $this;
@@ -148,8 +155,10 @@ trait CanBeOneOfMany
 
     /**
      * Get a new query for the related model, grouping the query by the given column, often the foreign key of the relationship.
+     *
+     * @param string[]|null $columns
      */
-    protected function newOneOfManySubQuery(array|string $groupBy, ?string $column = null, ?string $aggregate = null): Builder
+    protected function newOneOfManySubQuery(array|string $groupBy, ?array $columns = null, ?string $aggregate = null): Builder
     {
         $subQuery = $this->query->getModel()
             ->newQuery()
@@ -159,25 +168,41 @@ trait CanBeOneOfMany
             $subQuery->groupBy($this->qualifyRelatedColumn($group));
         }
 
-        if (null !== $column) {
-            $subQuery->select($aggregate . '(' . $column . ') as ' . $column);
+        if (null !== $columns) {
+            foreach ($columns as $key => $column) {
+                $aggregatedColumn = $subQuery->qualifyColumn($column);
+
+                if ($key === 0) {
+                    $aggregatedColumn = "{$aggregate}({$aggregatedColumn})";
+                } else {
+                    $aggregatedColumn = "min({$aggregatedColumn})";
+                }
+
+                $subQuery->select($aggregatedColumn . ' as ' . $column . '_aggregate');
+            }
         }
 
-        $this->addOneOfManySubQueryConstraints($subQuery, $groupBy, $column, $aggregate);
+        $this->addOneOfManySubQueryConstraints($subQuery, $groupBy, $columns, $aggregate);
 
         return $subQuery;
     }
 
     /**
      * Add the join subquery to the given query on the given column and the relationship's foreign key.
+     *
+     * @param string[] $on
+     *
+     * @todo Modifier en fonction du querybuilder de blitz
      */
-    protected function addOneOfManyJoinSubQuery(Builder $parent, Builder $subQuery, string $on): void
+    protected function addOneOfManyJoinSubQuery(Builder $parent, Builder $subQuery, array $on): void
     {
         $parent->beforeQuery(function ($parent) use ($subQuery, $on) {
             $subQuery->applyBeforeQueryCallbacks();
 
-            $parent->joinSub($subQuery, $this->relationName, function (BaseBuilder $join) use ($on) {
-                $join->join($this->relationName, [$this->qualifySubSelectColumn($on . '_aggregate') => $this->qualifyRelatedColumn($on)]);
+            $parent->joinSub($subQuery, $this->relationName, function ($join) use ($on) {
+                foreach ($on as $onColumn) {
+                    $join->on($this->qualifySubSelectColumn($onColumn . '_aggregate'), '=', $this->qualifyRelatedColumn($onColumn));
+                }
 
                 $this->addOneOfManyJoinSubQueryConstraints($join, $on);
             });
@@ -186,6 +211,8 @@ trait CanBeOneOfMany
 
     /**
      * Merge the relationship query joins to the given query builder.
+     *
+     * @todo Modifier en fonction du querybuilder de blitz
      */
     protected function mergeOneOfManyJoinsTo(Builder $query): void
     {

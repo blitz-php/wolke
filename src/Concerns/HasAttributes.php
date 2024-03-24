@@ -12,6 +12,7 @@
 namespace BlitzPHP\Wolke\Concerns;
 
 use BackedEnum;
+use BlitzPHP\Contracts\Security\EncrypterInterface;
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Utilities\Date;
 use BlitzPHP\Utilities\Helpers;
@@ -31,6 +32,8 @@ use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsInboundAttributes;
 use BlitzPHP\Wolke\Exceptions\InvalidCastException;
 use BlitzPHP\Wolke\Exceptions\JsonEncodingException;
+use BlitzPHP\Wolke\Exceptions\LazyLoadingViolationException;
+use BlitzPHP\Wolke\Exceptions\MissingAttributeException;
 use BlitzPHP\Wolke\Relations\Relation;
 use DateTimeInterface;
 use InvalidArgumentException;
@@ -146,7 +149,7 @@ trait HasAttributes
     /**
      * The encrypter instance that is used to encrypt attributes.
      *
-     * @var \CodeIgniter\Encryption\EncrypterInterface
+     * @var EncrypterInterface
      */
     public static $encrypter;
 
@@ -387,10 +390,34 @@ trait HasAttributes
         // car nous ne voulons traiter aucune de ces méthodes comme des relations,
         // car elles sont toutes conçues comme des méthodes d'assistance et aucune d'entre elles n'est une relation.
         if (method_exists(self::class, $key)) {
-            return null;
+            return $this->throwMissingAttributeExceptionIfApplicable($key);
         }
 
-        return $this->getRelationValue($key);
+        return $this->isRelation($key) || $this->relationLoaded($key)
+            ? $this->getRelationValue($key)
+            : $this->throwMissingAttributeExceptionIfApplicable($key);
+    }
+
+    /**
+     * Either throw a missing attribute exception or return null depending on Eloquent's configuration.
+     *
+     * @return null
+     *
+     * @throws MissingAttributeException
+     */
+    protected function throwMissingAttributeExceptionIfApplicable(string $key)
+    {
+        if ($this->exists
+            && ! $this->wasRecentlyCreated
+            && static::preventsAccessingMissingAttributes()) {
+            if (isset(static::$missingAttributeViolationCallback)) {
+                return call_user_func(static::$missingAttributeViolationCallback, $this, $key);
+            }
+
+            throw new MissingAttributeException($this, $key);
+        }
+
+        return null;
     }
 
     /**
@@ -425,16 +452,14 @@ trait HasAttributes
             return null;
         }
 
-        // Si "l'attribut" existe en tant que méthode sur le modèle,
-        // nous supposerons simplement qu'il s'agit d'une relation et chargerons et renverrons les résultats de la requête et hydraterons la valeur de la relation sur le tableau "relations".
-        if (
-            method_exists($this, $key)
-            || (static::$relationResolvers[static::class][$key] ?? null)
-        ) {
-            return $this->getRelationshipFromMethod($key);
+        if ($this->preventsLazyLoading) {
+            $this->handleLazyLoadingViolation($key);
         }
 
-        return null;
+        // Si "l'attribut" existe en tant que méthode sur le modèle,
+        // nous supposerons simplement qu'il s'agit d'une relation et chargerons et renverrons les résultats de la requête
+        // et hydraterons la valeur de la relation sur le tableau "relations".
+        return $this->getRelationshipFromMethod($key);
     }
 
     /**
@@ -448,6 +473,22 @@ trait HasAttributes
 
         return method_exists($this, $key)
                || $this->relationResolver(static::class, $key);
+    }
+
+    /**
+     * Handle a lazy loading violation.
+     */
+    protected function handleLazyLoadingViolation(string $key): mixed
+    {
+        if (isset(static::$lazyLoadingViolationCallback)) {
+            return call_user_func(static::$lazyLoadingViolationCallback, $this, $key);
+        }
+
+        if (! $this->exists || $this->wasRecentlyCreated) {
+            return null;
+        }
+
+        throw new LazyLoadingViolationException($this, $key);
     }
 
     /**
@@ -679,7 +720,7 @@ trait HasAttributes
                     ? $value
                     : $caster->get($this, $key, $value, $this->attributes);
 
-        if ($caster instanceof CastsInboundAttributes || ! is_object($value)) {
+        if ($caster instanceof CastsInboundAttributes || ! is_object($value) || $objectCachingDisabled) {
             unset($this->classCastCache[$key]);
         } else {
             $this->classCastCache[$key] = $value;
@@ -934,28 +975,15 @@ trait HasAttributes
     {
         $caster = $this->resolveCasterClass($key);
 
-        if (null === $value) {
-            $this->attributes = array_merge($this->attributes, array_map(
-                static function () {
-                },
-                $this->normalizeCastClassResponse($key, $caster->set(
-                    $this,
-                    $key,
-                    $this->{$key},
-                    $this->attributes
-                ))
-            ));
-        } else {
-            $this->attributes = array_merge(
-                $this->attributes,
-                $this->normalizeCastClassResponse($key, $caster->set(
-                    $this,
-                    $key,
-                    $value,
-                    $this->attributes
-                ))
-            );
-        }
+        $this->attributes = array_replace(
+            $this->attributes,
+            $this->normalizeCastClassResponse($key, $caster->set(
+                $this,
+                $key,
+                $value,
+                $this->attributes
+            ))
+        );
 
         if ($caster instanceof CastsInboundAttributes || ! is_object($value) || ($caster->withoutObjectCaching ?? false)) {
             unset($this->classCastCache[$key]);
@@ -1090,10 +1118,8 @@ trait HasAttributes
 
     /**
      * Définissez l'instance de chiffrement qui sera utilisée pour chiffrer les attributs.
-     *
-     * @param \BlitzPHP\Contracts\Security\EncrypterInterface|null $encrypter
      */
-    public static function encryptUsing($encrypter): void
+    public static function encryptUsing(?EncrypterInterface $encrypter): void
     {
         static::$encrypter = $encrypter;
     }
@@ -1101,10 +1127,23 @@ trait HasAttributes
     /**
      * Castez l'attribut donné en une chaîne hachée.
      */
-    protected function castAttributeAsHashedString(string $key, mixed $value): string
+    protected function castAttributeAsHashedString(string $key, mixed $value): ?string
     {
+        if ($value === null) {
+            return null;
+        }
+
+        /*
+        if (! Hash::isHashed($value)) {
+            return Hash::make($value);
+        }
+
+        if (! Hash::verifyConfiguration($value)) {
+            throw new RuntimeException("Could not verify the hashed value's configuration.");
+        }
+        */
+
         return (string) $value;
-        // return $value !== null && ! Hash::isHashed($value) ? Hash::make($value) : (string) $value;
     }
 
     /**
@@ -1424,6 +1463,7 @@ trait HasAttributes
         $class = str_contains($class, ':')
             ? $class
             : explode(':', $class, 2)[0];
+
         if ($class[0] === '?') {
             $class = substr($class, 1);
         }
@@ -1717,6 +1757,14 @@ trait HasAttributes
     }
 
     /**
+     * Get the attributes that have been changed since the last sync for an update operation.
+     */
+    protected function getDirtyForUpdate(): array
+    {
+        return $this->getDirty();
+    }
+
+    /**
      * Get the attributes that were changed.
      */
     public function getChanges(): array
@@ -1747,8 +1795,7 @@ trait HasAttributes
                    $this->fromDateTime($original);
         }
         if ($this->hasCast($key, ['object', 'collection'])) {
-            return $this->castAttribute($key, $attribute) ===
-                $this->castAttribute($key, $original);
+            return $this->fromJson($attribute) === $this->fromJson($original);
         }
         if ($this->hasCast($key, ['real', 'float', 'double'])) {
             if (($attribute === null && $original !== null) || ($attribute !== null && $original === null)) {
@@ -1760,10 +1807,6 @@ trait HasAttributes
         if ($this->hasCast($key, static::$primitiveCastTypes)) {
             return $this->castAttribute($key, $attribute) ===
                    $this->castAttribute($key, $original);
-        }
-        if ($this->hasCast($key, static::$primitiveCastTypes)) {
-            return $this->castAttribute($key, $attribute) ===
-                $this->castAttribute($key, $original);
         }
         if ($this->isClassCastable($key) && Text::startsWith($this->getCasts()[$key], [AsArrayObject::class, AsCollection::class])) {
             return $this->fromJson($attribute) === $this->fromJson($original);
@@ -1798,6 +1841,13 @@ trait HasAttributes
         // an appropriate native PHP type dependent upon the associated value
         // given with the key in the pair. Dayle made this comment line up.
         if ($this->hasCast($key)) {
+            if (static::preventsAccessingMissingAttributes()
+                && ! array_key_exists($key, $this->attributes)
+                && ($this->isEnumCastable($key)
+                 || in_array($this->getCastType($key), static::$primitiveCastTypes, true))) {
+                $this->throwMissingAttributeExceptionIfApplicable($key);
+            }
+
             return $this->castAttribute($key, $value);
         }
 
@@ -1857,7 +1907,7 @@ trait HasAttributes
     public function getMutatedAttributes(): array
     {
         if (! isset(static::$mutatorCache[static::class])) {
-            static::cacheMutatedAttributes(static::class);
+            static::cacheMutatedAttributes($this);
         }
 
         return static::$mutatorCache[static::class];

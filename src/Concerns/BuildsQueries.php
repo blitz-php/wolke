@@ -33,6 +33,20 @@ trait BuildsQueries
     use Conditionable;
 
     /**
+     * All of the available clause operators.
+     *
+     * @var string[]
+     */
+    public array $operators = [
+        '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
+        'like', 'like binary', 'not like', 'ilike',
+        '&', '|', '^', '<<', '>>', '&~', 'is', 'is not',
+        'rlike', 'not rlike', 'regexp', 'not regexp',
+        '~', '~*', '!~', '!~*', 'similar to',
+        'not similar to', 'not ilike', '~~*', '!~~*',
+    ];
+
+    /**
      * Merge an array of where clauses and bindings.
      */
     public function mergeWheres(array $wheres, array $bindings): static
@@ -119,8 +133,22 @@ trait BuildsQueries
         if ($useDefault) {
             return [$operator, '='];
         }
+        if ($this->invalidOperatorAndValue($operator, $value)) {
+            throw new InvalidArgumentException('Illegal operator and value combination.');
+        }
 
         return [$value, $operator];
+    }
+
+    /**
+     * Determine if the given operator and value combination is legal.
+     *
+     * Prevents using Null values with invalid operators.
+     */
+    protected function invalidOperatorAndValue(string $operator, mixed $value): bool
+    {
+        return null === $value && in_array($operator, $this->operators, true)
+             && ! in_array($operator, ['=', '<>', '!='], true);
     }
 
     /**
@@ -240,6 +268,22 @@ trait BuildsQueries
      */
     public function chunkById(int $count, callable $callback, ?string $column = null, ?string $alias = null): bool
     {
+        return $this->orderedChunkById($count, $callback, $column, $alias);
+    }
+
+    /**
+     * Chunk the results of a query by comparing IDs in descending order.
+     */
+    public function chunkByIdDesc(int $count, callable $callback, ?string $column = null, ?string $alias = null): bool
+    {
+        return $this->orderedChunkById($count, $callback, $column, $alias, descending: true);
+    }
+
+    /**
+     * Chunk the results of a query by comparing IDs in a given order.
+     */
+    public function orderedChunkById(int $count, callable $callback, ?string $column = null, ?string $alias = null, bool $descending = false): bool
+    {
         $column ??= $this->defaultKeyName();
 
         $alias ??= $column;
@@ -254,7 +298,11 @@ trait BuildsQueries
             // We'll execute the query for the given page and get the results. If there are
             // no results we can just break and return from here. When there are results
             // we will call the callback with the current chunk of these results here.
-            $results = $clone->forPageAfterId($count, $lastId, $column)->get();
+            if ($descending) {
+                $results = $clone->forPageBeforeId($count, $lastId, $column)->get();
+            } else {
+                $results = $clone->forPageAfterId($count, $lastId, $column)->get();
+            }
 
             $countResults = $results->count();
 
@@ -385,6 +433,10 @@ trait BuildsQueries
                 }
 
                 $lastId = $results->last()->{$alias};
+
+                if ($lastId === null) {
+                    throw new RuntimeException("The lazyById operation was aborted because the [{$alias}] column is not present in the query result.");
+                }
             }
         });
     }

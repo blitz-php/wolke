@@ -32,7 +32,7 @@ class AsArrayObject implements Castable
 
                 $data = Json::decode($attributes[$key]);
 
-                return is_array($data) ? new ArrayObject($data) : null;
+                return is_array($data) ? new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS) : null;
             }
 
             public function set(Model $model, string $key, mixed $value, array $attributes): mixed

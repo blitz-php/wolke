@@ -56,8 +56,10 @@ class MorphPivot extends Pivot
 
     /**
      * Delete the pivot model record from the database.
+     *
+     * @return int
      */
-    public function delete(): int
+    public function delete()
     {
         if (isset($this->attributes[$this->getKeyName()])) {
             return (int) parent::delete();
@@ -71,7 +73,11 @@ class MorphPivot extends Pivot
 
         $query->where($this->morphType, $this->morphClass);
 
-        return Helpers::tap($query->delete(), fn () => $this->fireModelEvent('deleted', false));
+        return Helpers::tap($query->delete(), function () {
+            $this->exists = false;
+
+            $this->fireModelEvent('deleted', false);
+        });
     }
 
     /**

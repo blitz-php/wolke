@@ -18,12 +18,9 @@ class JsonEncodingException extends RuntimeException
     /**
      * Create a new JSON encoding exception for the model.
      *
-     * @param mixed  $model
-     * @param string $message
-     *
      * @return static
      */
-    public static function forModel($model, $message)
+    public static function forModel(object $model, string $message)
     {
         return new static('Error encoding model [' . get_class($model) . '] with ID [' . $model->getKey() . '] to JSON: ' . $message);
     }
@@ -32,11 +29,10 @@ class JsonEncodingException extends RuntimeException
      * Create a new JSON encoding exception for the resource.
      *
      * @param \Illuminate\Http\Resources\Json\JsonResource $resource
-     * @param string                                       $message
      *
      * @return static
      */
-    public static function forResource($resource, $message)
+    public static function forResource($resource, string $message)
     {
         $model = $resource->resource;
 
@@ -46,13 +42,9 @@ class JsonEncodingException extends RuntimeException
     /**
      * Create a new JSON encoding exception for an attribute.
      *
-     * @param mixed  $model
-     * @param mixed  $key
-     * @param string $message
-     *
      * @return static
      */
-    public static function forAttribute($model, $key, $message)
+    public static function forAttribute(object $model, mixed $key, string $message)
     {
         $class = get_class($model);
 
