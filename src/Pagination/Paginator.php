@@ -96,7 +96,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     {
         return static::viewFactory()->addData(array_merge($data, [
             'paginator' => $this,
-        ]))->renderString($view ?: static::$defaultSimpleView);
+        ]))->render($view ?: static::$defaultSimpleView);
     }
 
     /**

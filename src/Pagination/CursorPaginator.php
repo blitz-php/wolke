@@ -71,7 +71,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     {
         return static::viewFactory()->addData(array_merge($data, [
             'paginator' => $this,
-        ]))->renderString($view ?: Paginator::$defaultSimpleView);
+        ]))->render($view ?: Paginator::$defaultSimpleView);
     }
 
     /**
