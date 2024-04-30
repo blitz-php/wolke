@@ -11,9 +11,11 @@
 
 namespace BlitzPHP\Wolke\Events;
 
+use BlitzPHP\Contracts\Container\ContainerInterface;
 use BlitzPHP\Contracts\Database\ConnectionResolverInterface;
 use BlitzPHP\Contracts\Event\EventListenerInterface;
 use BlitzPHP\Contracts\Event\EventManagerInterface;
+use BlitzPHP\Contracts\View\RendererInterface;
 use BlitzPHP\Database\Connection\BaseConnection;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Wolke\Model;
@@ -22,9 +24,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class Listener implements EventListenerInterface
 {
-    public function __construct(protected ConnectionResolverInterface $resolver, protected ServerRequestInterface $request)
+    protected ServerRequestInterface $request;
+
+    public function __construct(protected ContainerInterface $container)
     {
         BaseConnection::$useHashedAliases = false;
+
+        $this->request = $container->get(ServerRequestInterface::class);
     }
 
     /**
@@ -35,7 +41,8 @@ class Listener implements EventListenerInterface
         $event->attach('pre_system', function () {
             AbstractPaginator::currentPathResolver(fn () => $this->request->getUri()->getPath());
             AbstractPaginator::currentPageResolver(fn ($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
-            Model::setConnectionResolver($this->resolver);
+            AbstractPaginator::viewFactoryResolver(fn() => $this->container->get(RendererInterface::class));
+            Model::setConnectionResolver($this->container->get(ConnectionResolverInterface::class));
         });
     }
 }

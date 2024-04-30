@@ -73,10 +73,10 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
      */
     public function render(?string $view = null, array $data = []): string
     {
-        return static::viewFactory()->make($view ?: static::$defaultView, array_merge($data, [
+        return static::viewFactory()->addData(array_merge($data, [
             'paginator' => $this,
             'elements'  => $this->elements(),
-        ]));
+        ]))->renderString($view ?: static::$defaultView);
     }
 
     /**
