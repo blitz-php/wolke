@@ -580,7 +580,7 @@ class Builder
      */
     public function updateOrCreate(array $attributes, array $values = [])
     {
-        return Helpers::tap($this->firstOrCreate($attributes), static function ($instance) use ($values) {
+        return Helpers::tap($this->firstOrCreate($attributes, $values), function ($instance) use ($values) {
             if (! $instance->wasRecentlyCreated) {
                 $instance->fill($values)->save();
             }

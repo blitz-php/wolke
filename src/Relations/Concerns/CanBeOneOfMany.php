@@ -58,7 +58,7 @@ trait CanBeOneOfMany
      *
      * @throws InvalidArgumentException
      */
-    public function ofMany(null|array|string $column = 'id', null|Closure|string $aggregate = 'MAX', ?string $relation = null): self
+    public function ofMany(null|array|Closure|string $column = 'id', null|Closure|string $aggregate = 'MAX', ?string $relation = null): self
     {
         $this->isOneOfMany = true;
 
