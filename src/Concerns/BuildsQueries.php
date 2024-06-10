@@ -51,6 +51,15 @@ trait BuildsQueries
      */
     public function mergeWheres(array $wheres, array $bindings): static
     {
+		$wheres = array_merge($wheres, $bindings);
+		$keys   = array_keys($wheres);
+		$values = array_values($wheres);
+
+		foreach ($wheres as $key => $value) {
+			$this->query->where($key, $value);
+		}
+		// dd($keys, $values);
+
         Invader::make($this->query)->query_keys = array_merge(Invader::make($this->query)->query_keys, (array) $wheres);
 
         Invader::make($this->query)->query_values = array_merge(Invader::make($this->query)->query_values, (array) $bindings);
@@ -63,14 +72,18 @@ trait BuildsQueries
      */
     public function addWhereExistsQuery(BaseBuilder $query, string $boolean = 'and', bool $not = false): self
     {
-        $type   = $not ? 'NOT EXISTS' : 'EXISTS';
-        $fields = implode(', ', Invader::make($query)->fields);
+		$type   = $not ? 'NOT EXISTS' : 'EXISTS';
+		$fields = implode(', ', Invader::make($query)->fields);
+		$sql    = $query->sql();
 
         if ($boolean === 'and') {
-            $query->where("{$type} ({$fields})", null, false);
+            $query->where("{$type} ({$sql})", null, false);
         } else {
-            $query->orWhere("{$type} ({$fields})", null, false);
+            $query->orWhere("{$type} ({$sql})", null, false);
         }
+
+		Invader::make($this->query)->compileWhere = $query->getCompiledWhere();
+		Invader::make($this->query)->where        = Invader::make($query)->where;
 
         return $this;
     }
