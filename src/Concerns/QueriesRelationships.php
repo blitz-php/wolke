@@ -595,7 +595,7 @@ trait QueriesRelationships
                     $query->getCompiledWhere()
                 )->withCasts([$alias => 'bool']);
             } else {
-                $this->selectSub(
+                $this->selectSubquery(
                     $function ? $query : $query->limit(1),
                     $alias
                 );
