@@ -82,8 +82,10 @@ trait BuildsQueries
             $query->orWhere("{$type} ({$sql})", null, false);
         }
 
-		Invader::make($this->query)->compileWhere = $query->getCompiledWhere();
-		Invader::make($this->query)->where        = Invader::make($query)->where;
+		$where = Invader::make($query)->where;
+		$where = preg_replace('/^where/i', '', $where);
+		
+		$this->query->where($where, null, false);
 
         return $this;
     }
