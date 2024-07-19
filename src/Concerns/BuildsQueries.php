@@ -56,9 +56,11 @@ trait BuildsQueries
 		$values = array_values($wheres);
 
 		foreach ($wheres as $key => $value) {
+			$key   = is_string($key) ? trim($key) : $key;
+			$value = is_string($value) ? trim($value) : $value;
+
 			$this->query->where($key, $value);
 		}
-		// dd($keys, $values);
 
         Invader::make($this->query)->query_keys = array_merge(Invader::make($this->query)->query_keys, (array) $wheres);
 
