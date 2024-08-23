@@ -334,14 +334,22 @@ class Builder
             func_num_args() === 2
         );
 
-        $columnAndOperator = is_array($column) ? $column : "{$column} {$operator}";
+		if ($column instanceof Closure) {
+			if ($boolean === 'and') {
+				$this->query->where($column);
+			} else {
+				$this->query->orWhere($column);
+			}
+		} else {
+			$columnAndOperator = is_array($column) ? $column : "{$column} {$operator}";
 
-        if ($boolean === 'and') {
-            $this->query->where($columnAndOperator, $value, true);
-        } else {
-            $this->query->orWhere($columnAndOperator, $value, true);
-        }
-
+			if ($boolean === 'and') {
+				$this->query->where($columnAndOperator, $value, true);
+			} else {
+				$this->query->orWhere($columnAndOperator, $value, true);
+			}
+		}
+        
         return $this;
     }
 
