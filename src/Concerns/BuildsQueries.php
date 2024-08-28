@@ -87,7 +87,11 @@ trait BuildsQueries
 		$where = Invader::make($query)->where;
 		$where = preg_replace('/^where/i', '', $where);
 		
-		$this->query->where($where, null, false);
+		if ($boolean === 'and') {
+			$this->query->where($where, null, false);
+        } else {
+			$this->query->orWhere($where, null, false);
+        }
 
         return $this;
     }
