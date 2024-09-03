@@ -9,7 +9,7 @@
  * the LICENSE file that was distributed with this source code.
  */
 
-namespace BlitzPHP\Wolke\Events;
+namespace BlitzPHP\Wolke\Listeners;
 
 use BlitzPHP\Contracts\Container\ContainerInterface;
 use BlitzPHP\Contracts\Database\ConnectionResolverInterface;
@@ -38,7 +38,7 @@ class Listener implements EventListenerInterface
      */
     public function listen(EventManagerInterface $event): void
     {
-        $event->attach('pre_system', function () {
+        $event->on('pre_system', function () {
             AbstractPaginator::currentPathResolver(fn () => $this->request->getUri()->getPath());
             AbstractPaginator::currentPageResolver(fn ($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
             AbstractPaginator::viewFactoryResolver(fn() => $this->container->get(RendererInterface::class));
