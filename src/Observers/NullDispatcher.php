@@ -9,7 +9,7 @@
  * the LICENSE file that was distributed with this source code.
  */
 
-namespace BlitzPHP\Wolke\Events;
+ namespace BlitzPHP\Wolke\Observers;
 
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Wolke\Contracts\Dispatcher as DispatcherContract;

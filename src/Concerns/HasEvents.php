@@ -15,7 +15,7 @@ use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Wolke\Attributes\ObservedBy;
 use BlitzPHP\Wolke\Contracts\Dispatcher;
-use BlitzPHP\Wolke\Events\NullDispatcher;
+use BlitzPHP\Wolke\Observers\NullDispatcher;
 use Closure;
 use InvalidArgumentException;
 use ReflectionClass;
