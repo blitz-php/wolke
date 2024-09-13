@@ -19,9 +19,7 @@ use InvalidArgumentException;
 class Observe
 {
     /**
-     * Create a new attribute instance.
-	 * 
-	 * @param class-string<Model> $class La classe en observation
+     * @param class-string<Model> $class La classe en observation
      */
     public function __construct(public string $class)
     {
