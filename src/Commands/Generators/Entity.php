@@ -68,6 +68,6 @@ class Entity extends Command
         $this->templatePath = __DIR__ . '/Views';
 
         $this->classNameLang = 'CLI.generator.className.entity';
-        $this->runGeneration($params);
+        $this->generateClass($params);
     }
 }
