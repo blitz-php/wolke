@@ -374,17 +374,17 @@ class Builder
     /**
      * Add a basic "where not" clause to the query.
      */
-    public function whereNot(array|Closure|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and'): self
+    public function whereNot(array|Closure|string $column, mixed $value = null, string $boolean = 'and'): self
     {
-        return $this->where($column, $operator, $value, $boolean . ' not');
+        return $this->where($column, '!=', $value, $boolean);
     }
 
     /**
      * Add a basic "or where not" clause to the query.
      */
-    public function orWhereNot(array|Closure|string $column, null|Closure|string $operator = null, mixed $value = null): self
+    public function orWhereNot(array|Closure|string $column, mixed $value = null): self
     {
-        return $this->whereNot($column, $operator, $value, 'or');
+        return $this->whereNot($column, $value, 'or');
     }
 
     /**
@@ -1799,7 +1799,7 @@ class Builder
     /**
      * Qualify the given columns with the model's table.
      */
-    public function qualifyColumns(string $columns): array
+    public function qualifyColumns(array $columns): array
     {
         return $this->model->qualifyColumns($columns);
     }
