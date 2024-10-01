@@ -15,6 +15,7 @@ use BadMethodCallException;
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Database\Builder\BaseBuilder;
 use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
+use BlitzPHP\Database\RawSql;
 use BlitzPHP\Database\Result\BaseResult;
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Utilities\Helpers;
@@ -40,6 +41,8 @@ use Closure;
 use Exception;
 use ReflectionClass;
 use ReflectionMethod;
+
+use function DI\string;
 
 /**
  * @property HigherOrderBuilderProxy $orWhere
@@ -209,6 +212,22 @@ class Builder
         return $this->removedScopes;
     }
 
+	/**
+	 * Ajoute une clause "where" basique a la requete a partir d'un sql brute.
+	 */
+	public function whereRaw(string $query, string $boolean = 'and'): self
+	{
+		return $this->where(new RawSql($query), null, null, $boolean);
+	}
+
+	/**
+	 * Ajoute une clause "where" basique a la requete a partir d'un sql brute.
+	 */
+	public function orWhereRaw(string $query): self
+	{
+		return $this->whereRaw($query, 'or');
+	}
+
     /**
      * Add a where clause on the primary key to the query.
      */
@@ -254,7 +273,7 @@ class Builder
     }
 
     /**
-     * Add a "where null" clause to the query.
+     * Ajoute une clause "where null" a la requete.
      */
     public function whereNull(array|string $columns, string $boolean = 'and', bool $not = false): self
     {
@@ -315,13 +334,13 @@ class Builder
     }
 
     /**
-     * Add a basic where clause to the query.
+     * Ajoute une clause "where" basique a la requete.
      *
      * @todo verifier le fonctionnement lors de l'ulisation des closure comme arguments
      */
-    public function where(array|Closure|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and'): self
+    public function where(array|Closure|RawSql|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and'): self
     {
-        if ($column instanceof Closure) {
+		if ($column instanceof Closure) {
             $column($query = $this->model->newQueryWithoutRelationships());
         }
 
@@ -341,12 +360,20 @@ class Builder
 				$this->query->orWhere($column);
 			}
 		} else {
+			$escape = true;
+
+			if ($column instanceof RawSql) {
+				$column = (string) $column;
+				$value  = null;
+				$escape = false;
+			}
+			
 			$columnAndOperator = is_array($column) ? $column : "{$column} {$operator}";
 
 			if ($boolean === 'and') {
-				$this->query->where($columnAndOperator, $value, true);
+				$this->query->where($columnAndOperator, $value, $escape);
 			} else {
-				$this->query->orWhere($columnAndOperator, $value, true);
+				$this->query->orWhere($columnAndOperator, $value, $escape);
 			}
 		}
         
@@ -358,7 +385,7 @@ class Builder
      *
      * @return Model|static
      */
-    public function firstWhere(array|Closure|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and')
+    public function firstWhere(array|Closure|RawSql|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and')
     {
         return $this->where(...func_get_args())->first();
     }
@@ -366,7 +393,7 @@ class Builder
     /**
      * Add an "or where" clause to the query.
      */
-    public function orWhere(array|Closure|string $column, null|Closure|string $operator = null, mixed $value = null): self
+    public function orWhere(array|Closure|RawSql|string $column, null|Closure|string $operator = null, mixed $value = null): self
     {
         return $this->where($column, $operator, $value, 'or');
     }
@@ -374,7 +401,7 @@ class Builder
     /**
      * Add a basic "where not" clause to the query.
      */
-    public function whereNot(array|Closure|string $column, mixed $value = null, string $boolean = 'and'): self
+    public function whereNot(array|Closure|RawSql|string $column, mixed $value = null, string $boolean = 'and'): self
     {
         return $this->where($column, '!=', $value, $boolean);
     }
@@ -382,7 +409,7 @@ class Builder
     /**
      * Add a basic "or where not" clause to the query.
      */
-    public function orWhereNot(array|Closure|string $column, mixed $value = null): self
+    public function orWhereNot(array|Closure|RawSql|string $column, mixed $value = null): self
     {
         return $this->whereNot($column, $value, 'or');
     }
