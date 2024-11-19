@@ -42,8 +42,6 @@ use Exception;
 use ReflectionClass;
 use ReflectionMethod;
 
-use function DI\string;
-
 /**
  * @property HigherOrderBuilderProxy $orWhere
  * @property HigherOrderBuilderProxy $orWhereNot
