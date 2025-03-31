@@ -78,7 +78,7 @@ trait HasAttributes
     /**
      * The built-in, primitive cast types supported by Eloquent.
      *
-     * @var string[]
+     * @var list<string>
      */
     protected static array $primitiveCastTypes = [
         'array',
@@ -583,7 +583,7 @@ trait HasAttributes
 
         $attribute = $this->{Text::camel($key)}();
 
-        $value = ($attribute->get ?: fn ($value) => $value)($value, $this->attributes);
+        $value = ($attribute->get ?: static fn ($value) => $value)($value, $this->attributes);
 
         if ($attribute->withCaching || (is_object($value) && $attribute->withObjectCaching)) {
             $this->attributeCastCache[$key] = $value;
@@ -1295,7 +1295,7 @@ trait HasAttributes
     /**
      * Determine whether an attribute should be cast to a native type.
      */
-    public function hasCast(string $key, null|array|string $types = null): bool
+    public function hasCast(string $key, array|string|null $types = null): bool
     {
         if (array_key_exists($key, $this->getCasts())) {
             return $types ? in_array($this->getCastType($key), (array) $types, true) : true;
@@ -1719,7 +1719,7 @@ trait HasAttributes
     /**
      * Determine if any of the given attributes were changed.
      */
-    protected function hasChanges(array $changes, null|array|string $attributes = null): bool
+    protected function hasChanges(array $changes, array|string|null $attributes = null): bool
     {
         // If no specific attributes were provided, we will just see if the dirty array
         // already contains any attributes. If it does we will just return that this

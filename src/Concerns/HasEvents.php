@@ -334,7 +334,7 @@ trait HasEvents
     /**
      * Get the event dispatcher instance.
      *
-     * @return \BlitzPHP\Wolke\Contracts\Dispatcher
+     * @return Dispatcher
      */
     public static function getEventDispatcher()
     {

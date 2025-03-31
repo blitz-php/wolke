@@ -380,7 +380,7 @@ abstract class Relation
     /**
      * Builds a table-keyed array from model class names.
      *
-     * @param string[]|null $models
+     * @param list<string>|null $models
      */
     protected static function buildMorphMapFromModels(?array $models = null): ?array
     {

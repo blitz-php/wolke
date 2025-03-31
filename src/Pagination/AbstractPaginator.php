@@ -185,7 +185,7 @@ abstract class AbstractPaginator
     /**
      * Add a set of query string values to the paginator.
      */
-    public function appends(null|array|string $key, ?string $value = null): self
+    public function appends(array|string|null $key, ?string $value = null): self
     {
         if (null === $key) {
             return $this;
@@ -433,7 +433,7 @@ abstract class AbstractPaginator
     /**
      * Resolve the query string or return the default value.
      */
-    public static function resolveQueryString(null|array|string $default = null): string
+    public static function resolveQueryString(array|string|null $default = null): string
     {
         if (isset(static::$queryStringResolver)) {
             return (static::$queryStringResolver)();

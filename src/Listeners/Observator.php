@@ -21,35 +21,35 @@ use ReflectionClass;
 
 class Observator implements EventListenerInterface
 {
-	public function __construct(protected LocatorInterface $locator)
+    public function __construct(protected LocatorInterface $locator)
     {
     }
 
-	/**
+    /**
      * {@inheritDoc}
      */
     public function listen(EventManagerInterface $event): void
     {
-		$event->on('app:init', function () {
+        $event->on('app:init', function () {
             Model::setEventDispatcher(new Dispatcher());
-        
-			foreach ($this->locator->listFiles('Observers/') as $file) {
-				$className = $this->locator->getClassname($file);
-	
-				if ($className === '' || ! class_exists($className)) {
-					continue;
-				}
-	
-				$observable = (new ReflectionClass($className))->getAttributes(Observe::class);
 
-				if ($observable === []) {
-					continue;
-				}
+            foreach ($this->locator->listFiles('Observers/') as $file) {
+                $className = $this->locator->getClassname($file);
 
-				$observable = $observable[0]->newInstance();
+                if ($className === '' || ! class_exists($className)) {
+                    continue;
+                }
 
-				$observable->class::observe($className);
-			}
-		});
+                $observable = (new ReflectionClass($className))->getAttributes(Observe::class);
+
+                if ($observable === []) {
+                    continue;
+                }
+
+                $observable = $observable[0]->newInstance();
+
+                $observable->class::observe($className);
+            }
+        });
     }
 }

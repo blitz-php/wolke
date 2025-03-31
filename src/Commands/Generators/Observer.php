@@ -23,13 +23,19 @@ class Observer extends Command
 {
     use GeneratorTrait;
 
-    /** @var string Groupe auquel appartient la commande */
+    /**
+     * @var string Groupe auquel appartient la commande
+     */
     protected $group = 'Generateurs';
 
-    /** @var string Nom de la commande */
+    /**
+     * @var string Nom de la commande
+     */
     protected $name = 'make:observer';
 
-    /** @var string Description de la commande */
+    /**
+     * @var string Description de la commande
+     */
     protected $description = 'Génère un observateur d\'entité.';
 
     /**
@@ -37,16 +43,20 @@ class Observer extends Command
      */
     protected $service = 'Service de génération de code';
 
-    /** @var array Arguments de la commande */
+    /**
+     * @var array Arguments de la commande
+     */
     protected $arguments = [
-        'name'   => "Le nom de la classe de l'observateur.",
+        'name' => "Le nom de la classe de l'observateur.",
     ];
-	
-    /** @var array Options de la commande */
+
+    /**
+     * @var array Options de la commande
+     */
     protected $options = [
-		'--observe'   => "Le nom de la classe de l'entité obsersée",
-		'--namespace' => ["Définit l'espace de noms racine. Par défaut\u{a0}: \"APP_NAMESPACE\".", APP_NAMESPACE],
-		'--force'     => 'Forcer à écraser le fichier existant.',
+        '--observe'   => "Le nom de la classe de l'entité obsersée",
+        '--namespace' => ["Définit l'espace de noms racine. Par défaut\u{a0}: \"APP_NAMESPACE\".", APP_NAMESPACE],
+        '--force'     => 'Forcer à écraser le fichier existant.',
     ];
 
     /**
@@ -54,13 +64,13 @@ class Observer extends Command
      */
     public function execute(array $params)
     {
-        $this->component    = 'Observer';
-        $this->directory    = 'Observers';
-        $this->template     = 'observer.tpl.php';
-        $this->templatePath = __DIR__ . '/Views';
+        $this->component     = 'Observer';
+        $this->directory     = 'Observers';
+        $this->template      = 'observer.tpl.php';
+        $this->templatePath  = __DIR__ . '/Views';
         $this->classNameLang = 'CLI.generator.className.observer';
 
-		$params['suffix'] = true;
+        $params['suffix'] = true;
 
         $this->generateClass($params);
     }
@@ -71,24 +81,23 @@ class Observer extends Command
     protected function prepare(string $class): string
     {
         if (null === $observe = $this->option('observe')) {
-			$observe = str_replace($this->directory, 'Entities', $class);
-			$observe = preg_replace('#' . $this->component . '$#', '', $observe);
+            $observe = str_replace($this->directory, 'Entities', $class);
+            $observe = preg_replace('#' . $this->component . '$#', '', $observe);
         }
 
-		[$namespace, $observe] = Helpers::namespaceSplit($observe);
-		$observe               = Text::convertTo($observe, 'pascal');
+        [$namespace, $observe] = Helpers::namespaceSplit($observe);
+        $observe               = Text::convertTo($observe, 'pascal');
 
-		if ($namespace === '') {
-			$namespace = $this->getNamespace() . '\\Entities';
-		}
+        if ($namespace === '') {
+            $namespace = $this->getNamespace() . '\\Entities';
+        }
 
-		$useStatement = implode('\\', [$namespace, $observe]);
-		
+        $useStatement = implode('\\', [$namespace, $observe]);
+
         return $this->parseTemplate(
             $class,
             ['{useStatement}', '{observe}', '{instance}'],
-            [$useStatement, $observe, '$'. Text::camel($observe)],
+            [$useStatement, $observe, '$' . Text::camel($observe)],
         );
     }
 }
-

@@ -117,12 +117,10 @@ class MorphToMany extends BelongsToMany
      */
     protected function getCurrentlyAttachedPivots(): IterableCollection
     {
-        return parent::getCurrentlyAttachedPivots()->map(function ($record) {
-            return $record instanceof MorphPivot
+        return parent::getCurrentlyAttachedPivots()->map(fn ($record) => $record instanceof MorphPivot
                             ? $record->setMorphType($this->morphType)
                                 ->setMorphClass($this->morphClass)
-                            : $record;
-        });
+                            : $record);
     }
 
     /**

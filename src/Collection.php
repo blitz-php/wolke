@@ -530,7 +530,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @return array<array-key, TModel>
      */
-    public function getDictionary(null|ArrayAccess|iterable $items = null): array
+    public function getDictionary(ArrayAccess|iterable|null $items = null): array
     {
         $items = null === $items ? $this->items : $items;
 
@@ -751,7 +751,7 @@ class Collection extends IterableCollection implements QueueableCollection
 
         $class = get_class($model);
 
-        if ($this->filter(fn ($model) => ! $model instanceof $class)->isNotEmpty()) {
+        if ($this->filter(static fn ($model) => ! $model instanceof $class)->isNotEmpty()) {
             throw new LogicException('Unable to create query for collection with mixed types.');
         }
 

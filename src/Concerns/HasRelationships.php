@@ -48,7 +48,7 @@ trait HasRelationships
     /**
      * The many to many relationship methods.
      *
-     * @var string[]
+     * @var list<string>
      */
     public static array $manyMethods = [
         'belongsToMany', 'morphToMany', 'morphedByMany',
@@ -575,13 +575,11 @@ trait HasRelationships
      */
     protected function guessBelongsToManyRelation(): ?string
     {
-        $caller = Arr::first(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), static function ($trace) {
-            return ! in_array(
-                $trace['function'],
-                array_merge(static::$manyMethods, ['guessBelongsToManyRelation']),
-                true
-            );
-        });
+        $caller = Arr::first(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), static fn ($trace) => ! in_array(
+            $trace['function'],
+            array_merge(static::$manyMethods, ['guessBelongsToManyRelation']),
+            true
+        ));
 
         return null !== $caller ? $caller['function'] : null;
     }

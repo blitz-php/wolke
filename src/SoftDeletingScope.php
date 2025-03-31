@@ -20,7 +20,7 @@ class SoftDeletingScope implements Scope
     /**
      * All of the extensions to be added to the builder.
      *
-     * @var string[]
+     * @var list<string>
      */
     protected array $extensions = ['Restore', 'RestoreOrCreate', 'CreateOrRestore', 'WithTrashed', 'WithoutTrashed', 'OnlyTrashed'];
 

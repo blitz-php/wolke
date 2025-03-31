@@ -35,7 +35,7 @@ trait BuildsQueries
     /**
      * All of the available clause operators.
      *
-     * @var string[]
+     * @var list<string>
      */
     public array $operators = [
         '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
@@ -51,16 +51,16 @@ trait BuildsQueries
      */
     public function mergeWheres(array $wheres, array $bindings): static
     {
-		$wheres = array_merge($wheres, $bindings);
-		$keys   = array_keys($wheres);
-		$values = array_values($wheres);
+        $wheres = array_merge($wheres, $bindings);
+        $keys   = array_keys($wheres);
+        $values = array_values($wheres);
 
-		foreach ($wheres as $key => $value) {
-			$key   = is_string($key) ? trim($key) : $key;
-			$value = is_string($value) ? trim($value) : $value;
+        foreach ($wheres as $key => $value) {
+            $key   = is_string($key) ? trim($key) : $key;
+            $value = is_string($value) ? trim($value) : $value;
 
-			$this->query->where($key, $value);
-		}
+            $this->query->where($key, $value);
+        }
 
         Invader::make($this->query)->query_keys = array_merge(Invader::make($this->query)->query_keys, (array) $wheres);
 
@@ -74,9 +74,9 @@ trait BuildsQueries
      */
     public function addWhereExistsQuery(BaseBuilder $query, string $boolean = 'and', bool $not = false): self
     {
-		$type   = $not ? 'NOT EXISTS' : 'EXISTS';
-		$fields = implode(', ', Invader::make($query)->fields);
-		$sql    = $query->sql();
+        $type   = $not ? 'NOT EXISTS' : 'EXISTS';
+        $fields = implode(', ', Invader::make($query)->fields);
+        $sql    = $query->sql();
 
         if ($boolean === 'and') {
             $query->where("{$type} ({$sql})", null, false);
@@ -84,13 +84,13 @@ trait BuildsQueries
             $query->orWhere("{$type} ({$sql})", null, false);
         }
 
-		$where = Invader::make($query)->where;
-		$where = preg_replace('/^where/i', '', $where);
-		
-		if ($boolean === 'and') {
-			$this->query->where($where, null, false);
+        $where = Invader::make($query)->where;
+        $where = preg_replace('/^where/i', '', $where);
+
+        if ($boolean === 'and') {
+            $this->query->where($where, null, false);
         } else {
-			$this->query->orWhere($where, null, false);
+            $this->query->orWhere($where, null, false);
         }
 
         return $this;
@@ -500,7 +500,7 @@ trait BuildsQueries
     /**
      * Paginate the given query using a cursor paginator.
      */
-    protected function paginateUsingCursor(int $perPage, array|string $columns = ['*'], string $cursorName = 'cursor', null|Cursor|string $cursor = null): CursorPaginator
+    protected function paginateUsingCursor(int $perPage, array|string $columns = ['*'], string $cursorName = 'cursor', Cursor|string|null $cursor = null): CursorPaginator
     {
         if (! $cursor instanceof Cursor) {
             $cursor = is_string($cursor)

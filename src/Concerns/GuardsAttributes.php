@@ -16,14 +16,14 @@ trait GuardsAttributes
     /**
      * The attributes that are mass assignable.
      *
-     * @var string[]
+     * @var list<string>
      */
     protected array $fillable = [];
 
     /**
      * The attributes that aren't mass assignable.
      *
-     * @var bool|string[]
+     * @var bool|list<string>
      */
     protected array|bool $guarded = ['*'];
 
@@ -68,7 +68,7 @@ trait GuardsAttributes
     /**
      * Get the guarded attributes for the model.
      *
-     * @return string[]
+     * @return list<string>
      */
     public function getGuarded(): array
     {
@@ -80,7 +80,7 @@ trait GuardsAttributes
     /**
      * Set the guarded attributes for the model.
      *
-     * @param string[] $guarded
+     * @param list<string> $guarded
      */
     public function guard(array $guarded): self
     {
@@ -92,7 +92,7 @@ trait GuardsAttributes
     /**
      * Merge new guarded attributes with existing guarded attributes on the model.
      *
-     * @param string[] $guarded
+     * @param list<string> $guarded
      */
     public function mergeGuarded(array $guarded): self
     {

@@ -232,13 +232,11 @@ trait QueriesRelationships
      */
     protected function getBelongsToRelation(MorphTo $relation, string $type): BelongsTo
     {
-        $belongsTo = Relation::noConstraints(function () use ($relation, $type) {
-            return $this->model->belongsTo(
-                $type,
-                $relation->getForeignKeyName(),
-                $relation->getOwnerKeyName()
-            );
-        });
+        $belongsTo = Relation::noConstraints(fn () => $this->model->belongsTo(
+            $type,
+            $relation->getForeignKeyName(),
+            $relation->getOwnerKeyName()
+        ));
 
         $belongsTo->getQuery()->mergeConstraintsFrom($relation->getQuery());
 
@@ -388,7 +386,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function whereMorphedTo(MorphTo|string $relation, null|Model|string $model, string $boolean = 'and')
+    public function whereMorphedTo(MorphTo|string $relation, Model|string|null $model, string $boolean = 'and')
     {
         if (is_string($relation)) {
             $relation = $this->getRelationWithoutConstraints($relation);
@@ -446,7 +444,7 @@ trait QueriesRelationships
      *
      * @return Builder|static
      */
-    public function orWhereMorphedTo(MorphTo|string $relation, null|Model|string $model)
+    public function orWhereMorphedTo(MorphTo|string $relation, Model|string|null $model)
     {
         return $this->whereMorphedTo($relation, $model, 'or');
     }
@@ -715,13 +713,9 @@ trait QueriesRelationships
      */
     protected function requalifyWhereTables(array $wheres, string $from, string $to): array
     {
-        return Helpers::collect($wheres)->map(static function ($where) use ($from, $to) {
-            return Helpers::collect($where)->map(static function ($value) use ($from, $to) {
-                return is_string($value) && str_starts_with($value, $from . '.')
+        return Helpers::collect($wheres)->map(static fn ($where) => Helpers::collect($where)->map(static fn ($value) => is_string($value) && str_starts_with($value, $from . '.')
                     ? $to . '.' . Text::afterLast($value, '.')
-                    : $value;
-            });
-        })->toArray();
+                    : $value))->toArray();
     }
 
     /**

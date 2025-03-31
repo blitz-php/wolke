@@ -58,7 +58,7 @@ trait CanBeOneOfMany
      *
      * @throws InvalidArgumentException
      */
-    public function ofMany(null|array|Closure|string $column = 'id', null|Closure|string $aggregate = 'MAX', ?string $relation = null): self
+    public function ofMany(array|Closure|string|null $column = 'id', Closure|string|null $aggregate = 'MAX', ?string $relation = null): self
     {
         $this->isOneOfMany = true;
 
@@ -130,7 +130,7 @@ trait CanBeOneOfMany
     /**
      * Indicate that the relation is the latest single result of a larger one-to-many relationship.
      */
-    public function latestOfMany(null|array|string $column = 'id', ?string $relation = null): self
+    public function latestOfMany(array|string|null $column = 'id', ?string $relation = null): self
     {
         return $this->ofMany(Helpers::collect(Arr::wrap($column))->mapWithKeys(static fn ($column) => [$column => 'MAX'])->all(), 'MAX', $relation);
     }
@@ -138,7 +138,7 @@ trait CanBeOneOfMany
     /**
      * Indicate that the relation is the oldest single result of a larger one-to-many relationship.
      */
-    public function oldestOfMany(null|array|string $column = 'id', ?string $relation = null): self
+    public function oldestOfMany(array|string|null $column = 'id', ?string $relation = null): self
     {
         return $this->ofMany(Helpers::collect(Arr::wrap($column))->mapWithKeys(static fn ($column) => [$column => 'MIN'])->all(), 'MIN', $relation);
     }
@@ -156,7 +156,7 @@ trait CanBeOneOfMany
     /**
      * Get a new query for the related model, grouping the query by the given column, often the foreign key of the relationship.
      *
-     * @param string[]|null $columns
+     * @param list<string>|null $columns
      */
     protected function newOneOfManySubQuery(array|string $groupBy, ?array $columns = null, ?string $aggregate = null): Builder
     {
@@ -190,7 +190,7 @@ trait CanBeOneOfMany
     /**
      * Add the join subquery to the given query on the given column and the relationship's foreign key.
      *
-     * @param string[] $on
+     * @param list<string> $on
      *
      * @todo Modifier en fonction du querybuilder de blitz
      */

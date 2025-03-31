@@ -41,9 +41,9 @@ class Dispatcher implements DispatcherContract
     /**
      * Register an event listener with the dispatcher.
      */
-    public function listen(array|Closure|string $events, null|array|Closure|string $listener = null): void
+    public function listen(array|Closure|string $events, array|Closure|string|null $listener = null): void
     {
-		if ($events instanceof Closure) {
+        if ($events instanceof Closure) {
             $this->listen($this->firstClosureParameterType($events), $events);
 
             return;
@@ -255,7 +255,7 @@ class Dispatcher implements DispatcherContract
     /**
      * Register an event listener with the dispatcher.
      */
-    public function makeListener(Closure|array|string $listener, bool $wildcard = false): Closure
+    public function makeListener(array|Closure|string $listener, bool $wildcard = false): Closure
     {
         if (is_string($listener)) {
             return $this->createClassListener($listener, $wildcard);
@@ -292,8 +292,8 @@ class Dispatcher implements DispatcherContract
 
     /**
      * Create the class based event callable.
-	 * 
-	 * @return callable
+     *
+     * @return callable
      */
     protected function createClassCallable(array|string $listener)
     {

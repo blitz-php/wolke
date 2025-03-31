@@ -50,11 +50,9 @@ class AsEnumArrayObject implements Castable
 
                 $enumClass = $this->arguments[0];
 
-                return new ArrayObject((new Collection($data))->map(static function ($value) use ($enumClass) {
-                    return is_subclass_of($enumClass, BackedEnum::class)
+                return new ArrayObject((new Collection($data))->map(static fn ($value) => is_subclass_of($enumClass, BackedEnum::class)
                         ? $enumClass::from($value)
-                        : constant($enumClass . '::' . $value);
-                })->toArray());
+                        : constant($enumClass . '::' . $value))->toArray());
             }
 
             public function set($model, $key, $value, $attributes)

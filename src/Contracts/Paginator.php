@@ -23,7 +23,7 @@ interface Paginator
      *
      * @return $this
      */
-    public function appends(null|array|string $key, ?string $value = null);
+    public function appends(array|string|null $key, ?string $value = null);
 
     /**
      * Get / set the URL fragment to be appended to URLs.

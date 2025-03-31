@@ -58,7 +58,7 @@ class Builder
     /**
      * The model being queried.
      *
-     * @var \BlitzPHP\Wolke\Model
+     * @var Model
      */
     protected $model;
 
@@ -87,7 +87,7 @@ class Builder
     /**
      * The properties that should be returned from query builder.
      *
-     * @var string[]
+     * @var list<string>
      */
     protected array $propertyPassthru = [
         'from',
@@ -96,7 +96,7 @@ class Builder
     /**
      * The methods that should be returned from query builder.
      *
-     * @var string[]
+     * @var list<string>
      */
     protected array $passthru = [
         'aggregate',
@@ -210,21 +210,21 @@ class Builder
         return $this->removedScopes;
     }
 
-	/**
-	 * Ajoute une clause "where" basique a la requete a partir d'un sql brute.
-	 */
-	public function whereRaw(string $query, string $boolean = 'and'): self
-	{
-		return $this->where(new RawSql($query), null, null, $boolean);
-	}
+    /**
+     * Ajoute une clause "where" basique a la requete a partir d'un sql brute.
+     */
+    public function whereRaw(string $query, string $boolean = 'and'): self
+    {
+        return $this->where(new RawSql($query), null, null, $boolean);
+    }
 
-	/**
-	 * Ajoute une clause "where" basique a la requete a partir d'un sql brute.
-	 */
-	public function orWhereRaw(string $query): self
-	{
-		return $this->whereRaw($query, 'or');
-	}
+    /**
+     * Ajoute une clause "where" basique a la requete a partir d'un sql brute.
+     */
+    public function orWhereRaw(string $query): self
+    {
+        return $this->whereRaw($query, 'or');
+    }
 
     /**
      * Add a where clause on the primary key to the query.
@@ -336,9 +336,9 @@ class Builder
      *
      * @todo verifier le fonctionnement lors de l'ulisation des closure comme arguments
      */
-    public function where(array|Closure|RawSql|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and'): self
+    public function where(array|Closure|RawSql|string $column, Closure|string|null $operator = null, mixed $value = null, string $boolean = 'and'): self
     {
-		if ($column instanceof Closure) {
+        if ($column instanceof Closure) {
             $column($query = $this->model->newQueryWithoutRelationships());
         }
 
@@ -351,30 +351,30 @@ class Builder
             func_num_args() === 2
         );
 
-		if ($column instanceof Closure) {
-			if ($boolean === 'and') {
-				$this->query->where($column);
-			} else {
-				$this->query->orWhere($column);
-			}
-		} else {
-			$escape = true;
+        if ($column instanceof Closure) {
+            if ($boolean === 'and') {
+                $this->query->where($column);
+            } else {
+                $this->query->orWhere($column);
+            }
+        } else {
+            $escape = true;
 
-			if ($column instanceof RawSql) {
-				$column = (string) $column;
-				$value  = null;
-				$escape = false;
-			}
-			
-			$columnAndOperator = is_array($column) ? $column : "{$column} {$operator}";
+            if ($column instanceof RawSql) {
+                $column = (string) $column;
+                $value  = null;
+                $escape = false;
+            }
 
-			if ($boolean === 'and') {
-				$this->query->where($columnAndOperator, $value, $escape);
-			} else {
-				$this->query->orWhere($columnAndOperator, $value, $escape);
-			}
-		}
-        
+            $columnAndOperator = is_array($column) ? $column : "{$column} {$operator}";
+
+            if ($boolean === 'and') {
+                $this->query->where($columnAndOperator, $value, $escape);
+            } else {
+                $this->query->orWhere($columnAndOperator, $value, $escape);
+            }
+        }
+
         return $this;
     }
 
@@ -383,7 +383,7 @@ class Builder
      *
      * @return Model|static
      */
-    public function firstWhere(array|Closure|RawSql|string $column, null|Closure|string $operator = null, mixed $value = null, string $boolean = 'and')
+    public function firstWhere(array|Closure|RawSql|string $column, Closure|string|null $operator = null, mixed $value = null, string $boolean = 'and')
     {
         return $this->where(...func_get_args())->first();
     }
@@ -391,7 +391,7 @@ class Builder
     /**
      * Add an "or where" clause to the query.
      */
-    public function orWhere(array|Closure|RawSql|string $column, null|Closure|string $operator = null, mixed $value = null): self
+    public function orWhere(array|Closure|RawSql|string $column, Closure|string|null $operator = null, mixed $value = null): self
     {
         return $this->where($column, $operator, $value, 'or');
     }
@@ -471,7 +471,7 @@ class Builder
     /**
      * Find a model by its primary key.
      *
-     * @return Collection|Model|static|static[]|null
+     * @return Collection|list<static>|Model|static|null
      */
     public function find(mixed $id, array $columns = ['*'])
     {
@@ -499,7 +499,7 @@ class Builder
     /**
      * Find a model by its primary key or throw an exception.
      *
-     * @return Collection|Model|static|static[]
+     * @return Collection|list<static>|Model|static
      *
      * @throws ModelNotFoundException
      */
@@ -547,7 +547,7 @@ class Builder
     /**
      * Find a model by its primary key or call a callback.
      *
-     * @return Collection|mixed|Model|static|static[]
+     * @return Collection|list<static>|mixed|Model|static
      */
     public function findOr(mixed $id, array|Closure|string $columns = ['*'], ?Closure $callback = null)
     {
@@ -613,7 +613,7 @@ class Builder
      */
     public function updateOrCreate(array $attributes, array $values = [])
     {
-        return Helpers::tap($this->firstOrCreate($attributes, $values), function ($instance) use ($values) {
+        return Helpers::tap($this->firstOrCreate($attributes, $values), static function ($instance) use ($values) {
             if (! $instance->wasRecentlyCreated) {
                 $instance->fill($values)->save();
             }
@@ -735,7 +735,7 @@ class Builder
     /**
      * Get the hydrated models without eager loading.
      *
-     * @return Model[]|static[]
+     * @return list<Model>|list<static>
      */
     public function getModels(array|string $columns = [])
     {
@@ -977,7 +977,7 @@ class Builder
      *
      * @throws InvalidArgumentException
      */
-    public function paginate(null|Closure|int $perPage = null, array|string $columns = [], string $pageName = 'page', ?int $page = null, null|Closure|int $total = null): LengthAwarePaginator
+    public function paginate(Closure|int|null $perPage = null, array|string $columns = [], string $pageName = 'page', ?int $page = null, Closure|int|null $total = null): LengthAwarePaginator
     {
         $page    = $page ?: Paginator::resolveCurrentPage($pageName);
         $total   = null !== $total ? Helpers::value($total) : (clone $this->toBase())->count();
@@ -1000,7 +1000,7 @@ class Builder
     /**
      * Paginate the given query into a simple paginator.
      *
-     * @return \BlitzPHP\Wolke\Contracts\Paginator
+     * @return Contracts\Paginator
      */
     public function simplePaginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null)
     {
@@ -1023,7 +1023,7 @@ class Builder
     /**
      * Paginate the given query into a cursor paginator.
      *
-     * @return \BlitzPHP\Wolke\Contracts\Paginator
+     * @return Contracts\Paginator
      *
      * @throws CursorPaginationException
      */
@@ -1515,7 +1515,7 @@ class Builder
      *
      * @param  string...|array  $relations
      */
-    public function with($relations, null|Closure|string $callback = null): self
+    public function with($relations, Closure|string|null $callback = null): self
     {
         if ($callback instanceof Closure) {
             $eagerLoad = $this->parseWithRelations([$relations => $callback]);

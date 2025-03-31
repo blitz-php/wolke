@@ -133,7 +133,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * The connection resolver instance.
      *
-     * @var \BlitzPHP\Contracts\Database\ConnectionResolverInterface
+     * @var ConnectionResolverInterface
      */
     protected static $resolver;
 
@@ -1399,10 +1399,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             $this->setKeysForSelectQuery($this->newQueryWithoutScopes())->firstOrFail()->attributes
         );
 
-        $this->load(Helpers::collect($this->relations)->reject(static function ($relation) {
-            return $relation instanceof Pivot
-                || (is_object($relation) && in_array(AsPivot::class, Helpers::classUsesRecursive($relation), true));
-        })->keys()->all());
+        $this->load(Helpers::collect($this->relations)->reject(static fn ($relation) => $relation instanceof Pivot
+                || (is_object($relation) && in_array(AsPivot::class, Helpers::classUsesRecursive($relation), true)))->keys()->all());
 
         $this->syncOriginal();
 

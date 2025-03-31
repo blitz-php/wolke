@@ -44,7 +44,7 @@ class Listener implements EventListenerInterface
         $event->on('pre_system', function () {
             AbstractPaginator::currentPathResolver(fn () => $this->request->fullUrl());
             AbstractPaginator::currentPageResolver(fn ($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
-            AbstractPaginator::viewFactoryResolver(fn() => $this->container->get(RendererInterface::class));
+            AbstractPaginator::viewFactoryResolver(fn () => $this->container->get(RendererInterface::class));
             Model::setConnectionResolver($this->container->get(ConnectionResolverInterface::class));
         });
     }

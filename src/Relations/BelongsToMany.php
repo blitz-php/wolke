@@ -203,7 +203,7 @@ class BelongsToMany extends Relation
     /**
      * {@inheritDoc}
      *
-     * @param Model[] $models
+     * @param list<Model> $models
      */
     public function initRelation(array $models, string $relation): array
     {
@@ -217,7 +217,7 @@ class BelongsToMany extends Relation
     /**
      * {@inheritDoc}
      *
-     * @param Model[] $models
+     * @param list<Model> $models
      */
     public function match(array $models, Collection $results, string $relation): array
     {
@@ -986,9 +986,9 @@ class BelongsToMany extends Relation
     /**
      * Save an array of new models and attach them to the parent model.
      *
-     * @param Collection<Model>|Model[] $models
+     * @param Collection<Model>|list<Model> $models
      *
-     * @return Collection<Model>|Model[]
+     * @return Collection<Model>|list<Model>
      */
     public function saveMany(array|Collection $models, array $pivotAttributes = [])
     {
@@ -1004,9 +1004,9 @@ class BelongsToMany extends Relation
     /**
      * Save an array of new models without raising any events and attach them to the parent model.
      *
-     * @param Collection<Model>|Model[] $models
+     * @param Collection<Model>|list<Model> $models
      *
-     * @return Collection<Model>|Model[]
+     * @return Collection<Model>|list<Model>
      */
     public function saveManyQuietly(array|Collection $models, array $pivotAttributes = [])
     {
@@ -1033,7 +1033,7 @@ class BelongsToMany extends Relation
     /**
      * Create an array of new instances of the related models.
      *
-     * @return Model[]
+     * @return list<Model>
      */
     public function createMany(iterable $records, array $joinings = []): array
     {

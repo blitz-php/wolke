@@ -20,7 +20,7 @@ interface SupportsPartialRelations
      *
      * @return static
      */
-    public function ofMany(null|array|Closure|string $column = 'id', null|Closure|string $aggregate = 'MAX', ?string $relation = null);
+    public function ofMany(array|Closure|string|null $column = 'id', Closure|string|null $aggregate = 'MAX', ?string $relation = null);
 
     /**
      * Determine whether the relationship is a one-of-many relationship.

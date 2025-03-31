@@ -9,7 +9,7 @@
  * the LICENSE file that was distributed with this source code.
  */
 
- namespace BlitzPHP\Wolke\Observers;
+namespace BlitzPHP\Wolke\Observers;
 
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Wolke\Contracts\Dispatcher as DispatcherContract;
@@ -58,7 +58,7 @@ class NullDispatcher implements DispatcherContract
     /**
      * Register an event listener with the dispatcher.
      */
-    public function listen(array|Closure|string $events, null|array|Closure|string $listener = null): void
+    public function listen(array|Closure|string $events, array|Closure|string|null $listener = null): void
     {
         $this->dispatcher->listen($events, $listener);
     }

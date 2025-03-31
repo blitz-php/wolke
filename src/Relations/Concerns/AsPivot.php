@@ -21,7 +21,7 @@ trait AsPivot
     /**
      * The parent model of the relationship.
      *
-     * @var \BlitzPHP\Wolke\Model
+     * @var Model
      */
     public $pivotParent;
 
@@ -247,7 +247,7 @@ trait AsPivot
     /**
      * Get a new query to restore one or more models by their queueable IDs.
      *
-     * @param int[]|string|string[] $ids
+     * @param list<int>|list<string>|string $ids
      */
     public function newQueryForRestoration($ids): Builder
     {
@@ -269,7 +269,7 @@ trait AsPivot
     /**
      * Get a new query to restore multiple models by their queueable IDs.
      *
-     * @param int[]|string[] $ids
+     * @param list<int>|list<string> $ids
      */
     protected function newQueryForCollectionRestoration(array $ids): Builder
     {
@@ -284,10 +284,8 @@ trait AsPivot
         foreach ($ids as $id) {
             $segments = explode(':', $id);
 
-            $query->orWhere(static function ($query) use ($segments) {
-                return $query->where($segments[0], $segments[1])
-                    ->where($segments[2], $segments[3]);
-            });
+            $query->orWhere(static fn ($query) => $query->where($segments[0], $segments[1])
+                ->where($segments[2], $segments[3]));
         }
 
         return $query;
