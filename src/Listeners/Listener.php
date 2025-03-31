@@ -24,6 +24,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class Listener implements EventListenerInterface
 {
+    /**
+     * @var \BlitzPHP\Http\Request
+     */
     protected ServerRequestInterface $request;
 
     public function __construct(protected ContainerInterface $container)
@@ -39,7 +42,7 @@ class Listener implements EventListenerInterface
     public function listen(EventManagerInterface $event): void
     {
         $event->on('pre_system', function () {
-            AbstractPaginator::currentPathResolver(fn () => $this->request->getUri()->getPath());
+            AbstractPaginator::currentPathResolver(fn () => $this->request->fullUrl());
             AbstractPaginator::currentPageResolver(fn ($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
             AbstractPaginator::viewFactoryResolver(fn() => $this->container->get(RendererInterface::class));
             Model::setConnectionResolver($this->container->get(ConnectionResolverInterface::class));

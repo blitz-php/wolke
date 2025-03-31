@@ -387,7 +387,7 @@ abstract class AbstractPaginator
      */
     public function path(): ?string
     {
-        return $this->path;
+        return preg_replace('/(&)?' . $this->pageName . '=(\d+)/', '', $this->path);
     }
 
     /**
