@@ -643,7 +643,7 @@ trait HasRelationships
     /**
      * Get the polymorphic relationship columns.
      */
-    protected function getMorphs(string $name, string $type, string $id): array
+    protected function getMorphs(string $name, ?string $type = null, ?string $id = null): array
     {
         return [$type ?: $name . '_type', $id ?: $name . '_id'];
     }

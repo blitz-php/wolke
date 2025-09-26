@@ -72,8 +72,10 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
 
     /**
      * Add constraints for inner join subselect for one of many relationships.
+     * 
+     * @param null|string|string[] $aggregate
      */
-    public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, ?string $aggregate = null): void
+    public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void
     {
         $query->select($this->foreignKey);
     }
