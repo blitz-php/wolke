@@ -38,8 +38,10 @@ trait CanBeOneOfMany
 
     /**
      * Add constraints for inner join subselect for one of many relationships.
+	 * 
+	 * @param array|string|null $aggregate
      */
-    abstract public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, ?string $aggregate = null): void;
+    abstract public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void;
 
     /**
      * Get the columns the determine the relationship groups.

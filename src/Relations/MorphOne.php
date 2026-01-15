@@ -74,8 +74,10 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
 
     /**
      * Add constraints for inner join subselect for one of many relationships.
+	 * 
+	 * @param array|string|null $aggregate
      */
-    public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, ?string $aggregate = null): void
+    public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void
     {
         $query->select([$this->foreignKey, $this->morphType]);
     }
