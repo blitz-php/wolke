@@ -13,6 +13,13 @@ namespace BlitzPHP\Wolke\Contracts;
 
 use BlitzPHP\Wolke\Pagination\Cursor;
 
+/**
+ * @template TKey of array-key
+ *
+ * @template-covariant TValue
+ *
+ * @method $this through(callable(TValue): mixed $callback)
+ */
 interface CursorPaginator
 {
     /**
@@ -53,6 +60,8 @@ interface CursorPaginator
 
     /**
      * Get all of the items being paginated.
+     *
+     * @return array<TKey, TValue>
      */
     public function items(): array;
 
@@ -80,6 +89,11 @@ interface CursorPaginator
      * Determine if there are enough items to split into multiple pages.
      */
     public function hasPages(): bool;
+
+    /**
+     * Determine if there are more items in the data source.
+     */
+    public function hasMorePages(): bool;
 
     /**
      * Get the base path for paginator generated URLs.

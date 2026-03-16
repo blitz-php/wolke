@@ -20,6 +20,13 @@ use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection;
 use Closure;
 
+/**
+ * @template TKey of array-key
+ *
+ * @template-covariant TValue
+ *
+ * @mixin Collection<TKey, TValue>
+ */
 abstract class AbstractPaginator
 {
     use ForwardsCalls;
@@ -28,7 +35,7 @@ abstract class AbstractPaginator
     /**
      * All of the items being paginated.
      *
-     * @var Collection
+     * @var Collection<TKey, TValue>
      */
     protected $items;
 
@@ -107,12 +114,12 @@ abstract class AbstractPaginator
     /**
      * The default pagination view.
      */
-    public static string $defaultView = 'BlitzPHP\Wolke\Pagination\Views\bootstrap-4';
+    public static string $defaultView = 'BlitzPHP\Wolke\Pagination\Views\bootstrap-5';
 
     /**
      * The default "simple" pagination view.
      */
-    public static string $defaultSimpleView = 'BlitzPHP\Wolke\Pagination\Views\simple-bootstrap-4';
+    public static string $defaultSimpleView = 'BlitzPHP\Wolke\Pagination\Views\simple-bootstrap-5';
 
     /**
      * Determine if the given value is a valid page number.
@@ -139,7 +146,9 @@ abstract class AbstractPaginator
      */
     public function getUrlRange(int $start, int $end): array
     {
-        return Helpers::collect(range($start, $end))->mapWithKeys(fn ($page) => [$page => $this->url($page)])->all();
+        return Collection::range($start, $end)
+            ->mapWithKeys(fn ($page) => [$page => $this->url($page)])
+            ->all();
     }
 
     /**
@@ -185,7 +194,7 @@ abstract class AbstractPaginator
     /**
      * Add a set of query string values to the paginator.
      */
-    public function appends(array|string|null $key, ?string $value = null): self
+    public function appends(array|string|null $key, ?string $value = null): static
     {
         if (null === $key) {
             return $this;
@@ -201,7 +210,7 @@ abstract class AbstractPaginator
     /**
      * Add an array of query string values.
      */
-    protected function appendArray(array $keys): self
+    protected function appendArray(array $keys): static
     {
         foreach ($keys as $key => $value) {
             $this->addQuery($key, $value);
@@ -213,7 +222,7 @@ abstract class AbstractPaginator
     /**
      * Add all current query string values to the paginator.
      */
-    public function withQueryString(): self
+    public function withQueryString(): static
     {
         if (isset(static::$queryStringResolver)) {
             return $this->appends(call_user_func(static::$queryStringResolver));
@@ -225,7 +234,7 @@ abstract class AbstractPaginator
     /**
      * Add a query string value to the paginator.
      */
-    protected function addQuery(string $key, string $value): self
+    protected function addQuery(string $key, string $value): static
     {
         if ($key !== $this->pageName) {
             $this->query[$key] = $value;
@@ -245,7 +254,7 @@ abstract class AbstractPaginator
     /**
      * Load a set of relationships onto the mixed relationship collection.
      */
-    public function loadMorph(string $relation, array $relations): self
+    public function loadMorph(string $relation, array $relations): static
     {
         $this->getCollection()->loadMorph($relation, $relations);
 
@@ -255,7 +264,7 @@ abstract class AbstractPaginator
     /**
      * Load a set of relationship counts onto the mixed relationship collection.
      */
-    public function loadMorphCount(string $relation, array $relations): self
+    public function loadMorphCount(string $relation, array $relations): static
     {
         $this->getCollection()->loadMorphCount($relation, $relations);
 
@@ -264,6 +273,8 @@ abstract class AbstractPaginator
 
     /**
      * Get the slice of items being paginated.
+     *
+     * @return array<TKey, TValue>
      */
     public function items(): array
     {
@@ -288,8 +299,14 @@ abstract class AbstractPaginator
 
     /**
      * Transform each item in the slice of items using a callback.
+     *
+     * @template TMapValue
+     *
+     * @param  callable(TValue, TKey): TMapValue  $callback
+     *
+     * @phpstan-this-out static<TKey, TMapValue>
      */
-    public function through(callable $callback): self
+    public function through(callable $callback): static
     {
         $this->items->transform($callback);
 
@@ -347,7 +364,7 @@ abstract class AbstractPaginator
     /**
      * Set the query string variable used to store the page.
      */
-    public function setPageName(string $name): self
+    public function setPageName(string $name): static
     {
         $this->pageName = $name;
 
@@ -357,7 +374,7 @@ abstract class AbstractPaginator
     /**
      * Set the base path to assign to all URLs.
      */
-    public function withPath(string $path): self
+    public function withPath(string $path): static
     {
         return $this->setPath($path);
     }
@@ -365,7 +382,7 @@ abstract class AbstractPaginator
     /**
      * Set the base path to assign to all URLs.
      */
-    public function setPath(string $path): self
+    public function setPath(string $path): static
     {
         $this->path = $path;
 
@@ -375,7 +392,7 @@ abstract class AbstractPaginator
     /**
      * Set the number of links to display on each side of current page link.
      */
-    public function onEachSide(int $count): self
+    public function onEachSide(int $count): static
     {
         $this->onEachSide = $count;
 
@@ -432,8 +449,10 @@ abstract class AbstractPaginator
 
     /**
      * Resolve the query string or return the default value.
+     * 
+     * @return string
      */
-    public static function resolveQueryString(array|string|null $default = null): string
+    public static function resolveQueryString(array|string|null $default = null)
     {
         if (isset(static::$queryStringResolver)) {
             return (static::$queryStringResolver)();
@@ -483,11 +502,24 @@ abstract class AbstractPaginator
     }
 
     /**
+     * Indicate that Tailwind styling should be used for generated links.
+     */
+    public static function useTailwind(): void
+    {
+        static::defaultView('BlitzPHP\Wolke\Pagination\Views\tailwind');
+        static::defaultSimpleView('BlitzPHP\Wolke\Pagination\Views\simple-tailwind');
+    }
+
+    /**
      * Indicate that Bootstrap 4 styling should be used for generated links.
      */
-    public static function useBootstrap(): void
+    public static function useBootstrap(int $version = 5): void
     {
-        static::useBootstrapFour();
+        match($version) {
+            3       => static::useBootstrapThree(),
+            4       => static::useBootstrapFour(),
+            default => static::useBootstrapFive(),
+        };
     }
 
     /**
@@ -495,8 +527,8 @@ abstract class AbstractPaginator
      */
     public static function useBootstrapThree(): void
     {
-        static::defaultView('BlitzPHP\Wolke\Pagination\Views\default');
-        static::defaultSimpleView('BlitzPHP\Wolke\Pagination\Views\simple-default');
+        static::defaultView('BlitzPHP\Wolke\Pagination\Views\bootstrap-3');
+        static::defaultSimpleView('BlitzPHP\Wolke\Pagination\Views\simple-bootstrap-3');
     }
 
     /**
@@ -519,6 +551,8 @@ abstract class AbstractPaginator
 
     /**
      * Get an iterator for the items.
+     *
+     * @return ArrayIterator<TKey, TValue>
      */
     public function getIterator(): ArrayIterator
     {
@@ -551,6 +585,8 @@ abstract class AbstractPaginator
 
     /**
      * Get the paginator's underlying collection.
+     *
+     * @return Collection<TKey, TValue>
      */
     public function getCollection(): Collection
     {
@@ -559,8 +595,10 @@ abstract class AbstractPaginator
 
     /**
      * Set the paginator's underlying collection.
+     *
+     * @param Collection<TKey, TValue>  $collection
      */
-    public function setCollection(Collection $collection): self
+    public function setCollection(Collection $collection): static
     {
         $this->items = $collection;
 

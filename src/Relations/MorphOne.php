@@ -11,7 +11,8 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
-use BlitzPHP\Database\Builder\BaseBuilder;
+use BlitzPHP\Database\Builder\JoinClause;
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Contracts\SupportsPartialRelations;
@@ -20,6 +21,12 @@ use BlitzPHP\Wolke\Relations\Concerns\CanBeOneOfMany;
 use BlitzPHP\Wolke\Relations\Concerns\ComparesRelatedModels;
 use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ *
+ * @extends MorphOneOrMany<TRelatedModel, TDeclaringModel, ?TRelatedModel>
+ */
 class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
 {
     use CanBeOneOfMany;
@@ -27,7 +34,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     use SupportsDefaultModels;
 
     /**
-     * Get the results of the relationship.
+     * {@inheritDoc}
      */
     public function getResults(): mixed
     {
@@ -39,7 +46,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     }
 
     /**
-     * Initialize the relation on a set of models.
+     * {@inheritDoc}
      */
     public function initRelation(array $models, string $relation): array
     {
@@ -51,7 +58,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     }
 
     /**
-     * Match the eagerly loaded results to their parents.
+     * {@inheritDoc}
      */
     public function match(array $models, Collection $results, string $relation): array
     {
@@ -59,9 +66,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     }
 
     /**
-     * Get the relationship query.
-     *
-     * @param array|mixed $columns
+     * {@inheritDoc}
      */
     public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
@@ -75,7 +80,8 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     /**
      * Add constraints for inner join subselect for one of many relationships.
 	 * 
-	 * @param array|string|null $aggregate
+	 * @param Builder<TRelatedModel>  $query
+     * @param array|string|null $aggregate
      */
     public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void
     {
@@ -92,14 +98,12 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
 
     /**
      * Add join query constraints for one of many relationships.
-     *
-     * @param string $on deprecated
      */
-    public function addOneOfManyJoinSubQueryConstraints(BaseBuilder $query, string $on): void
+    public function addOneOfManyJoinSubQueryConstraints(JoinClause $join): void
     {
-        $query
-            ->join($query->getTable(), [$this->qualifySubSelectColumn($this->morphType) => $this->qualifyRelatedColumn($this->morphType)])
-            ->join($query->getTable(), [$this->qualifySubSelectColumn($this->foreignKey) => $this->qualifyRelatedColumn($this->foreignKey)]);
+        $join
+            ->on($this->qualifySubSelectColumn($this->morphType), '=', $this->qualifyRelatedColumn($this->morphType))
+            ->on($this->qualifySubSelectColumn($this->foreignKey), '=', $this->qualifyRelatedColumn($this->foreignKey));
     }
 
     /**
@@ -107,13 +111,20 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
      */
     public function newRelatedInstanceFor(Model $parent): Model
     {
-        return $this->related->newInstance()
-            ->setAttribute($this->getForeignKeyName(), $parent->{$this->localKey})
-            ->setAttribute($this->getMorphType(), $this->morphClass);
+        return Helpers::tap($this->related->newInstance(), function($instance) use($parent) {
+            $instance->setAttribute($this->getForeignKeyName(), $parent->{$this->localKey})
+                ->setAttribute($this->getMorphType(), $this->morphClass);
+
+            $this->applyInverseRelationToModel($instance, $parent);
+        });
     }
 
     /**
      * Get the value of the model's foreign key.
+     *
+     * @param  TRelatedModel  $model
+     * 
+     * @return int|string
      */
     protected function getRelatedKeyFrom(Model $model): mixed
     {

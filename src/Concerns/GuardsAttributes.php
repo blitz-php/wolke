@@ -23,9 +23,9 @@ trait GuardsAttributes
     /**
      * The attributes that aren't mass assignable.
      *
-     * @var bool|list<string>
+     * @var list<string>
      */
-    protected array|bool $guarded = ['*'];
+    protected array $guarded = ['*'];
 
     /**
      * Indicates if all mass assignment is enabled.
@@ -34,6 +34,8 @@ trait GuardsAttributes
 
     /**
      * The actual columns that exist on the database and can be guarded.
+     * 
+     * @var array<class-string,list<string>>
      */
     protected static array $guardableColumns = [];
 
@@ -72,9 +74,9 @@ trait GuardsAttributes
      */
     public function getGuarded(): array
     {
-        return ! is_array($this->guarded)
-                    ? []
-                    : $this->guarded;
+        return self::$unguarded === true
+            ? []
+            : $this->guarded;
     }
 
     /**
@@ -190,6 +192,10 @@ trait GuardsAttributes
      */
     protected function isGuardableColumn(string $key): bool
     {
+        if ($this->hasSetMutator($key) || $this->hasAttributeSetMutator($key) || $this->isClassCastable($key)) {
+            return true;
+        }
+
         if (! isset(static::$guardableColumns[static::class])) {
             $columns = $this->getConnection()
                 ->getSchemaBuilder()
@@ -198,6 +204,7 @@ trait GuardsAttributes
             if (empty($columns)) {
                 return true;
             }
+
             static::$guardableColumns[static::class] = $columns;
         }
 
@@ -214,6 +221,9 @@ trait GuardsAttributes
 
     /**
      * Get the fillable attributes of a given array.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
      */
     protected function fillableFromArray(array $attributes): array
     {

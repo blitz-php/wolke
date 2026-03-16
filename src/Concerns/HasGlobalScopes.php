@@ -11,9 +11,10 @@
 
 namespace BlitzPHP\Wolke\Concerns;
 
-use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
+use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Wolke\Attributes\ScopedBy;
+use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Contracts\Scope;
 use Closure;
 use InvalidArgumentException;
@@ -24,7 +25,7 @@ trait HasGlobalScopes
     /**
      * Boot the has global scopes trait for a model.
      */
-    public static function bootHasGlobalScopes()
+    public static function bootHasGlobalScopes(): void
     {
         static::addGlobalScopes(static::resolveGlobalScopeAttributes());
     }
@@ -36,8 +37,13 @@ trait HasGlobalScopes
     {
         $reflectionClass = new ReflectionClass(static::class);
 
-        return Helpers::collect($reflectionClass->getAttributes(ScopedBy::class))
-            ->map(static fn ($attribute) => $attribute->getArguments())
+        $attributes = (new Collection($reflectionClass->getAttributes(ScopedBy::class, ReflectionAttribute::IS_INSTANCEOF)));
+
+        foreach ($reflectionClass->getTraits() as $trait) {
+            $attributes->push(...$trait->getAttributes(ScopedBy::class, ReflectionAttribute::IS_INSTANCEOF));
+        }
+
+        return $attributes->map(fn ($attribute) => $attribute->getArguments())
             ->flatten()
             ->all();
     }
@@ -45,9 +51,12 @@ trait HasGlobalScopes
     /**
      * Register a new global scope on the model.
      *
+     * @param Scope|(Closure(Builder<static>): mixed)|string  $scope
+     * @param Scope|(Closure(Builder<static>): mixed)|null  $implementation
+     *
      * @throws InvalidArgumentException
      */
-    public static function addGlobalScope(Closure|Scope|string $scope, ?Closure $implementation = null): mixed
+    public static function addGlobalScope(Closure|Scope|string $scope, Closure|Scope|null $implementation = null): mixed
     {
         if (is_string($scope) && ($implementation instanceof Closure || $implementation instanceof Scope)) {
             return static::$globalScopes[static::class][$scope] = $implementation;
@@ -90,7 +99,7 @@ trait HasGlobalScopes
     /**
      * Get a global scope registered with the model.
      *
-     * @return Closure|Scope|null
+     * @return Scope|(Closure(Builder<static>): mixed)|null
      */
     public static function getGlobalScope(Scope|string $scope)
     {

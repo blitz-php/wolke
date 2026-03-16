@@ -11,20 +11,37 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Wolke\Collection;
+use BlitzPHP\Wolke\Model;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ *
+ * @extends HasOneOrMany<TRelatedModel, TDeclaringModel, Collection<int, TRelatedModel>>
+ */
 class HasMany extends HasOneOrMany
 {
     /**
      * Convert the relationship to a "has one" relationship.
+     *
+     * @return HasOne<TRelatedModel, TDeclaringModel>
      */
     public function one(): HasOne
     {
-        return HasOne::noConstraints(fn () => new HasOne(
-            $this->getQuery(),
-            $this->parent,
-            $this->foreignKey,
-            $this->localKey
+        return HasOne::noConstraints(fn () => Helpers::tap(
+            new HasOne(
+                $this->getQuery(),
+                $this->parent,
+                $this->foreignKey,
+                $this->localKey
+            ),
+            function ($hasOne) {
+                if ($inverse = $this->getInverseRelationship()) {
+                    $hasOne->inverse($inverse);
+                }
+            }
         ));
     }
 

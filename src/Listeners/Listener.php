@@ -11,29 +11,21 @@
 
 namespace BlitzPHP\Wolke\Listeners;
 
+use BlitzPHP\Contracts\Autoloader\LocatorInterface;
 use BlitzPHP\Contracts\Container\ContainerInterface;
 use BlitzPHP\Contracts\Database\ConnectionResolverInterface;
 use BlitzPHP\Contracts\Event\EventListenerInterface;
 use BlitzPHP\Contracts\Event\EventManagerInterface;
-use BlitzPHP\Contracts\View\RendererInterface;
-use BlitzPHP\Database\Connection\BaseConnection;
-use BlitzPHP\Utilities\Iterable\Arr;
+use BlitzPHP\Wolke\Attributes\Observe;
 use BlitzPHP\Wolke\Model;
-use BlitzPHP\Wolke\Pagination\AbstractPaginator;
-use Psr\Http\Message\ServerRequestInterface;
+use BlitzPHP\Wolke\Observers\Dispatcher;
+use BlitzPHP\Wolke\Pagination\PaginationState;
+use ReflectionClass;
 
 class Listener implements EventListenerInterface
 {
-    /**
-     * @var \BlitzPHP\Http\Request
-     */
-    protected ServerRequestInterface $request;
-
     public function __construct(protected ContainerInterface $container)
     {
-        BaseConnection::$useHashedAliases = false;
-
-        $this->request = $container->get(ServerRequestInterface::class);
     }
 
     /**
@@ -41,11 +33,34 @@ class Listener implements EventListenerInterface
      */
     public function listen(EventManagerInterface $event): void
     {
-        $event->on('pre_system', function () {
-            AbstractPaginator::currentPathResolver(fn () => $this->request->fullUrl());
-            AbstractPaginator::currentPageResolver(fn ($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
-            AbstractPaginator::viewFactoryResolver(fn () => $this->container->get(RendererInterface::class));
+        $event->on('app:init', function () {
             Model::setConnectionResolver($this->container->get(ConnectionResolverInterface::class));
+            PaginationState::resolveUsing($this->container);
+            
+            $this->bootObservables($this->container->get(LocatorInterface::class));
         });
+    }
+            
+    private function bootObservables(LocatorInterface $locator)
+    {
+        Model::setEventDispatcher(new Dispatcher());
+        
+        foreach ($locator->listFiles('Observers/') as $file) {
+            $className = $locator->getClassname($file);
+
+            if ($className === '' || ! class_exists($className)) {
+                continue;
+            }
+
+            $observable = (new ReflectionClass($className))->getAttributes(Observe::class);
+
+            if ($observable === []) {
+                continue;
+            }
+
+            $observable = $observable[0]->newInstance();
+
+            $observable->class::observe($className);
+        }
     }
 }

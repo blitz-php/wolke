@@ -11,27 +11,43 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ *
+ * @extends MorphOneOrMany<TRelatedModel, TDeclaringModel, Collection<int, TRelatedModel>>
+ */
 class MorphMany extends MorphOneOrMany
 {
     /**
      * Convert the relationship to a "morph one" relationship.
+     * 
+     * @return MorphOne<TRelatedModel, TDeclaringModel>
      */
     public function one(): MorphOne
     {
-        return MorphOne::noConstraints(fn () => new MorphOne(
-            $this->getQuery(),
-            $this->getParent(),
-            $this->morphType,
-            $this->foreignKey,
-            $this->localKey
+        return MorphOne::noConstraints(fn () => Helpers::tap(
+            new MorphOne(
+                $this->getQuery(),
+                $this->getParent(),
+                $this->morphType,
+                $this->foreignKey,
+                $this->localKey
+            ),
+            function ($morphOne) {
+                if ($inverse = $this->getInverseRelationship()) {
+                    $morphOne->inverse($inverse);
+                }
+            }
         ));
     }
 
     /**
-     * Get the results of the relationship.
+     * {@inheritDoc}
      */
     public function getResults(): mixed
     {
@@ -41,7 +57,7 @@ class MorphMany extends MorphOneOrMany
     }
 
     /**
-     * Initialize the relation on a set of models.
+     * {@inheritDoc}
      */
     public function initRelation(array $models, string $relation): array
     {
@@ -53,7 +69,7 @@ class MorphMany extends MorphOneOrMany
     }
 
     /**
-     * Match the eagerly loaded results to their parents.
+     *{@inheritDoc}
      */
     public function match(array $models, Collection $results, string $relation): array
     {
@@ -68,13 +84,5 @@ class MorphMany extends MorphOneOrMany
         $attributes[$this->getMorphType()] = $this->morphClass;
 
         return parent::forceCreate($attributes);
-    }
-
-    /**
-     * Create a new instance of the related model with mass assignment without raising model events.
-     */
-    public function forceCreateQuietly(array $attributes = []): Model
-    {
-        return Model::withoutEvents(fn () => $this->forceCreate($attributes));
     }
 }

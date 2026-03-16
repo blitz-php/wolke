@@ -56,7 +56,7 @@ trait HasTimestamps
     /**
      * Update the creation and update timestamps.
      */
-    public function updateTimestamps(): self
+    public function updateTimestamps(): static
     {
         $time = $this->freshTimestamp();
 
@@ -78,7 +78,7 @@ trait HasTimestamps
     /**
      * Set the value of the "created at" attribute.
      */
-    public function setCreatedAt(mixed $value): self
+    public function setCreatedAt(mixed $value): static
     {
         $this->{$this->getCreatedAtColumn()} = $value;
 
@@ -88,7 +88,7 @@ trait HasTimestamps
     /**
      * Set the value of the "updated at" attribute.
      */
-    public function setUpdatedAt(mixed $value): self
+    public function setUpdatedAt(mixed $value): static
     {
         $this->{$this->getUpdatedAtColumn()} = $value;
 
@@ -169,7 +169,11 @@ trait HasTimestamps
         try {
             return $callback();
         } finally {
-            static::$ignoreTimestampsOn = array_values(array_diff(static::$ignoreTimestampsOn, $models));
+            foreach ($models as $model) {
+                if (($key = array_search($model, static::$ignoreTimestampsOn, true)) !== false) {
+                    unset(static::$ignoreTimestampsOn[$key]);
+                }
+            }
         }
     }
 

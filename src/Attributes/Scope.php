@@ -9,10 +9,17 @@
  * the LICENSE file that was distributed with this source code.
  */
 
-namespace BlitzPHP\Wolke\Exceptions;
+namespace BlitzPHP\Wolke\Attributes;
 
-use RuntimeException;
+use Attribute;
 
-class RecordsNotFoundException extends RuntimeException
+#[Attribute(Attribute::TARGET_METHOD)]
+class Scope
 {
+    /**
+     * Create a new attribute instance.
+     */
+    public function __construct()
+    {
+    }
 }

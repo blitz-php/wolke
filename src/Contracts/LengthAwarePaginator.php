@@ -11,6 +11,13 @@
 
 namespace BlitzPHP\Wolke\Contracts;
 
+/**
+ * @template TKey of array-key
+ *
+ * @template-covariant TValue
+ *
+ * @extends Paginator<TKey, TValue>
+ */
 interface LengthAwarePaginator extends Paginator
 {
     /**

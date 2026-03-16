@@ -36,6 +36,9 @@ class MorphPivot extends Pivot
 
     /**
      * Set the keys for a save update query.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     protected function setKeysForSaveQuery(Builder $query): Builder
     {
@@ -46,6 +49,9 @@ class MorphPivot extends Pivot
 
     /**
      * Set the keys for a select query.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     protected function setKeysForSelectQuery(Builder $query): Builder
     {
@@ -91,7 +97,7 @@ class MorphPivot extends Pivot
     /**
      * Set the morph type for the pivot.
      */
-    public function setMorphType(string $morphType): self
+    public function setMorphType(string $morphType): static
     {
         $this->morphType = $morphType;
 
@@ -100,8 +106,10 @@ class MorphPivot extends Pivot
 
     /**
      * Set the morph class for the pivot.
+     * 
+     * @param  class-string  $morphClass
      */
-    public function setMorphClass(string $morphClass): self
+    public function setMorphClass(string $morphClass): static
     {
         $this->morphClass = $morphClass;
 
@@ -132,6 +140,8 @@ class MorphPivot extends Pivot
      * Get a new query to restore one or more models by their queueable IDs.
      *
      * @param list<int>|list<string>|string $ids
+     * 
+     * @return Builder<static>
      */
     public function newQueryForRestoration($ids): Builder
     {
@@ -151,6 +161,11 @@ class MorphPivot extends Pivot
             ->where($segments[4], $segments[5]);
     }
 
+    /**
+     * Get a new query to restore multiple models by their queueable IDs.
+     *
+     * @return Builder<static>
+     */
     protected function newQueryForCollectionRestoration(array $ids): Builder
     {
         $ids = array_values($ids);

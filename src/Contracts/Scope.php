@@ -18,6 +18,11 @@ interface Scope
 {
     /**
      * Apply the scope to a given Wolke query builder.
+     *
+     * @template TModel of Model
+     *
+     * @param Builder<TModel>  $builder
+     * @param TModel $model
      */
     public function apply(Builder $builder, Model $model): void;
 }

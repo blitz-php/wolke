@@ -11,7 +11,7 @@
 
 namespace BlitzPHP\Wolke\Casts;
 
-use BlitzPHP\Container\Services;
+use BlitzPHP\Database\Config\Services;
 use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsAttributes;
 use BlitzPHP\Wolke\Contracts\SerializesCastableAttributes;
@@ -43,7 +43,7 @@ class AsEncryptedArrayObject implements Castable
                 return null;
             }
 
-            public function serialize($model, string $key, $value, array $attributes)
+            public function serialize($model, string $key, $value, array $attributes): mixed
             {
                 return null !== $value ? $value->getArrayCopy() : null;
             }

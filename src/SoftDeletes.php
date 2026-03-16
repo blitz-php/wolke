@@ -12,12 +12,14 @@
 namespace BlitzPHP\Wolke;
 
 use BlitzPHP\Utilities\Helpers;
-use Closure;
+use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 
 /**
- * @method static static|\BlitzPHP\Wolke\Builder|\BlitzPHP\Database\Builder\BaseBuilder withTrashed(bool $withTrashed = true)
- * @method static static|\BlitzPHP\Wolke\Builder|\BlitzPHP\Database\Builder\BaseBuilder onlyTrashed()
- * @method static static|\BlitzPHP\Wolke\Builder|\BlitzPHP\Database\Builder\BaseBuilder withoutTrashed()
+ * @method static Builder<static> withTrashed(bool $withTrashed = true)
+ * @method static Builder<static> onlyTrashed()
+ * @method static Builder<static> withoutTrashed()
+ * @method static static restoreOrCreate(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
+ * @method static static createOrRestore(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
  */
 trait SoftDeletes
 {
@@ -70,6 +72,43 @@ trait SoftDeletes
     public function forceDeleteQuietly(): ?bool
     {
         return static::withoutEvents(fn () => $this->forceDelete());
+    }
+
+    /**
+     * Destroy the models for the given IDs.
+     *
+     * @param  IterableCollection|array|int|string  $ids
+     */
+    public static function forceDestroy($ids): int
+    {
+        if ($ids instanceof Collection) {
+            $ids = $ids->modelKeys();
+        }
+
+        if ($ids instanceof IterableCollection) {
+            $ids = $ids->all();
+        }
+
+        $ids = is_array($ids) ? $ids : func_get_args();
+
+        if (count($ids) === 0) {
+            return 0;
+        }
+
+        // We will actually pull the models from the database table and call delete on
+        // each of them individually so that their events get fired properly with a
+        // correct set of attributes in case the developers wants to check these.
+        $key = ($instance = new static)->getKeyName();
+
+        $count = 0;
+
+        foreach ($instance->withTrashed()->whereIn($key, $ids)->get() as $model) {
+            if ($model->forceDelete()) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     /**
@@ -158,40 +197,50 @@ trait SoftDeletes
 
     /**
      * Register a "softDeleted" model event callback with the dispatcher.
+     * 
+     * @param callable|class-string  $callback
      */
-    public static function softDeleted(Closure|string $callback)
+    public static function softDeleted(callable|string $callback)
     {
         static::registerModelEvent('trashed', $callback);
     }
 
     /**
      * Register a "restoring" model event callback with the dispatcher.
+     * 
+     * @param callable|class-string  $callback
      */
-    public static function restoring(Closure|string $callback): void
+    public static function restoring(callable|string $callback): void
     {
         static::registerModelEvent('restoring', $callback);
     }
 
     /**
      * Register a "restored" model event callback with the dispatcher.
+     * 
+     * @param callable|class-string  $callback
      */
-    public static function restored(Closure|string $callback): void
+    public static function restored(callable|string $callback): void
     {
         static::registerModelEvent('restored', $callback);
     }
 
     /**
      * Register a "forceDeleting" model event callback with the dispatcher.
+     * 
+     * @param callable|class-string  $callback
      */
-    public static function forceDeleting(Closure|string $callback): void
+    public static function forceDeleting(callable|string $callback): void
     {
         static::registerModelEvent('forceDeleting', $callback);
     }
 
     /**
      * Register a "forceDeleted" model event callback with the dispatcher.
+     * 
+     * @param callable|class-string  $callback
      */
-    public static function forceDeleted(Closure|string $callback): void
+    public static function forceDeleted(callable|string $callback): void
     {
         static::registerModelEvent('forceDeleted', $callback);
     }

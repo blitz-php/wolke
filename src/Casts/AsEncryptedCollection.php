@@ -11,8 +11,9 @@
 
 namespace BlitzPHP\Wolke\Casts;
 
-use BlitzPHP\Container\Services;
+use BlitzPHP\Database\Config\Services;
 use BlitzPHP\Utilities\Iterable\Collection;
+use BlitzPHP\Utilities\String\Text;
 use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsAttributes;
 use BlitzPHP\Wolke\Model;
@@ -28,6 +29,7 @@ class AsEncryptedCollection implements Castable
         return new class ($arguments) implements CastsAttributes {
             public function __construct(protected array $arguments)
             {
+                $this->arguments = array_pad(array_values($this->arguments), 2, '');
             }
 
             public function get(Model $model, string $key, mixed $value, array $attributes): mixed
@@ -38,11 +40,23 @@ class AsEncryptedCollection implements Castable
                     throw new InvalidArgumentException('La classe fournie doit étendre [' . Collection::class . '].');
                 }
 
-                if (isset($attributes[$key])) {
-                    return new $collectionClass(Json::decode(Services::encrypter()->decrypt($attributes[$key])));
+                if (! isset($attributes[$key])) {
+                    return null;
                 }
 
-                return null;
+                $instance = new $collectionClass(Json::decode(Services::encrypter()->decrypt($attributes[$key])));
+
+                if (! isset($this->arguments[1]) || ! $this->arguments[1]) {
+                    return $instance;
+                }
+
+                if (is_string($this->arguments[1])) {
+                    $this->arguments[1] = Text::parseCallback($this->arguments[1]);
+                }
+
+                return is_callable($this->arguments[1])
+                    ? $instance->map($this->arguments[1])
+                    : $instance->mapInto($this->arguments[1][0]);
             }
 
             public function set(Model $model, string $key, mixed $value, array $attributes): mixed
@@ -54,5 +68,30 @@ class AsEncryptedCollection implements Castable
                 return null;
             }
         };
+    }
+
+    /**
+     * Specify the type of object each item in the collection should be mapped to.
+     *
+     * @param  array{class-string, string}|class-string  $map
+     */
+    public static function of(array|string $map): string
+    {
+        return static::using('', $map);
+    }
+
+    /**
+     * Specify the collection for the cast.
+     *
+     * @param  class-string  $class
+     * @param  array{class-string, string}|class-string|null  $map
+     */
+    public static function using(string $class, array|string|null $map = null): string
+    {
+        if (is_array($map) && is_callable($map)) {
+            $map = $map[0].'@'.$map[1];
+        }
+
+        return static::class.':'.implode(',', [$class, $map]);
     }
 }

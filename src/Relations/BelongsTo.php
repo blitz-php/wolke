@@ -11,6 +11,7 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Model;
@@ -18,6 +19,12 @@ use BlitzPHP\Wolke\Relations\Concerns\ComparesRelatedModels;
 use BlitzPHP\Wolke\Relations\Concerns\InteractsWithDictionary;
 use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ *
+ * @extends Relation<TRelatedModel, TDeclaringModel, ?TRelatedModel>
+ */
 class BelongsTo extends Relation
 {
     use ComparesRelatedModels;
@@ -26,17 +33,21 @@ class BelongsTo extends Relation
 
     /**
      * The child model instance of the relation.
+     *
+     * @var TDeclaringModel
      */
     protected Model $child;
 
     /**
      * Create a new belongs to relationship instance.
      *
-     * @param string $foreignKey   The foreign key of the parent model.
-     * @param string $ownerKey     The associated key on the parent model.
-     * @param string $relationName The name of the relationship.
+     * @param Builder<TRelatedModel>  $query
+     * @param TDeclaringModel  $child
+     * @param string $foreignKey    The foreign key of the parent model.
+     * @param ?string $ownerKey     The associated key on the parent model.
+     * @param string $relationName  The name of the relationship.
      */
-    public function __construct(Builder $query, Model $child, protected string $foreignKey, protected string $ownerKey, protected string $relationName)
+    public function __construct(Builder $query, Model $child, protected string $foreignKey, protected ?string $ownerKey, protected string $relationName)
     {
         // In the underlying base relationship class, this variable is referred to as
         // the "parent" since most relationships are not inversed. But, since this
@@ -67,9 +78,9 @@ class BelongsTo extends Relation
             // For belongs to relationships, which are essentially the inverse of has one
             // or has many relationships, we need to actually query on the primary key
             // of the related models matching on the foreign key that's on a parent.
-            $table = $this->related->getTable();
+            $key = $this->getQualifiedOwnerKeyName();
 
-            $this->query->where($table . '.' . $this->ownerKey, '=', $this->getForeignKeyFrom($this->child));
+            $this->query->where($key, '=', $this->getForeignKeyFrom($this->child));
         }
     }
 
@@ -81,7 +92,7 @@ class BelongsTo extends Relation
         // We'll grab the primary key name of the related models since it could be set to
         // a non-standard name and not "id". We will then construct the constraint for
         // our eagerly loading query so it returns the proper models from execution.
-        $key = $this->related->getTable() . '.' . $this->ownerKey;
+        $key = $this->getQualifiedOwnerKeyName();
 
         $whereIn = $this->whereInMethod($this->related, $this->ownerKey);
 
@@ -90,6 +101,8 @@ class BelongsTo extends Relation
 
     /**
      * Gather the keys from an array of related models.
+     *
+     * @param  array<int, TDeclaringModel>  $models
      */
     protected function getEagerModelKeys(array $models): array
     {
@@ -143,8 +156,8 @@ class BelongsTo extends Relation
         foreach ($models as $model) {
             $attribute = $this->getDictionaryKey($this->getForeignKeyFrom($model));
 
-            if (isset($dictionary[$attribute])) {
-                $model->setRelation($relation, $dictionary[$attribute]);
+            if (isset($dictionary[$attribute ?? ''])) {
+                $model->setRelation($relation, $dictionary[$attribute ?? '']);
             }
         }
 
@@ -154,7 +167,8 @@ class BelongsTo extends Relation
     /**
      * Associate the model instance to the given parent.
      *
-     * @param int|Model|string $model
+     * @param  TRelatedModel|int|string|null  $model
+     * @return TDeclaringModel
      */
     public function associate($model): Model
     {
@@ -173,6 +187,8 @@ class BelongsTo extends Relation
 
     /**
      * Dissociate previously associated model from the given parent.
+     *
+     * @return TDeclaringModel
      */
     public function dissociate(): Model
     {
@@ -183,10 +199,22 @@ class BelongsTo extends Relation
 
     /**
      * Alias of "dissociate" method.
+     *
+     * @return TDeclaringModel
      */
     public function disassociate(): Model
     {
         return $this->dissociate();
+    }
+
+    /**
+     * Touch all of the related models for the relationship.
+     */
+    public function touch(): void
+    {
+        if (null !== $this->getParentKey()) {
+            parent::touch();
+        }
     }
 
     /**
@@ -208,7 +236,10 @@ class BelongsTo extends Relation
     /**
      * Add the constraints for a relationship query on the same table.
      *
-     * @param array|mixed $columns
+     * @param Builder<TRelatedModel> $query
+     * @param Builder<TDeclaringModel> $parentQuery
+     * 
+     * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQueryForSelfRelation(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
@@ -236,6 +267,10 @@ class BelongsTo extends Relation
 
     /**
      * Make a new related instance for the given model.
+     *
+     * @param  TDeclaringModel  $parent
+     * 
+     * @return TRelatedModel
      */
     protected function newRelatedInstanceFor(Model $parent): Model
     {
@@ -244,6 +279,8 @@ class BelongsTo extends Relation
 
     /**
      * Get the child of the relationship.
+     *
+     * @return TDeclaringModel
      */
     public function getChild(): Model
     {
@@ -292,6 +329,10 @@ class BelongsTo extends Relation
 
     /**
      * Get the value of the model's associated key.
+     *
+     * @param  TRelatedModel  $model
+     * 
+     * @return int|string
      */
     protected function getRelatedKeyFrom(Model $model): mixed
     {
@@ -300,10 +341,14 @@ class BelongsTo extends Relation
 
     /**
      * Get the value of the model's foreign key.
+     *
+     * @param TDeclaringModel $model
      */
     protected function getForeignKeyFrom(Model $model): mixed
     {
-        return $model->{$this->foreignKey};
+        $foreignKey = $model->{$this->foreignKey};
+
+        return Helpers::enumValue($foreignKey);
     }
 
     /**

@@ -19,7 +19,7 @@ class HigherOrderBuilderProxy
     /**
      * Create a new proxy instance.
      *
-     * @param Builder $builder The collection being operated on.
+     * @param Builder<*> $builder The collection being operated on.
      * @param string  $method  The method being proxied.
      */
     public function __construct(protected Builder $builder, protected string $method)

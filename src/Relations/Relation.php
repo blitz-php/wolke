@@ -12,18 +12,23 @@
 namespace BlitzPHP\Wolke\Relations;
 
 use BlitzPHP\Database\Builder\BaseBuilder;
+use BlitzPHP\Database\Query\Expression;
+use BlitzPHP\Database\Exceptions\MultipleRecordsFoundException;
 use BlitzPHP\Traits\Macroable;
 use BlitzPHP\Traits\Support\ForwardsCalls;
-use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
+use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Exceptions\ModelNotFoundException;
-use BlitzPHP\Wolke\Exceptions\MultipleRecordsFoundException;
 use BlitzPHP\Wolke\Model;
 use Closure;
 
 /**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ * @template TResult
+ *
  * @mixin \BlitzPHP\Wolke\Builder
  */
 abstract class Relation
@@ -35,9 +40,9 @@ abstract class Relation
     /**
      * The related model instance.
      *
-     * @var Model
+     * @var TRelatedModel
      */
-    protected $related;
+    protected Model $related;
 
     /**
      * Indicates whether the eagerly loaded relation should implicitly return an empty collection.
@@ -51,6 +56,8 @@ abstract class Relation
 
     /**
      * An array to map class names to their morph names in the database.
+     * 
+     * @var array<string, class-string<Model>>
      */
     public static array $morphMap = [];
 
@@ -67,10 +74,8 @@ abstract class Relation
     /**
      * Create a new relation instance.
      *
-     * @param Builder $query  The Wolke query builder instance.
-     * @param Model   $parent The parent model instance.
-     *
-     * @return void
+     * @param Builder<TRelatedModel> $query  The Wolke query builder instance.
+     * @param TDeclaringModel        $parent The parent model instance.
      */
     public function __construct(protected Builder $query, protected Model $parent)
     {
@@ -81,6 +86,12 @@ abstract class Relation
 
     /**
      * Run a callback with constraints disabled on the relation.
+     * 
+     * @template TReturn of mixed
+     *
+     * @param  Closure(): TReturn  $callback
+     * 
+     * @return TReturn
      */
     public static function noConstraints(Closure $callback): mixed
     {
@@ -105,26 +116,41 @@ abstract class Relation
 
     /**
      * Set the constraints for an eager load of the relation.
+     * 
+     * @param list<TDeclaringModel>  $models
      */
     abstract public function addEagerConstraints(array $models): void;
 
     /**
      * Initialize the relation on a set of models.
+     *
+     * @param list<TDeclaringModel>  $models
+     * 
+     * @return list<TDeclaringModel>
      */
     abstract public function initRelation(array $models, string $relation): array;
 
     /**
      * Match the eagerly loaded results to their parents.
+     * 
+     * @param  list<TDeclaringModel>  $models
+     * @param  Collection<int, TRelatedModel>  $results
+     * 
+     * @return list<TDeclaringModel>
      */
     abstract public function match(array $models, Collection $results, string $relation): array;
 
     /**
      * Get the results of the relationship.
+     *
+     * @return TResult
      */
     abstract public function getResults(): mixed;
 
     /**
      * Get the relationship for eager loading.
+     *
+     * @return Collection<int, TRelatedModel>
      */
     public function getEager(): Collection
     {
@@ -136,6 +162,8 @@ abstract class Relation
     /**
      * Execute the query and get the first result if it's the sole matching record.
      *
+     * @return TRelatedModel
+     * 
      * @throws ModelNotFoundException
      * @throws MultipleRecordsFoundException
      */
@@ -158,6 +186,8 @@ abstract class Relation
 
     /**
      * Execute the query as a "select" statement.
+     * 
+     * @return Collection<int, TRelatedModel>
      */
     public function get(array $columns = ['*']): Collection
     {
@@ -190,13 +220,18 @@ abstract class Relation
 
     /**
      * Add the constraints for a relationship count query.
+     *
+     * @param Builder<TRelatedModel>  $query
+     * @param Builder<TDeclaringModel>  $parentQuery
+     * 
+     * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceCountQuery(Builder $query, Builder $parentQuery): Builder
     {
         return $this->getRelationExistenceQuery(
             $query,
             $parentQuery,
-            'count(*)'
+            new Expression('count(*)')
         );
         // )->setBindings([], 'select');
     }
@@ -206,7 +241,10 @@ abstract class Relation
      *
      * Essentially, these queries compare on column names like whereColumn.
      *
-     * @param array|mixed $columns
+     * @param Builder<TRelatedModel>  $query
+     * @param Builder<TDeclaringModel>  $parentQuery
+     * 
+     * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
@@ -227,14 +265,25 @@ abstract class Relation
 
     /**
      * Get all of the primary keys for an array of models.
+     * 
+     * @param list<TDeclaringModel> $models
+     * 
+     * @return list<int|string|null>
      */
     protected function getKeys(array $models, ?string $key = null): array
     {
-        return Helpers::collect($models)->map(static fn ($value) => $key ? $value->getAttribute($key) : $value->getKey())->values()->unique(null, true)->sort()->all();
+        return (new IterableCollection($models))
+            ->map(static fn ($value) => $key ? $value->getAttribute($key) : $value->getKey())
+            ->values()
+            ->unique(null, true)
+            ->sort()
+            ->all();
     }
 
     /**
      * Get the query builder that will contain the relationship constraints.
+     * 
+     * @return Builder<TRelatedModel>
      */
     protected function getRelationQuery(): Builder
     {
@@ -243,6 +292,8 @@ abstract class Relation
 
     /**
      * Get the underlying query for the relation.
+     * 
+     * @return Builder<TRelatedModel>
      */
     public function getQuery(): Builder
     {
@@ -267,6 +318,8 @@ abstract class Relation
 
     /**
      * Get the parent model of the relation.
+     *
+     * @return TDeclaringModel
      */
     public function getParent(): Model
     {
@@ -283,6 +336,8 @@ abstract class Relation
 
     /**
      * Get the related model of the relation.
+     *
+     * @return TRelatedModel
      */
     public function getRelated(): Model
     {
@@ -315,6 +370,8 @@ abstract class Relation
 
     /**
      * Add a whereIn eager constraint for the given set of model keys to be loaded.
+     * 
+     * @param Builder<TRelatedModel>|null  $query
      */
     protected function whereInEager(string $whereIn, string $key, array $modelKeys, ?Builder $query = null): void
     {
@@ -354,6 +411,8 @@ abstract class Relation
 
     /**
      * Define the morph map for polymorphic relations and require all morphed models to be explicitly mapped.
+     * 
+     * @param array<array-key, class-string<Model>> $map
      */
     public static function enforceMorphMap(array $map, bool $merge = true): array
     {
@@ -364,6 +423,10 @@ abstract class Relation
 
     /**
      * Set or get the morph map for polymorphic relations.
+     *
+     * @param array<array-key, class-string<Model>>|null $map
+     * 
+     * @return array<string, class-string<Model>>
      */
     public static function morphMap(?array $map = null, bool $merge = true): array
     {
@@ -380,7 +443,9 @@ abstract class Relation
     /**
      * Builds a table-keyed array from model class names.
      *
-     * @param list<string>|null $models
+     * @param  array<array-key, class-string<Model>>|null  $models
+     * 
+     * @return array<string, class-string<Model>>|null
      */
     protected static function buildMorphMapFromModels(?array $models = null): ?array
     {
@@ -393,10 +458,24 @@ abstract class Relation
 
     /**
      * Get the model associated with a custom polymorphic type.
+     * 
+     * @return class-string<Model>|null
      */
     public static function getMorphedModel(string $alias): ?string
     {
         return static::$morphMap[$alias] ?? null;
+    }
+
+    /**
+     * Get the alias associated with a custom polymorphic class.
+     *
+     * @param  class-string<Model>  $className
+     * 
+     * @return int|string
+     */
+    public static function getMorphAlias(string $className)
+    {
+        return array_search($className, static::$morphMap, strict: true) ?: $className;
     }
 
     /**
@@ -408,13 +487,7 @@ abstract class Relation
             return $this->macroCall($method, $parameters);
         }
 
-        $result = $this->forwardCallTo($this->query, $method, $parameters);
-
-        if ($result === $this->query) {
-            return $this;
-        }
-
-        return $result;
+        return $this->forwardDecoratedCallTo($this->query, $method, $parameters);
     }
 
     /**

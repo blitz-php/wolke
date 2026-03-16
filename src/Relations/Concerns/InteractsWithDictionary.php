@@ -11,7 +11,7 @@
 
 namespace BlitzPHP\Wolke\Relations\Concerns;
 
-use BackedEnum;
+use BlitzPHP\Utilities\Helpers;
 use InvalidArgumentException;
 use UnitEnum;
 
@@ -30,7 +30,7 @@ trait InteractsWithDictionary
             }
 
             if ($attribute instanceof UnitEnum) {
-                return $attribute instanceof BackedEnum ? $attribute->value : $attribute->name;
+                return Helpers::enumValue($attribute);
             }
 
             throw new InvalidArgumentException('Model attribute value is an object but does not have a __toString method.');

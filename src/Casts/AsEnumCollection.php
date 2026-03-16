@@ -12,6 +12,7 @@
 namespace BlitzPHP\Wolke\Casts;
 
 use BackedEnum;
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsAttributes;
@@ -23,7 +24,7 @@ class AsEnumCollection implements Castable
     /**
      * Get the caster class to use when casting from / to this cast target.
      *
-     * @template TEnum of \UnitEnum|\BackedEnum
+     * @template TEnum of \UnitEnum
      *
      * @param array{class-string<TEnum>} $arguments
      *
@@ -55,7 +56,7 @@ class AsEnumCollection implements Castable
                         : constant($enumClass . '::' . $value));
             }
 
-            public function set($model, $key, $value, $attributes)
+            public function set($model, $key, $value, $attributes): mixed
             {
                 $value = $value !== null
                     ? Json::encode((new Collection($value))->map(fn ($enum) => $this->getStorableEnumValue($enum))->jsonSerialize())
@@ -64,7 +65,7 @@ class AsEnumCollection implements Castable
                 return [$key => $value];
             }
 
-            public function serialize($model, string $key, $value, array $attributes)
+            public function serialize($model, string $key, $value, array $attributes): mixed
             {
                 return (new Collection($value))->map(fn ($enum) => $this->getStorableEnumValue($enum))->toArray();
             }
@@ -75,8 +76,18 @@ class AsEnumCollection implements Castable
                     return $enum;
                 }
 
-                return $enum instanceof BackedEnum ? $enum->value : $enum->name;
+                return Helpers::enumValue($enum);
             }
         };
+    }
+
+    /**
+     * Specify the Enum for the cast.
+     *
+     * @param  class-string  $class
+     */
+    public static function of(string $class): string
+    {
+        return static::class.':'.$class;
     }
 }

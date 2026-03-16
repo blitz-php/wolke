@@ -18,6 +18,14 @@ use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ * @template TPivotModel of Pivot = MorphPivot
+ * @template TAccessor of string = 'pivot'
+ *
+ * @extends BelongsToMany<TRelatedModel, TDeclaringModel, TPivotModel, TAccessor>
+ */
 class MorphToMany extends BelongsToMany
 {
     /**
@@ -33,6 +41,8 @@ class MorphToMany extends BelongsToMany
     /**
      * Create a new morph to many relationship instance.
      *
+     * @param Builder<TRelatedModel>  $query
+     * @param TDeclaringModel  $parent
      * @param bool $inverse Indicates if we are connecting the inverse of the relation.
      *                      This primarily affects the morphClass constraint.
      *
@@ -68,7 +78,7 @@ class MorphToMany extends BelongsToMany
     /**
      * Set the where clause for the relation query.
      */
-    protected function addWhereConstraints(): self
+    protected function addWhereConstraints(): static
     {
         parent::addWhereConstraints();
 
@@ -78,7 +88,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Set the constraints for an eager load of the relation.
+     * {@inheritDoc}
      */
     public function addEagerConstraints(array $models): void
     {
@@ -100,7 +110,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Add the constraints for a relationship count query.
+     * {@inheritDoc}
      *
      * @param array|mixed $columns
      */
@@ -113,14 +123,18 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Get the pivot models that are currently attached.
+     * Get the pivot models that are currently attached, filtered by related model keys.
+     *
+     * @return IterableCollection<int, TPivotModel>
      */
-    protected function getCurrentlyAttachedPivots(): IterableCollection
+    protected function getCurrentlyAttachedPivotsForIds(mixed $ids = null): IterableCollection
     {
-        return parent::getCurrentlyAttachedPivots()->map(fn ($record) => $record instanceof MorphPivot
-                            ? $record->setMorphType($this->morphType)
-                                ->setMorphClass($this->morphClass)
-                            : $record);
+        return parent::getCurrentlyAttachedPivotsForIds($ids)->map(function ($record) {
+            return $record instanceof MorphPivot
+                ? $record->setMorphType($this->morphType)
+                    ->setMorphClass($this->morphClass)
+                : $record;
+        });
     }
 
     /**
@@ -133,6 +147,8 @@ class MorphToMany extends BelongsToMany
 
     /**
      * Create a new pivot model instance.
+     * 
+     * @return TPivotModel
      */
     public function newPivot(array $attributes = [], bool $exists = false): Pivot
     {
@@ -144,6 +160,7 @@ class MorphToMany extends BelongsToMany
                         : MorphPivot::fromAttributes($this->parent, $attributes, $this->table, $exists);
 
         $pivot->setPivotKeys($this->foreignPivotKey, $this->relatedPivotKey)
+            ->setRelatedModel($this->related)
             ->setMorphType($this->morphType)
             ->setMorphClass($this->morphClass);
 
@@ -157,9 +174,15 @@ class MorphToMany extends BelongsToMany
      */
     protected function aliasedPivotColumns(): array
     {
-        $defaults = [$this->foreignPivotKey, $this->relatedPivotKey, $this->morphType];
-
-        return Helpers::collect(array_merge($defaults, $this->pivotColumns))->map(fn ($column) => $this->qualifyPivotColumn($column) . ' as pivot_' . $column)->unique()->all();
+        return (new IterableCollection([
+            $this->foreignPivotKey,
+            $this->relatedPivotKey,
+            $this->morphType,
+            ...$this->pivotColumns,
+        ]))
+            ->map(fn ($column) => $this->qualifyPivotColumn($column).' as pivot_' . $column)
+            ->unique()
+            ->all();
     }
 
     /**
@@ -180,6 +203,8 @@ class MorphToMany extends BelongsToMany
 
     /**
      * Get the class name of the parent model.
+     *
+     * @return class-string<TRelatedModel>
      */
     public function getMorphClass(): string
     {

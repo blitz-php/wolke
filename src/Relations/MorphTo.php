@@ -13,11 +13,18 @@ namespace BlitzPHP\Wolke\Relations;
 
 use BadMethodCallException;
 use BlitzPHP\Utilities\Helpers;
+use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\Concerns\InteractsWithDictionary;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ *
+ * @extends BelongsTo<TRelatedModel, TDeclaringModel>
+ */
 class MorphTo extends BelongsTo
 {
     use InteractsWithDictionary;
@@ -32,7 +39,7 @@ class MorphTo extends BelongsTo
     /**
      * The models whose relations are being eager loaded.
      *
-     * @var Collection
+     * @var Collection<int, TDeclaringModel>
      */
     protected $models;
 
@@ -63,8 +70,11 @@ class MorphTo extends BelongsTo
 
     /**
      * Create a new morph to relationship instance.
+     *
+     * @param Builder<TRelatedModel>  $query
+     * @param TDeclaringModel  $parent
      */
-    public function __construct(Builder $query, Model $parent, string $foreignKey, string $ownerKey, string $type, string $relation)
+    public function __construct(Builder $query, Model $parent, string $foreignKey, ?string $ownerKey, string $type, string $relation)
     {
         $this->morphType = $type;
 
@@ -72,24 +82,32 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Set the constraints for an eager load of the relation.
+     * {@inheritDoc}
      */
     public function addEagerConstraints(array $models): void
     {
-        $this->buildDictionary($this->models = Collection::make($models));
+        $this->buildDictionary($this->models = new Collection($models));
     }
 
     /**
      * Build a dictionary with the models.
+     * 
+     * @param Collection<int, TRelatedModel>  $models
      */
     protected function buildDictionary(Collection $models): void
     {
-        foreach ($models as $model) {
+        $isAssociative = Arr::isAssoc($models->all());
+        
+        foreach ($models as $key => $model) {
             if ($model->{$this->morphType}) {
                 $morphTypeKey  = $this->getDictionaryKey($model->{$this->morphType});
                 $foreignKeyKey = $this->getDictionaryKey($model->{$this->foreignKey});
 
-                $this->dictionary[$morphTypeKey][$foreignKeyKey][] = $model;
+                if ($isAssociative) {
+                    $this->dictionary[$morphTypeKey][$foreignKeyKey][$key] = $model;
+                } else {
+                    $this->dictionary[$morphTypeKey][$foreignKeyKey][] = $model;
+                }
             }
         }
     }
@@ -97,7 +115,9 @@ class MorphTo extends BelongsTo
     /**
      * Get the results of the relationship.
      *
-     * Called via eager load method of Eloquent query builder.
+     * Called via eager load method of Wolke query builder.
+     * 
+     * @return Collection<int, TDeclaringModel>
      */
     public function getEager(): Collection
     {
@@ -110,6 +130,8 @@ class MorphTo extends BelongsTo
 
     /**
      * Get all of the relation results for a type.
+     * 
+     * @return Collection<int, TRelatedModel>
      */
     protected function getResultsByType(string $type): Collection
     {
@@ -134,7 +156,7 @@ class MorphTo extends BelongsTo
         $whereIn = $this->whereInMethod($instance, $ownerKey);
 
         return $query->{$whereIn}(
-            $instance->getTable() . '.' . $ownerKey,
+            $instance->qualifyColumn($ownerKey),
             $this->gatherKeysByType($type, $instance->getKeyType())
         )->get();
     }
@@ -151,15 +173,16 @@ class MorphTo extends BelongsTo
 
     /**
      * Create a new model instance by type.
+     * 
+     * @return TRelatedModel
      */
     public function createModelByType(string $type): Model
     {
         $class = Model::getActualClassNameForMorph($type);
 
-        return Helpers::tap(new $class(), static function ($instance) {
+        return Helpers::tap(new $class(), function ($instance) {
             if (! $instance->getConnectionName()) {
-                $instance->setConnection('default');
-                // $instance->setConnection($this->getConnection()->getName()); Todo: defini la methode getName() dans la baseconnection
+                $instance->setConnection($this->getConnection()->getName());
             }
         });
     }
@@ -174,6 +197,8 @@ class MorphTo extends BelongsTo
 
     /**
      * Match the results for a given type to their parents.
+     * 
+     * @param Collection<int, TRelatedModel>  $results
      */
     protected function matchToMorphParents(string $type, Collection $results): void
     {
@@ -191,7 +216,9 @@ class MorphTo extends BelongsTo
     /**
      * {@inheritDoc}
      *
-     * @param Model $model
+     * @param  TRelatedModel|null  $model
+     * 
+     * @return TDeclaringModel
      */
     public function associate($model): Model
     {
@@ -216,6 +243,8 @@ class MorphTo extends BelongsTo
 
     /**
      * Dissociate previously associated model from the given parent.
+     *
+     * @return TDeclaringModel
      */
     public function dissociate(): Model
     {
@@ -227,7 +256,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Touch all of the related models for the relationship.
+     * {@inheritDoc}
      */
     public function touch(): void
     {
@@ -237,7 +266,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Make a new related instance for the given model.
+     * {@inheritDoc}
      */
     protected function newRelatedInstanceFor(Model $parent): Model
     {
@@ -263,7 +292,7 @@ class MorphTo extends BelongsTo
     /**
      * Specify which relations to load for a given morph type.
      */
-    public function morphWith(array $with): self
+    public function morphWith(array $with): static
     {
         $this->morphableEagerLoads = array_merge(
             $this->morphableEagerLoads,
@@ -276,7 +305,7 @@ class MorphTo extends BelongsTo
     /**
      * Specify which relationship counts to load for a given morph type.
      */
-    public function morphWithCount(array $withCount): self
+    public function morphWithCount(array $withCount): static
     {
         $this->morphableEagerLoadCounts = array_merge(
             $this->morphableEagerLoadCounts,
@@ -289,7 +318,7 @@ class MorphTo extends BelongsTo
     /**
      * Specify constraints on the query for a given morph type.
      */
-    public function constrain(array $callbacks): self
+    public function constrain(array $callbacks): static
     {
         $this->morphableConstraints = array_merge(
             $this->morphableConstraints,
@@ -317,7 +346,7 @@ class MorphTo extends BelongsTo
     /**
      * Indicate that soft deleted models should not be included in the results.
      */
-    public function withoutTrashed(): self
+    public function withoutTrashed(): static
     {
         $callback = static fn ($query) => $query->hasMacro('withoutTrashed') ? $query->withoutTrashed() : $query;
 
@@ -332,7 +361,7 @@ class MorphTo extends BelongsTo
     /**
      * Indicate that only soft deleted models should be included in the results.
      */
-    public function onlyTrashed(): self
+    public function onlyTrashed(): static
     {
         $callback = static fn ($query) => $query->hasMacro('onlyTrashed') ? $query->onlyTrashed() : $query;
 
@@ -346,6 +375,10 @@ class MorphTo extends BelongsTo
 
     /**
      * Replay stored macro calls on the actual related instance.
+     * 
+     * @param Builder<TRelatedModel>  $query
+     * 
+     * @return Builder<TRelatedModel>
      */
     protected function replayMacros(Builder $query): Builder
     {
@@ -354,6 +387,17 @@ class MorphTo extends BelongsTo
         }
 
         return $query;
+    }
+    /** 
+     * {@inheritDoc}
+     */
+    public function getQualifiedOwnerKeyName(): string
+    {
+        if (null === $this->ownerKey) {
+            return '';
+        }
+
+        return parent::getQualifiedOwnerKeyName();
     }
 
     /**

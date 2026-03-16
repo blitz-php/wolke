@@ -62,7 +62,7 @@ class Observer extends Command
     /**
      * {@inheritDoc}
      */
-    public function execute(array $params)
+    public function handle()
     {
         $this->component     = 'Observer';
         $this->directory     = 'Observers';
@@ -70,7 +70,7 @@ class Observer extends Command
         $this->templatePath  = __DIR__ . '/Views';
         $this->classNameLang = 'CLI.generator.className.observer';
 
-        $params['suffix'] = true;
+        $params = $this->parameters() + ['suffix' => true];
 
         $this->generateClass($params);
     }

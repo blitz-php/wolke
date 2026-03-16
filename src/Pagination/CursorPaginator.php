@@ -20,10 +20,25 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 
+/**
+ * @template TKey of array-key
+ *
+ * @template-covariant TValue
+ *
+ * @extends AbstractCursorPaginator<TKey, TValue>
+ *
+ * @implements Arrayable<TKey, TValue>
+ * @implements ArrayAccess<TKey, TValue>
+ * @implements IteratorAggregate<TKey, TValue>
+ * @implements PaginatorContract<TKey, TValue>
+ */
 class CursorPaginator extends AbstractCursorPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, PaginatorContract
 {
     /**
      * Create a new paginator instance.
+     *
+     * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $items
+     * @param  array{path: string, query: array, fragment: ?string, pageName: string}  $options
      */
     public function __construct(mixed $items, int $perPage, ?Cursor $cursor = null, array $options = [])
     {
@@ -45,7 +60,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
      */
     protected function setItems(mixed $items): void
     {
-        $this->items = $items instanceof Collection ? $items : Collection::make($items);
+        $this->items = $items instanceof Collection ? $items : new Collection($items);
 
         $this->hasMore = $this->items->count() > $this->perPage;
 
@@ -69,9 +84,9 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
      */
     public function render(?string $view = null, array $data = []): string
     {
-        return static::viewFactory()->addData(array_merge($data, [
-            'paginator' => $this,
-        ]))->render($view ?: Paginator::$defaultSimpleView);
+        return static::viewFactory()
+            ->addData(array_merge($data, ['paginator' => $this]))
+            ->render($view ?: Paginator::$defaultSimpleView);
     }
 
     /**
@@ -138,5 +153,13 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     public function toJson(int $options = 0): string
     {
         return json_encode($this->jsonSerialize(), $options);
+    }
+
+    /**
+     * Convert the object to pretty print formatted JSON.
+     */
+    public function toPrettyJson(int $options = 0): string
+    {
+        return $this->toJson(JSON_PRETTY_PRINT | $options);
     }
 }

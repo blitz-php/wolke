@@ -11,7 +11,8 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
-use BlitzPHP\Database\Builder\BaseBuilder;
+use BlitzPHP\Database\Builder\JoinClause;
+use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Contracts\SupportsPartialRelations;
@@ -20,6 +21,12 @@ use BlitzPHP\Wolke\Relations\Concerns\CanBeOneOfMany;
 use BlitzPHP\Wolke\Relations\Concerns\ComparesRelatedModels;
 use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ *
+ * @extends HasOneOrMany<TRelatedModel, TDeclaringModel, ?TRelatedModel>
+ */
 class HasOne extends HasOneOrMany implements SupportsPartialRelations
 {
     use ComparesRelatedModels;
@@ -73,6 +80,7 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
     /**
      * Add constraints for inner join subselect for one of many relationships.
      * 
+     * @param Builder<TRelatedModel>  $query
      * @param null|string|string[] $aggregate
      */
     public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void
@@ -90,27 +98,33 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
 
     /**
      * Add join query constraints for one of many relationships.
-     *
-     * @param string $on deprecated
      */
-    public function addOneOfManyJoinSubQueryConstraints(BaseBuilder $query, string $on): void
+    public function addOneOfManyJoinSubQueryConstraints(JoinClause $join): void
     {
-        $query->join($query->getTable(), [$this->qualifySubSelectColumn($this->foreignKey) => $this->qualifyRelatedColumn($this->foreignKey)]);
+        $join->on($this->qualifySubSelectColumn($this->foreignKey), '=', $this->qualifyRelatedColumn($this->foreignKey));
     }
 
     /**
      * Make a new related instance for the given model.
+     *
+     * @param  TDeclaringModel  $parent
+     * 
+     * @return TRelatedModel
      */
     public function newRelatedInstanceFor(Model $parent): Model
     {
-        return $this->related->newInstance()->setAttribute(
-            $this->getForeignKeyName(),
-            $parent->{$this->localKey}
-        );
+        return Helpers::tap($this->related->newInstance(), function ($instance) use ($parent) {
+            $instance->setAttribute($this->getForeignKeyName(), $parent->{$this->localKey});
+            $this->applyInverseRelationToModel($instance, $parent);
+        });
     }
 
     /**
      * Get the value of the model's foreign key.
+     *
+     * @param TRelatedModel  $model
+     * 
+     * @return int|string
      */
     protected function getRelatedKeyFrom(Model $model): mixed
     {

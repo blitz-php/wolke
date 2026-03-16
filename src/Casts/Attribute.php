@@ -42,8 +42,6 @@ class Attribute
 
     /**
      * Create a new attribute accessor / mutator.
-     *
-     * @return void
      */
     public function __construct(?callable $get = null, ?callable $set = null)
     {

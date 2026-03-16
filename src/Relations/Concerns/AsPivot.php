@@ -26,6 +26,13 @@ trait AsPivot
     public $pivotParent;
 
     /**
+     * The related model of the relationship.
+     *
+     * @var Model
+     */
+    public $pivotRelated;
+
+    /**
      * The name of the foreign key column.
      */
     protected string $foreignKey = '';
@@ -37,10 +44,8 @@ trait AsPivot
 
     /**
      * Create a new pivot model instance.
-     *
-     * @return static
      */
-    public static function fromAttributes(Model $parent, array $attributes, string $table, bool $exists = false)
+    public static function fromAttributes(Model $parent, array $attributes, string $table, bool $exists = false): static
     {
         $instance = new static();
 
@@ -66,10 +71,8 @@ trait AsPivot
 
     /**
      * Create a new pivot model from raw values returned from a query.
-     *
-     * @return static
      */
-    public static function fromRawAttributes(Model $parent, array $attributes, string $table, bool $exists = false)
+    public static function fromRawAttributes(Model $parent, array $attributes, string $table, bool $exists = false): static
     {
         $instance = static::fromAttributes($parent, [], $table, $exists);
 
@@ -85,6 +88,10 @@ trait AsPivot
 
     /**
      * Set the keys for a select query.
+     *
+     * @param  Builder<static>  $query
+     * 
+     * @return Builder<static>
      */
     protected function setKeysForSelectQuery(Builder $query): Builder
     {
@@ -105,6 +112,10 @@ trait AsPivot
 
     /**
      * Set the keys for a save update query.
+     *
+     * @param  Builder<static>  $query
+     * 
+     * @return Builder<static>
      */
     protected function setKeysForSaveQuery(Builder $query): Builder
     {
@@ -137,6 +148,8 @@ trait AsPivot
 
     /**
      * Get the query builder for a delete operation on the pivot.
+     *
+     * @return Builder<static>
      */
     protected function getDeleteQuery(): Builder
     {
@@ -189,7 +202,7 @@ trait AsPivot
     /**
      * Set the key names for the pivot model instance.
      */
-    public function setPivotKeys(string $foreignKey, string $relatedKey): self
+    public function setPivotKeys(string $foreignKey, string $relatedKey): static
     {
         $this->foreignKey = $foreignKey;
 
@@ -199,11 +212,22 @@ trait AsPivot
     }
 
     /**
+     * Set the related model of the relationship.
+     */
+    public function setRelatedModel(?Model $related = null): static
+    {
+        $this->pivotRelated = $related;
+
+        return $this;
+    }
+
+    /**
      * Determine if the pivot model or given attributes has timestamp attributes.
      */
     public function hasTimestampAttributes(?array $attributes = null): bool
     {
-        return array_key_exists($this->getCreatedAtColumn(), $attributes ?? $this->attributes);
+        return ($createdAt = $this->getCreatedAtColumn()) !== null
+            && array_key_exists($createdAt, $attributes ?? $this->attributes);
     }
 
     /**
@@ -248,6 +272,8 @@ trait AsPivot
      * Get a new query to restore one or more models by their queueable IDs.
      *
      * @param list<int>|list<string>|string $ids
+     * 
+     * @return Builder<static>
      */
     public function newQueryForRestoration($ids): Builder
     {
@@ -294,7 +320,7 @@ trait AsPivot
     /**
      * Unset all the loaded relations for the instance.
      */
-    public function unsetRelations(): self
+    public function unsetRelations(): static
     {
         $this->pivotParent = null;
         $this->relations   = [];

@@ -1,27 +1,27 @@
-<?php if ($paginator->hasPages()) : ?>
+<?php if ($paginator->hasPages()): ?>
     <nav>
         <ul class="pagination">
-            <!-- Previous Page Link -->
-            <?php if ($paginator->onFirstPage()) : ?>
+            <?php // Previous Page Link ?>
+            <?php if ($paginator->onFirstPage()): ?>
                 <li class="page-item disabled" aria-disabled="true">
-                    <span class="page-link"><?= lang('Pager.previous') ?></span>
+                    <span class="page-link"><?= lang('Pagination.previous'); ?></span>
                 </li>
-            <?php else : ?>
+            <?php else: ?>
                 <li class="page-item">
-                    <a class="page-link" href="{{ $paginator->previousPageUrl() }}" rel="prev"><?= lang('Pager.previous') ?></a>
+                    <a class="page-link" href="<?php echo $paginator->previousPageUrl(); ?>" rel="prev"><?= lang('Pagination.previous'); ?></a>
                 </li>
-            <?php endif ?>
+            <?php endif; ?>
 
-            <!-- Next Page Link -->
-            <?php if ($paginator->hasMorePages()) : ?>
+            <?php // Next Page Link ?>
+            <?php if ($paginator->hasMorePages()): ?>
                 <li class="page-item">
-                    <a class="page-link" href="{{ $paginator->nextPageUrl() }}" rel="next"><?= lang('Pager.next') ?></a>
+                    <a class="page-link" href="<?php echo $paginator->nextPageUrl(); ?>" rel="next"><?= lang('Pagination.next'); ?></a>
                 </li>
-            <?php else : ?>
+            <?php else: ?>
                 <li class="page-item disabled" aria-disabled="true">
-                    <span class="page-link"><?= lang('Pager.next') ?></span>
+                    <span class="page-link"><?= lang('Pagination.next'); ?></span>
                 </li>
-            <?php endif ?>
+            <?php endif; ?>
         </ul>
     </nav>
-<?php endif ?>
+<?php endif; ?>

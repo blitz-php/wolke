@@ -14,38 +14,40 @@ namespace BlitzPHP\Wolke;
 use BadMethodCallException;
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Database\Builder\BaseBuilder;
+use BlitzPHP\Database\Exceptions\MultipleRecordsFoundException;
+use BlitzPHP\Database\Exceptions\RecordsNotFoundException;
 use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
-use BlitzPHP\Database\RawSql;
-use BlitzPHP\Database\Result\BaseResult;
+use BlitzPHP\Database\Query\Expression;
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Utilities\Helpers;
+use BlitzPHP\Utilities\Invade\Invader;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Utilities\Iterable\LazyCollection;
 use BlitzPHP\Utilities\String\Text;
-use BlitzPHP\Utilities\Support\Invader;
 use BlitzPHP\Wolke\Concerns\BuildsQueries;
 use BlitzPHP\Wolke\Concerns\QueriesRelationships;
 use BlitzPHP\Wolke\Contracts\Scope;
 use BlitzPHP\Wolke\Exceptions\CursorPaginationException;
 use BlitzPHP\Wolke\Exceptions\ModelNotFoundException;
-use BlitzPHP\Wolke\Exceptions\MultipleRecordsFoundException;
-use BlitzPHP\Wolke\Exceptions\RecordsNotFoundException;
 use BlitzPHP\Wolke\Exceptions\RelationNotFoundException;
-use BlitzPHP\Wolke\Pagination\CursorPaginator;
+use BlitzPHP\Wolke\Pagination\Cursor;
 use BlitzPHP\Wolke\Pagination\LengthAwarePaginator;
 use BlitzPHP\Wolke\Pagination\Paginator;
 use BlitzPHP\Wolke\Relations\BelongsToMany;
 use BlitzPHP\Wolke\Relations\Relation;
 use Closure;
 use Exception;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * @property HigherOrderBuilderProxy $orWhere
- * @property HigherOrderBuilderProxy $orWhereNot
- * @property HigherOrderBuilderProxy $whereNot
+ * @template TModel of Model
+ *
+ * @property-read HigherOrderBuilderProxy|$this $orWhere
+ * @property-read HigherOrderBuilderProxy|$this $whereNot
+ * @property-read HigherOrderBuilderProxy|$this $orWhereNot
  *
  * @mixin BaseBuilder
  */
@@ -58,9 +60,14 @@ class Builder
     /**
      * The model being queried.
      *
-     * @var Model
+     * @var TModel
      */
     protected $model;
+
+    /**
+     * The attributes that should be added to new models created by this builder.
+     */
+    public array $pendingAttributes = [];
 
     /**
      * The relationships that should be eager loaded.
@@ -125,6 +132,7 @@ class Builder
         'sum',
         'sql',
         'toSql',
+        'toRawSql',
     ];
 
     /**
@@ -138,6 +146,18 @@ class Builder
     protected array $removedScopes = [];
 
     /**
+     * The callbacks that should be invoked after retrieving data from the database.
+     */
+    protected array $afterQueryCallbacks = [];
+
+    /**
+     * The callbacks that should be invoked on clone.
+     * 
+     * @var list<Closure(static): void>
+     */
+    protected array $onCloneCallbacks = [];
+
+    /**
      * Create a new Orm query builder instance.
      *
      * @param BaseBuilder $query The base query builder instance.
@@ -149,7 +169,7 @@ class Builder
     /**
      * Create and return an un-saved model instance.
      *
-     * @return Model|static
+     * @return TModel
      */
     public function make(array $attributes = [])
     {
@@ -159,7 +179,7 @@ class Builder
     /**
      * Register a new global scope.
      */
-    public function withGlobalScope(string $identifier, Closure|Scope $scope): self
+    public function withGlobalScope(string $identifier, Closure|Scope $scope): static
     {
         $this->scopes[$identifier] = $scope;
 
@@ -173,7 +193,7 @@ class Builder
     /**
      * Remove a registered global scope.
      */
-    public function withoutGlobalScope(Scope|string $scope): self
+    public function withoutGlobalScope(Scope|string $scope): static
     {
         if (! is_string($scope)) {
             $scope = get_class($scope);
@@ -189,7 +209,7 @@ class Builder
     /**
      * Remove all or passed registered global scopes.
      */
-    public function withoutGlobalScopes(?array $scopes = null): self
+    public function withoutGlobalScopes(?array $scopes = null): static
     {
         if (! is_array($scopes)) {
             $scopes = array_keys($this->scopes);
@@ -203,6 +223,18 @@ class Builder
     }
 
     /**
+     * Remove all global scopes except the given scopes.
+     */
+    public function withoutGlobalScopesExcept(array $scopes = []): static
+    {
+        $this->withoutGlobalScopes(
+            array_diff(array_keys($this->scopes), $scopes)
+        );
+
+        return $this;
+    }
+
+    /**
      * Get an array of global scopes that were removed from the query.
      */
     public function removedScopes(): array
@@ -211,25 +243,9 @@ class Builder
     }
 
     /**
-     * Ajoute une clause "where" basique a la requete a partir d'un sql brute.
-     */
-    public function whereRaw(string $query, string $boolean = 'and'): self
-    {
-        return $this->where(new RawSql($query), null, null, $boolean);
-    }
-
-    /**
-     * Ajoute une clause "where" basique a la requete a partir d'un sql brute.
-     */
-    public function orWhereRaw(string $query): self
-    {
-        return $this->whereRaw($query, 'or');
-    }
-
-    /**
      * Add a where clause on the primary key to the query.
      */
-    public function whereKey(mixed $id): self
+    public function whereKey(mixed $id): static
     {
         if ($id instanceof Model) {
             $id = $id->getKey();
@@ -251,7 +267,7 @@ class Builder
     /**
      * Add a where clause on the primary key to the query.
      */
-    public function whereKeyNot(mixed $id): self
+    public function whereKeyNot(mixed $id): static
     {
         if ($id instanceof Model) {
             $id = $id->getKey();
@@ -271,108 +287,34 @@ class Builder
     }
 
     /**
-     * Ajoute une clause "where null" a la requete.
+     * Exclude the given models from the query results.
+     *
+     * @param  iterable|mixed  $models
      */
-    public function whereNull(array|string $columns, string $boolean = 'and', bool $not = false): self
+    public function except($models): static
     {
-        if ($boolean === 'and') {
-            if ($not) {
-                $this->query->whereNotNull($columns);
-            } else {
-                $this->query->whereNull($columns);
-            }
-        } else {
-            if ($not) {
-                $this->query->orWhereNotNull($columns);
-            } else {
-                $this->query->orWhereNull($columns);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Add a "where not null" clause to the query.
-     */
-    public function whereNotNull(array|string $columns, string $boolean = 'and'): self
-    {
-        return $this->whereNull($columns, $boolean, true);
-    }
-
-    /**
-     * Add a "where" clause comparing two columns to the query.
-     */
-    public function whereColumn(string $first, ?string $operator = null, ?string $second = null, string $boolean = 'and'): self
-    {
-        // Here we will make some assumptions about the operator. If only 2 values are
-        // passed to the method, we will assume that the operator is an equals sign
-        // and keep going. Otherwise, we'll require the operator to be passed in.
-        [$first, $operator] = $this->prepareValueAndOperator(
-            $first,
-            $operator,
-            func_num_args() === 2
+        return $this->whereKeyNot(
+            $models instanceof Model
+                ? $models->getKey()
+                : Collection::wrap($models)->modelKeys()
         );
-
-        if ($boolean === 'and') {
-            $this->query->where("{$first} {$operator}", $second, false);
-        } else {
-            $this->query->orWhere("{$first} {$operator}", $second, false);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Add an "or where" clause comparing two columns to the query.
-     */
-    public function orWhereColumn(string $first, ?string $operator = null, ?string $second = null): self
-    {
-        return $this->whereColumn($first, $operator, $second, 'or');
     }
 
     /**
      * Ajoute une clause "where" basique a la requete.
-     *
-     * @todo verifier le fonctionnement lors de l'ulisation des closure comme arguments
+     * 
+     * @param  (\Closure(static): mixed)|string|array|Expression  $column
      */
-    public function where(array|Closure|RawSql|string $column, Closure|string|null $operator = null, mixed $value = null, string $boolean = 'and'): self
+    public function where(array|Closure|Expression|string $column, mixed $operator = null, mixed $value = null, string $boolean = 'and'): static
     {
-        if ($column instanceof Closure) {
+        if ($column instanceof Closure && is_null($operator)) {
             $column($query = $this->model->newQueryWithoutRelationships());
-        }
 
-        // Here we will make some assumptions about the operator. If only 2 values are
-        // passed to the method, we will assume that the operator is an equals sign
-        // and keep going. Otherwise, we'll require the operator to be passed in.
-        [$value, $operator] = $this->prepareValueAndOperator(
-            (string) $value,
-            $operator,
-            func_num_args() === 2
-        );
+            $this->eagerLoad = array_merge($this->eagerLoad, $query->getEagerLoads());
 
-        if ($column instanceof Closure) {
-            if ($boolean === 'and') {
-                $this->query->where($column);
-            } else {
-                $this->query->orWhere($column);
-            }
+            $this->query->addNestedWhereQuery($query->getQuery(), $boolean);
         } else {
-            $escape = true;
-
-            if ($column instanceof RawSql) {
-                $column = (string) $column;
-                $value  = null;
-                $escape = false;
-            }
-
-            $columnAndOperator = is_array($column) ? $column : "{$column} {$operator}";
-
-            if ($boolean === 'and') {
-                $this->query->where($columnAndOperator, $value, $escape);
-            } else {
-                $this->query->orWhere($columnAndOperator, $value, $escape);
-            }
+            $this->query->where(...func_get_args());
         }
 
         return $this;
@@ -381,33 +323,45 @@ class Builder
     /**
      * Add a basic where clause to the query, and return the first result.
      *
-     * @return Model|static
+     * @param  (Closure(static): mixed)|string|array|Expression  $column
+     * 
+     * @return TModel|null
      */
-    public function firstWhere(array|Closure|RawSql|string $column, Closure|string|null $operator = null, mixed $value = null, string $boolean = 'and')
+    public function firstWhere(array|Closure|Expression|string $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
     {
         return $this->where(...func_get_args())->first();
     }
 
     /**
      * Add an "or where" clause to the query.
+     * 
+     * @param  (Closure(static): mixed)|array|string|Expression  $column
      */
-    public function orWhere(array|Closure|RawSql|string $column, Closure|string|null $operator = null, mixed $value = null): self
+    public function orWhere(array|Closure|Expression|string $column, Closure|string|null $operator = null, mixed $value = null): static
     {
+        [$value, $operator] = $this->prepareValueAndOperator(
+            $value, $operator, func_num_args() === 2
+        );
+
         return $this->where($column, $operator, $value, 'or');
     }
 
     /**
      * Add a basic "where not" clause to the query.
+     * 
+     * @param  (Closure(static): mixed)|array|string|Expression  $column
      */
-    public function whereNot(array|Closure|RawSql|string $column, mixed $value = null, string $boolean = 'and'): self
+    public function whereNot(array|Closure|Expression|string $column, mixed $value = null, string $boolean = 'and'): static
     {
         return $this->where($column, '!=', $value, $boolean);
     }
 
     /**
      * Add a basic "or where not" clause to the query.
+     * 
+     * @param  (Closure(static): mixed)|array|string|Expression  $column
      */
-    public function orWhereNot(array|Closure|RawSql|string $column, mixed $value = null): self
+    public function orWhereNot(array|Closure|Expression|string $column, mixed $value = null): static
     {
         return $this->whereNot($column, $value, 'or');
     }
@@ -415,7 +369,7 @@ class Builder
     /**
      * Add an "order by" clause for a timestamp to the query.
      */
-    public function latest(?string $column = null): self
+    public function latest(Expression|string|null $column = null): static
     {
         if (null === $column) {
             $column = $this->model->getCreatedAtColumn() ?? 'created_at';
@@ -429,7 +383,7 @@ class Builder
     /**
      * Add an "order by" clause for a timestamp to the query.
      */
-    public function oldest(?string $column = null): self
+    public function oldest(?string $column = null): static
     {
         if (null === $column) {
             $column = $this->model->getCreatedAtColumn() ?? 'created_at';
@@ -442,13 +396,15 @@ class Builder
 
     /**
      * Create a collection of models from plain arrays.
+     * 
+     * @return Collection<int, TModel>
      */
     public function hydrate(array $items): Collection
     {
         $instance = $this->newModelInstance();
 
         return $instance->newCollection(array_map(static function ($item) use ($items, $instance) {
-            $model = $instance->newFromBuilder((array) $item);
+            $model = $instance->newFromBuilder($item);
 
             if (count($items) > 1) {
                 $model->preventsLazyLoading = Model::preventsLazyLoading();
@@ -459,19 +415,80 @@ class Builder
     }
 
     /**
+     * Insert into the database after merging the model's default attributes, setting timestamps, and casting values.
+     *
+     * @param  array<int, array<string, mixed>>  $values
+     */
+    public function fillAndInsert(array $values): bool
+    {
+        return $this->insert($this->fillForInsert($values));
+    }
+
+    /**
+     * Insert (ignoring errors) into the database after merging the model's default attributes, setting timestamps, and casting values.
+     *
+     * @param  array<int, array<string, mixed>>  $values
+     */
+    public function fillAndInsertOrIgnore(array $values): int
+    {
+        return $this->insertOrIgnore($this->fillForInsert($values));
+    }
+
+    /**
+     * Insert a record into the database and get its ID after merging the model's default attributes, setting timestamps, and casting values.
+     *
+     * @param  array<string, mixed>  $values
+     */
+    public function fillAndInsertGetId(array $values): int
+    {
+        return $this->insertGetId($this->fillForInsert([$values])[0]);
+    }
+
+    /**
+     * Enrich the given values by merging in the model's default attributes, adding timestamps, and casting values.
+     *
+     * @param  array<int, array<string, mixed>>  $values
+     * 
+     * @return array<int, array<string, mixed>>
+     */
+    public function fillForInsert(array $values)
+    {
+        if (empty($values)) {
+            return [];
+        }
+
+        if (! is_array(Arr::first($values))) {
+            $values = [$values];
+        }
+
+        $this->model->unguarded(function () use (&$values) {
+            foreach ($values as $key => $rowValues) {
+                $values[$key] = Helpers::tap(
+                    $this->newModelInstance($rowValues),
+                    fn ($model) => $model->setUniqueIds()
+                )->getAttributes();
+            }
+        });
+
+        return $this->addTimestampsToUpsertValues($values);
+    }
+
+    /**
      * Create a collection of models from a raw query.
+     * 
+     * @return Collection<int, TModel>
      */
     public function fromQuery(string $query, array $bindings = []): Collection
     {
         return $this->hydrate(
-            $this->query->db()->query($query, $bindings)->result()
+            $this->query->db()->query($query, $bindings)->resultObject()
         );
     }
 
     /**
      * Find a model by its primary key.
      *
-     * @return Collection|list<static>|Model|static|null
+     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel|null)
      */
     public function find(mixed $id, array $columns = ['*'])
     {
@@ -483,7 +500,22 @@ class Builder
     }
 
     /**
+     * Find a sole model by its primary key.
+     *
+     * @return TModel
+     *
+     * @throws ModelNotFoundException<TModel>
+     * @throws MultipleRecordsFoundException
+     */
+    public function findSole(mixed $id, array $columns = ['*'])
+    {
+        return $this->whereKey($id)->sole($columns);
+    }
+
+    /**
      * Find multiple models by their primary keys.
+     * 
+     * @return Collection<int, TModel>
      */
     public function findMany(array|Arrayable $ids, array $columns = ['*']): Collection
     {
@@ -499,7 +531,7 @@ class Builder
     /**
      * Find a model by its primary key or throw an exception.
      *
-     * @return Collection|list<static>|Model|static
+     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel)
      *
      * @throws ModelNotFoundException
      */
@@ -533,7 +565,7 @@ class Builder
     /**
      * Find a model by its primary key or return fresh model instance.
      *
-     * @return Model|static
+     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel)
      */
     public function findOrNew(mixed $id, array $columns = ['*'])
     {
@@ -547,7 +579,16 @@ class Builder
     /**
      * Find a model by its primary key or call a callback.
      *
-     * @return Collection|list<static>|mixed|Model|static
+     * @template TValue
+     *
+     * @param  (Closure(): TValue)|list<string>|string  $columns
+     * @param  (Closure(): TValue)|null  $callback
+     * 
+     * @return (
+     *     $id is (Arrayable<array-key, mixed>|array<mixed>)
+     *     ? Collection<int, TModel>
+     *     : TModel|TValue
+     * )
      */
     public function findOr(mixed $id, array|Closure|string $columns = ['*'], ?Closure $callback = null)
     {
@@ -567,7 +608,7 @@ class Builder
     /**
      * Get the first record matching the attributes or instantiate it.
      *
-     * @return Model|static
+     * @return TModel
      */
     public function firstOrNew(array $attributes = [], array $values = [])
     {
@@ -581,9 +622,11 @@ class Builder
     /**
      * Get the first record matching the attributes or create it.
      *
-     * @return Model|static
+     * @param  (Closure(): array)|array  $values
+     * 
+     * @return TModel
      */
-    public function firstOrCreate(array $attributes = [], array $values = [])
+    public function firstOrCreate(array $attributes = [], Closure|array $values = [])
     {
         if (null !== ($instance = (clone $this)->where($attributes)->first())) {
             return $instance;
@@ -595,12 +638,14 @@ class Builder
     /**
      * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
      *
-     * @return Model|static
+     * @param  (Closure(): array)|array  $values
+     * 
+     * @return TModel
      */
-    public function createOrFirst(array $attributes = [], array $values = [])
+    public function createOrFirst(array $attributes = [], Closure|array $values = [])
     {
         try {
-            return $this->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, $values)));
+            return $this->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, Helpers::value($values))));
         } catch (UniqueConstraintViolationException $e) {
             return $this->where($attributes)->first() ?? throw $e;
         }
@@ -609,7 +654,7 @@ class Builder
     /**
      * Create or update a record matching the attributes, and fill it with values.
      *
-     * @return Model|static
+     * @return TModel
      */
     public function updateOrCreate(array $attributes, array $values = [])
     {
@@ -621,11 +666,25 @@ class Builder
     }
 
     /**
+     * Create a record matching the attributes, or increment the existing record.
+     *
+     * @return TModel
+     */
+    public function incrementOrCreate(array $attributes, string $column = 'count', float|int $default = 1, float|int $step = 1, array $extra = [])
+    {
+        return Helpers::tap($this->firstOrCreate($attributes, [$column => $default]), function ($instance) use ($column, $step, $extra) {
+            if (! $instance->wasRecentlyCreated) {
+                $instance->increment($column, $step, $extra);
+            }
+        });
+    }
+
+    /**
      * Execute the query and get the first result or throw an exception.
      *
-     * @return Model|static
+     * @return TModel
      *
-     * @throws ModelNotFoundException
+     * @throws ModelNotFoundException<TModel>
      */
     public function firstOrFail(array $columns = ['*'])
     {
@@ -639,7 +698,12 @@ class Builder
     /**
      * Execute the query and get the first result or call a callback.
      *
-     * @return mixed|Model|static
+     * @template TValue
+     *
+     * @param  (Closure(): TValue)|list<string>  $columns
+     * @param  (Closure(): TValue)|null  $callback
+     * 
+     * @return TModel|TValue
      */
     public function firstOr(array|Closure $columns = ['*'], ?Closure $callback = null)
     {
@@ -659,7 +723,7 @@ class Builder
     /**
      * Execute the query and get the first result if it's the sole matching record.
      *
-     * @return Model
+     * @return TModel
      *
      * @throws ModelNotFoundException
      * @throws MultipleRecordsFoundException
@@ -668,7 +732,7 @@ class Builder
     {
         try {
             return $this->baseSole($columns);
-        } catch (RecordsNotFoundException $exception) {
+        } catch (RecordsNotFoundException) {
             throw (new ModelNotFoundException())->setModel(get_class($this->model));
         }
     }
@@ -676,21 +740,27 @@ class Builder
     /**
      * Get a single column's value from the first result of a query.
      */
-    public function value(string $column): mixed
+    public function value(string|Expression $column): mixed
     {
         if ($result = $this->first([$column])) {
+            $column = $column instanceof Expression ? $column->getValue() : $column;
+
             return $result->{Text::afterLast($column, '.')};
         }
+
+        return null;
     }
 
     /**
      * Get a single column's value from the first result of a query if it's the sole matching record.
      *
-     * @throws ModelNotFoundException<\Illuminate\Database\Eloquent\Model>
+     * @throws ModelNotFoundException<TModel>
      * @throws MultipleRecordsFoundException
      */
-    public function soleValue(string $column): mixed
+    public function soleValue(string|Expression $column): mixed
     {
+        $column = $column instanceof Expression ? $column->getValue() : $column;
+
         return $this->sole([$column])->{Text::afterLast($column, '.')};
     }
 
@@ -699,13 +769,17 @@ class Builder
      *
      * @throws ModelNotFoundException<Model>
      */
-    public function valueOrFail(string $column): mixed
+    public function valueOrFail(string|Expression $column): mixed
     {
+        $column = $column instanceof Expression ? $column->getValue() : $column;
+
         return $this->firstOrFail([$column])->{Text::afterLast($column, '.')};
     }
 
     /**
      * Execute the query as a "select" statement.
+     * 
+     * @return list<TModel>
      */
     public function all(array|string $columns = ['*']): array
     {
@@ -715,9 +789,9 @@ class Builder
     /**
      * Execute the query as a "select" statement.
      *
-     * @return Collection<Model>
+     * @return Collection<int, TModel>
      */
-    public function get(array|string $columns = []): Collection
+    public function get(array|string $columns = ['*']): Collection
     {
         $builder = $this->applyScopes();
 
@@ -729,15 +803,17 @@ class Builder
             $models = $builder->eagerLoadRelations($models);
         }
 
-        return $builder->getModel()->newCollection($models);
+        return $this->applyAfterQueryCallbacks(
+            $builder->getModel()->newCollection($models)
+        );
     }
 
     /**
      * Get the hydrated models without eager loading.
      *
-     * @return list<Model>|list<static>
+     * @return list<TModel>
      */
-    public function getModels(array|string $columns = [])
+    public function getModels(array|string $columns = []): array
     {
         return $this->model->hydrate(
             $this->query->from($this->model->getTable())->select($columns)->result()
@@ -746,6 +822,10 @@ class Builder
 
     /**
      * Eager load the relationships for the models.
+     * 
+     * @param  list<TModel>  $models
+     * 
+     * @return list<TModel>
      */
     public function eagerLoadRelations(array $models): array
     {
@@ -787,6 +867,8 @@ class Builder
 
     /**
      * Get the relation instance for the given relation name.
+     * 
+     * @return Relation<Model, TModel, *>
      */
     public function getRelation(string $name): Relation
     {
@@ -796,7 +878,7 @@ class Builder
         $relation = Relation::noConstraints(function () use ($name) {
             try {
                 return $this->getModel()->newInstance()->{$name}();
-            } catch (BadMethodCallException $e) {
+            } catch (BadMethodCallException) {
                 throw RelationNotFoundException::make($this->getModel(), $name);
             }
         });
@@ -841,11 +923,45 @@ class Builder
     }
 
     /**
+     * Register a closure to be invoked after the query is executed.
+     *
+     * @param Closure(mixed): mixed  $callback
+     */
+    public function afterQuery(Closure $callback): static
+    {
+        $this->afterQueryCallbacks[] = $callback;
+
+        return $this;
+    }
+
+    /**
+     * Invoke the "after query" modification callbacks.
+     */
+    public function applyAfterQueryCallbacks(mixed $result): mixed
+    {
+        foreach ($this->afterQueryCallbacks as $afterQueryCallback) {
+            $result = $afterQueryCallback($result) ?: $result;
+        }
+
+        return $result;
+    }
+
+    /**
      * Get a lazy collection for the given query.
+     *
+     * @return LazyCollection<int, TModel>
      */
     public function cursor(): LazyCollection
     {
-        return $this->applyScopes()->baseCursor()->map(fn ($record) => $this->newModelInstance()->newFromBuilder($record));
+        return $this->applyScopes()
+            ->baseCursor()
+            // ->query->cursor() // @TODO A voir si on met le cursor au niveau du query builder (ps: je ne suis pas d'accord)
+            ->map(function ($record) {
+                $model = $this->newModelInstance()->newFromBuilder($record);
+
+                return $this->applyAfterQueryCallbacks($this->newModelInstance()->newCollection([$model]))->first();
+            })
+            ->reject(fn ($model) => is_null($model));
     }
 
     /**
@@ -853,123 +969,38 @@ class Builder
      */
     protected function enforceOrderBy(): void
     {
-        if (empty(Invader::make($this->query)->order)) {
+        if ($this->query->orders === []) {
             $this->orderBy($this->model->getQualifiedKeyName(), 'asc');
         }
     }
 
     /**
      * Get an array with the values of a given column.
+     * 
+     * @return IterableCollection<array-key, mixed>
      */
-    public function pluck(string $column, ?string $key = null): IterableCollection
+    public function pluck(string|Expression $column, ?string $key = null): IterableCollection
     {
-        // First, we will need to select the results of the query accounting for the
-        // given columns / key. Once we have the results, we will be able to take
-        // the results and get the exact data that was requested for the query.
-        $queryResult = $this->onceWithColumns(
-            null === $key ? [$column] : [$column, $key],
-            fn () => $this->fromQuery($this->toSql())
-        );
+        $column = $column instanceof Expression ? $column->getValue() : $column;
 
-        if (empty($queryResult)) {
-            return Helpers::collect();
-        }
+        $results = new IterableCollection($this->toBase()->values($column));
 
-        // If the columns are qualified with a table or have an alias, we cannot use
-        // those directly in the "pluck" operations since the results from the DB
-        // are only keyed by the column itself. We'll strip the table out here.
-        $column = $this->stripTableForPluck($column);
-
-        $key = $this->stripTableForPluck($key);
-
-        $results = is_array($queryResult[0])
-            ? $this->pluckFromArrayColumn($queryResult, $column, $key)
-            : $this->pluckFromObjectColumn($queryResult, $column, $key);
+        $column = Text::after($column, "{$this->model->getTable()}.");
 
         // If the model has a mutator for the requested column, we will spin through
         // the results and mutate the values so that the mutated version of these
-        // columns are returned as you would expect from these Orm models.
-        if (! $this->model->hasGetMutator($column)
-            && ! $this->model->hasCast($column)
-            && ! in_array($column, $this->model->getDates(), true)) {
-            return $results;
+        // columns are returned as you would expect from these Wolke models.
+        if (! $this->model->hasAnyGetMutator($column) &&
+            ! $this->model->hasCast($column) &&
+            ! in_array($column, $this->model->getDates())) {
+            return $this->applyAfterQueryCallbacks($results);
         }
 
-        return $results->map(fn ($value) => $this->model->newFromBuilder([$column => $value])->{$column});
-    }
-
-    /**
-     * Execute the given callback while selecting the given columns.
-     *
-     * After running the callback, the columns are reset to the original value.
-     */
-    protected function onceWithColumns(array $columns, callable $callback): mixed
-    {
-        $original = Invader::make($this->query)->fields;
-
-        if (empty($original)) {
-            Invader::make($this->query)->fields = $columns;
-        }
-
-        $result = $callback();
-
-        Invader::make($this->query)->fields = $original;
-
-        return $result;
-    }
-
-    /**
-     * Strip off the table name or alias from a column identifier.
-     */
-    protected function stripTableForPluck(?string $column): ?string
-    {
-        if (null === $column) {
-            return $column;
-        }
-
-        $separator = str_contains(strtolower($column), ' as ') ? ' as ' : '\.';
-
-        return Arr::last(preg_split('~' . $separator . '~i', $column));
-    }
-
-    /**
-     * Retrieve column values from rows represented as arrays.
-     */
-    protected function pluckFromArrayColumn(iterable $queryResult, string $column, ?string $key): IterableCollection
-    {
-        $results = [];
-
-        if (null === $key) {
-            foreach ($queryResult as $row) {
-                $results[] = $row[$column];
-            }
-        } else {
-            foreach ($queryResult as $row) {
-                $results[$row[$key]] = $row[$column];
-            }
-        }
-
-        return Helpers::collect($results);
-    }
-
-    /**
-     * Retrieve column values from rows represented as objects.
-     */
-    protected function pluckFromObjectColumn(iterable $queryResult, string $column, ?string $key): IterableCollection
-    {
-        $results = [];
-
-        if (null === $key) {
-            foreach ($queryResult as $row) {
-                $results[] = $row->{$column};
-            }
-        } else {
-            foreach ($queryResult as $row) {
-                $results[$row->{$key}] = $row->{$column};
-            }
-        }
-
-        return Helpers::collect($results);
+        return $this->applyAfterQueryCallbacks(
+            $results->map(function ($value) use ($column) {
+                return $this->model->newFromBuilder([$column => $value])->{$column};
+            })
+        );
     }
 
     /**
@@ -980,12 +1011,8 @@ class Builder
     public function paginate(Closure|int|null $perPage = null, array|string $columns = [], string $pageName = 'page', ?int $page = null, Closure|int|null $total = null): LengthAwarePaginator
     {
         $page    = $page ?: Paginator::resolveCurrentPage($pageName);
-        $total   = null !== $total ? Helpers::value($total) : (clone $this->toBase())->count();
-        $perPage = (
-            $perPage instanceof Closure
-            ? $perPage($total)
-            : $perPage
-        ) ?: $this->model->getPerPage();
+        $total   = Helpers::value($total) ?? (clone $this->toBase())->count();
+        $perPage = Helpers::value($perPage, $total) ?: $this->model->getPerPage();
 
         $results = $total
             ? $this->forPage($page, $perPage)->get($columns)
@@ -1023,73 +1050,51 @@ class Builder
     /**
      * Paginate the given query into a cursor paginator.
      *
-     * @return Contracts\Paginator
+     * @return Contracts\CursorPaginator
      *
      * @throws CursorPaginationException
      */
-    public function cursorPaginate(?int $perPage = null, array $columns = ['*'], string $cursorName = 'cursor', ?string $cursor = null)
+    public function cursorPaginate(?int $perPage = null, array $columns = ['*'], string $cursorName = 'cursor', Cursor|string|null $cursor = null)
     {
-        $cursor = $cursor ?: CursorPaginator::resolveCurrentCursor($cursorName);
-
         $perPage = $perPage ?: $this->model->getPerPage();
 
-        $orders = $this->ensureOrderForCursorPagination(null !== $cursor && $cursor->pointsToPreviousItems());
-
-        $orderDirection = $orders->first()['direction'] ?? 'asc';
-
-        $comparisonOperator = Text::lower($orderDirection) === ' asc' ? '>' : '<';
-
-        $parameters = $orders->pluck('field')->toArray();
-
-        if (null !== $cursor) {
-            if (count($parameters) === 1) {
-                $this->where($column = $parameters[0], $comparisonOperator, $cursor->parameter($column));
-            } elseif (count($parameters) > 1) {
-                $this->whereRowValues($parameters, $comparisonOperator, $cursor->parameters($parameters));
-            }
-        }
-
-        $this->limit($perPage + 1);
-
-        return $this->cursorPaginator($this->get($columns), $perPage, $cursor, [
-            'path'       => Paginator::resolveCurrentPath(),
-            'cursorName' => $cursorName,
-            'parameters' => $parameters,
-        ]);
+        return $this->paginateUsingCursor($perPage, $columns, $cursorName, $cursor);
     }
 
     /**
      * Ensure the proper order by required for cursor pagination.
-     *
-     * @throws CursorPaginationException
      */
     protected function ensureOrderForCursorPagination(bool $shouldReverse = false): IterableCollection
     {
-        $orderDirections = Helpers::collect($this->query->QBOrderBy)->pluck('direction')->unique();
-
-        if ($orderDirections->count() > 1) {
-            throw new CursorPaginationException('Only a single order by direction is supported when using cursor pagination.');
-        }
-
-        if ($orderDirections->count() === 0) {
+        if ($this->query->orders === []) {
             $this->enforceOrderBy();
         }
 
-        if ($shouldReverse) {
-            $this->query->QBOrderBy = Helpers::collect($this->query->QBOrderBy)->map(static function ($order) {
-                $order['direction'] = Text::lower($order['direction']) === ' asc' ? 'desc' : 'asc';
-
+        $reverseDirection = function ($order) {
+            if (! isset($order['direction'])) {
                 return $order;
-            })->toArray();
+            }
+
+            $order['direction'] = $order['direction'] === 'asc' ? 'desc' : 'asc';
+
+            return $order;
+        };
+
+        if ($shouldReverse) {
+            Invader::make($this->query)->orders = (new IterableCollection($this->query->orders))->map($reverseDirection)->toArray();
         }
 
-        return Helpers::collect($this->query->QBOrderBy);
+        $orders = $this->query->orders;
+
+        return (new IterableCollection($orders))
+            ->filter(fn ($order) => Arr::has($order, 'direction'))
+            ->values();
     }
 
     /**
      * Save a new model and return the instance.
      *
-     * @return Model|self
+     * @return TModel
      */
     public function create(array $attributes = [])
     {
@@ -1099,9 +1104,19 @@ class Builder
     }
 
     /**
+     * Save a new model and return the instance without raising model events.
+     *
+     * @return TModel
+     */
+    public function createQuietly(array $attributes = [])
+    {
+        return Model::withoutEvents(fn () => $this->create($attributes));
+    }
+
+    /**
      * Save a new model and return the instance. Allow mass-assignment.
      *
-     * @return Model|self
+     * @return TModel
      */
     public function forceCreate(array $attributes)
     {
@@ -1111,7 +1126,7 @@ class Builder
     /**
      * Save a new model instance with mass assignment without raising model events.
      *
-     * @return Model|self
+     * @return TModel
      */
     public function forceCreateQuietly(array $attributes = [])
     {
@@ -1120,10 +1135,8 @@ class Builder
 
     /**
      * Update records in the database.
-     *
-     * @return BaseBuilder|BaseResult
      */
-    public function update(array $values)
+    public function update(array $values): int
     {
         return $this->toBase()->update($this->addUpdatedAtColumn($values));
     }
@@ -1133,7 +1146,7 @@ class Builder
      */
     public function upsert(array $values, array|string $uniqueBy, ?array $update = null): int
     {
-        if (empty($values)) {
+        if ($values === []) {
             return 0;
         }
         if (! is_array(reset($values))) {
@@ -1145,7 +1158,7 @@ class Builder
 
         return $this->toBase()->upsert(
             $this->addTimestampsToUpsertValues($this->addUniqueIdsToUpsertValues($values)),
-            $uniqueBy,
+            (array) $uniqueBy,
             $this->addUpdatedAtToUpsertColumns($update)
         );
     }
@@ -1159,31 +1172,25 @@ class Builder
     {
         $time = $this->model->freshTimestamp();
 
-        if (! $column) {
-            $column = $this->model->getUpdatedAtColumn();
+        if ($column) {
+            return $this->toBase()->update([$column => $time]);
         }
+
+        $column = $this->model->getUpdatedAtColumn();
 
         if (! $this->model->usesTimestamps() || null === $column) {
             return false;
         }
 
-        $result = $this->toBase()->update([$column => $time]);
-        if ($result instanceof BaseResult) {
-            return $result->affectedRows();
-        }
-
-        return false;
+        return $this->toBase()->update([$column => $time]);
     }
 
     /**
      * Increment a column's value by a given amount.
      */
-    public function increment(string $column, float|int $amount = 1, array $extra = []): bool
+    public function increment(string $column, float|int $amount = 1, array $extra = []): int
     {
-        return $this->toBase()->increment(
-            $column,
-            $amount
-        );
+        return $this->toBase()->increment($column, $amount, $this->addUpdatedAtColumn($extra));
     }
 
     /**
@@ -1191,10 +1198,7 @@ class Builder
      */
     public function decrement(string $column, float|int $amount = 1, array $extra = []): bool
     {
-        return $this->toBase()->decrement(
-            $column,
-            $amount
-        );
+        return $this->toBase()->decrement($column, $amount, $this->addUpdatedAtColumn($extra));
     }
 
     /**
@@ -1221,7 +1225,7 @@ class Builder
             ) {
                 $timestamp = $this->model->newInstance()
                     ->forceFill([$column => $timestamp])
-                    ->getAttributes()[$column];
+                    ->getAttributes()[$column] ?? $timestamp;
             }
 
             $values = array_merge([$column => $timestamp], $values);
@@ -1229,10 +1233,7 @@ class Builder
 
         $segments = preg_split('/\s+as\s+/i', $this->query->getTable());
 
-        $qualifiedColumn = match ($this->query->db()->driver) {
-            'sqlite' => $column,
-            default  => end($segments) . '.' . $column
-        };
+        $qualifiedColumn = end($segments) . '.' . $column;
 
         $values[$qualifiedColumn] = Arr::get($values, $qualifiedColumn, $values[$column]);
 
@@ -1310,10 +1311,8 @@ class Builder
 
     /**
      * Delete records from the database.
-     *
-     * @return BaseBuilder|BaseResult
      */
-    public function delete()
+    public function delete(): mixed
     {
         if (isset($this->onDelete)) {
             return call_user_func($this->onDelete, $this);
@@ -1327,7 +1326,7 @@ class Builder
      *
      * Since we do not apply scopes here, the row will actually be deleted.
      *
-     * @return BaseBuilder|BaseResult
+     * @return int
      */
     public function forceDelete()
     {
@@ -1378,10 +1377,8 @@ class Builder
 
     /**
      * Apply the scopes to the Orm builder instance and return it.
-     *
-     * @return static
      */
-    public function applyScopes()
+    public function applyScopes(): static
     {
         if (! $this->scopes) {
             return $this;
@@ -1411,10 +1408,6 @@ class Builder
             });
         }
 
-        if (empty(Invader::make($builder->query)->table)) {
-            $builder->query->from($this->getModel()->getTable());
-        }
-
         return $builder;
     }
 
@@ -1430,13 +1423,11 @@ class Builder
         // We will keep track of how many wheres are on the query before running the
         // scope so that we can properly group the added scope constraints in the
         // query as their own isolated nested where statement and avoid issues.
-        $originalWhereCount = [] === $query->getCompiledWhere()
-            ? 0
-            : count($query->getCompiledWhere());
+        $originalWhereCount = count($query->wheres);
 
-        $result = $scope(...array_values($parameters)) ?? $this;
+        $result = $scope(...$parameters) ?? $this;
 
-        if (count((array) $query->getCompiledWhere()) > $originalWhereCount) {
+        if (count($query->wheres) > $originalWhereCount) {
             $this->addNewWheresWithinGroup($query, $originalWhereCount);
         }
 
@@ -1456,16 +1447,12 @@ class Builder
      */
     protected function addNewWheresWithinGroup(BaseBuilder $query, int $originalWhereCount): void
     {
-        // @todo a verifier et COMPRENDRE car ne fonctionne pas
-        return;
         // Here, we totally remove all of the where clauses since we are going to
         // rebuild them as nested queries by slicing the groups of wheres into
         // their own sections. This is to prevent any confusing logic order.
-        $allWheres = $query->getCompiledWhere();
-
-        // @todo implementation d'un tableau de where au niveau de basebuilder
-
-        Invader::make($this->query)->where = '';
+        $allWheres = $query->wheres;
+        
+        Invader::make($query)->wheres = [];
 
         $this->groupWhereSliceForScope(
             $query,
@@ -1483,18 +1470,21 @@ class Builder
      */
     protected function groupWhereSliceForScope(BaseBuilder $query, array $whereSlice): void
     {
-        $whereBooleans = Helpers::collect($whereSlice)->pluck('boolean');
+        $whereBooleans = (new IterableCollection($whereSlice))->pluck('boolean');
 
         // Here we'll check if the given subset of where clauses contains any "or"
         // booleans and in this case create a nested where expression. That way
         // we don't add any unnecessary nesting thus keeping the query clean.
-        if ($whereBooleans->contains('or')) {
-            Invader::make($query)->compileWhere[] = $this->createNestedWhere(
+        if ($whereBooleans->contains(fn ($logicalOperator) => str_contains($logicalOperator, 'or'))) {
+            $wheres = $query->wheres;
+
+            $wheres[] = $this->createNestedWhere(
                 $whereSlice,
-                $whereBooleans->first()
+                str_replace(' not', '', $whereBooleans->first())
             );
+            Invader::make($query)->wheres = $wheres;
         } else {
-            Invader::make($query)->compileWhere = array_merge($query->getCompiledWhere(), $whereSlice);
+            Invader::make($query)->wheres = array_merge($query->wheres, $whereSlice);
         }
     }
 
@@ -1505,17 +1495,18 @@ class Builder
     {
         $whereGroup = $this->getQuery()->reset()->from($this->model->getTable());
 
-        $whereGroup->where($whereSlice);
+        Invader::make($whereGroup)->wheres = $whereSlice;
 
-        return ['type' => 'Nested', 'query' => $whereGroup, 'boolean' => $boolean];
+        return ['type' => 'nested', 'query' => $whereGroup, 'boolean' => $boolean];
     }
 
     /**
      * Set the relationships that should be eager loaded.
      *
-     * @param  string...|array  $relations
+     * @param array<array-key, array|(Closure(Relation<*,*,*>): mixed)|string>|string  $relations
+     * @param (Closure(Relation<*,*,*>): mixed)|string|null  $callback
      */
-    public function with($relations, Closure|string|null $callback = null): self
+    public function with($relations, Closure|string|null $callback = null): static
     {
         if ($callback instanceof Closure) {
             $eagerLoad = $this->parseWithRelations([$relations => $callback]);
@@ -1531,7 +1522,7 @@ class Builder
     /**
      * Prevent the specified relations from being eager loaded.
      */
-    public function without(mixed $relations): self
+    public function without(mixed $relations): static
     {
         $this->eagerLoad = array_diff_key($this->eagerLoad, array_flip(
             is_string($relations) ? func_get_args() : $relations
@@ -1542,8 +1533,10 @@ class Builder
 
     /**
      * Set the relationships that should be eager loaded while removing any previously added eager loading specifications.
+     * 
+     * @param  array<array-key, array|(Closure(Relation<*,*,*>): mixed)|string>|string  $relations
      */
-    public function withOnly(mixed $relations): self
+    public function withOnly($relations): static
     {
         $this->eagerLoad = [];
 
@@ -1552,12 +1545,15 @@ class Builder
 
     /**
      * Create a new instance of the model being queried.
+     * 
+     * @return TModel
      */
     public function newModelInstance(array $attributes = []): Model
     {
+        $attributes = array_merge($this->pendingAttributes, $attributes);
+
         return $this->model->newInstance($attributes)->setConnection(
-            'default'
-            // $this->query->getConnectionName()
+            $this->query->getConnection()->getName()
         );
     }
 
@@ -1664,12 +1660,8 @@ class Builder
     {
         return [explode(':', $name)[0], static function ($query) use ($name) {
             $query->select(array_map(static function ($column) use ($query) {
-                if (str_contains($column, '.')) {
-                    return $column;
-                }
-
                 return $query instanceof BelongsToMany
-                    ? $query->getRelated()->getTable() . '.' . $column
+                    ? $query->getRelated()->qualifyColumn($column)
                     : $column;
             }, explode(',', explode(':', $name)[1])));
         }];
@@ -1698,9 +1690,31 @@ class Builder
     }
 
     /**
+     * Specify attributes that should be added to any new models created by this builder.
+     *
+     * The given key / value pairs will also be added as where conditions to the query.
+     */
+    public function withAttributes(Expression|array|string $attributes, mixed $value = null, bool $asConditions = true): static
+    {
+        if (! is_array($attributes)) {
+            $attributes = [$attributes => $value];
+        }
+
+        if ($asConditions) {
+            foreach ($attributes as $column => $value) {
+                $this->where($this->qualifyColumn($column), $value);
+            }
+        }
+
+        $this->pendingAttributes = array_merge($this->pendingAttributes, $attributes);
+
+        return $this;
+    }
+
+    /**
      * Apply query-time casts to the model instance.
      */
-    public function withCasts(array $casts): self
+    public function withCasts(array $casts): static
     {
         $this->model->mergeCasts($casts);
 
@@ -1718,9 +1732,19 @@ class Builder
      */
     public function withSavepointIfNeeded(Closure $scope): mixed
     {
-        return $this->getQuery()->db()->transDepth > 0
+        return $this->getQuery()->db()->transactionLevel() > 0
             ? $this->getQuery()->db()->transaction($scope)
             : $scope();
+    }
+
+    /**
+     * Get the Wolke builder instances that are used in the union of the query.
+     */
+    protected function getUnionBuilders(): IterableCollection
+    {
+        return $this->query->unions !== []
+            ? (new IterableCollection($this->query->unions))->pluck('query')
+            : new IterableCollection();
     }
 
     /**
@@ -1734,7 +1758,7 @@ class Builder
     /**
      * Set the underlying query builder instance.
      */
-    public function setQuery(BaseBuilder $query): self
+    public function setQuery(BaseBuilder $query): static
     {
         $this->query = $query;
 
@@ -1760,7 +1784,7 @@ class Builder
     /**
      * Set the relationships being eagerly loaded.
      */
-    public function setEagerLoads(array $eagerLoad): self
+    public function setEagerLoads(array $eagerLoad): static
     {
         $this->eagerLoad = $eagerLoad;
 
@@ -1770,7 +1794,7 @@ class Builder
     /**
      * Indicate that the given relationships should not be eagerly loaded.
      */
-    public function withoutEagerLoad(array $relations): self
+    public function withoutEagerLoad(array $relations): static
     {
         $relations = array_diff(array_keys($this->model->getRelations()), $relations);
 
@@ -1780,9 +1804,25 @@ class Builder
     /**
      * Flush the relationships being eagerly loaded.
      */
-    public function withoutEagerLoads(): self
+    public function withoutEagerLoads(): static
     {
         return $this->setEagerLoads([]);
+    }
+
+    /**
+     * Get the "limit" value from the query or null if it's not set.
+     */
+    public function getLimit(): ?int
+    {
+        return $this->query->limit;
+    }
+
+    /**
+     * Get the "offset" value from the query or null if it's not set.
+     */
+    public function getOffset(): ?int
+    {
+        return $this->query->offset;
     }
 
     /**
@@ -1795,6 +1835,8 @@ class Builder
 
     /**
      * Get the model instance being queried.
+     * 
+     * @return TModel
      */
     public function getModel(): Model
     {
@@ -1803,8 +1845,14 @@ class Builder
 
     /**
      * Set a model instance for the model being queried.
+     *
+     * @template TModelNew of Model
+     *
+     * @param  TModelNew  $model
+     * 
+     * @return static<TModelNew>
      */
-    public function setModel(Model $model): self
+    public function setModel(Model $model): static
     {
         $this->model = $model;
 
@@ -1816,15 +1864,17 @@ class Builder
     /**
      * Qualify the given column name by the model's table.
      */
-    public function qualifyColumn(string $column): string
+    public function qualifyColumn(string|Expression $column): string
     {
+        $column = $column instanceof Expression ? $column->getValue() : $column;
+
         return $this->model->qualifyColumn($column);
     }
 
     /**
      * Qualify the given columns with the model's table.
      */
-    public function qualifyColumns(array $columns): array
+    public function qualifyColumns(array|Expression $columns): array
     {
         return $this->model->qualifyColumns($columns);
     }
@@ -1876,7 +1926,7 @@ class Builder
             return $this->toBase()->{$key};
         }
 
-        throw new Exception("Property [{$key}] does not exist on the Eloquent builder instance.");
+        throw new Exception("Property [{$key}] does not exist on the Wolke builder instance.");
     }
 
     /**
@@ -1937,7 +1987,9 @@ class Builder
         }
 
         if ($method === 'mixin') {
-            return static::registerMixin($parameters[0], $parameters[1] ?? true);
+            static::registerMixin($parameters[0], $parameters[1] ?? true);
+
+            return null;
         }
 
         if (! static::hasGlobalMacro($method)) {
@@ -1964,8 +2016,6 @@ class Builder
 
         foreach ($methods as $method) {
             if ($replace || ! static::hasGlobalMacro($method->name)) {
-                $method->setAccessible(true);
-
                 static::macro($method->name, $method->invoke($mixin));
             }
         }
@@ -1973,21 +2023,32 @@ class Builder
 
     /**
      * Clone the Wolke query builder.
-     *
-     * @return static
      */
-    public function clone()
+    public function clone(): static
     {
         return clone $this;
+    }
+    /**
+     * Register a closure to be invoked on a clone.
+     * 
+     * @var Closure(static): void $callback
+     */
+    public function onClone(Closure $callback): static
+    {
+        $this->onCloneCallbacks[] = $callback;
+
+        return $this;
     }
 
     /**
      * Force a clone of the underlying query builder when cloning.
-     *
-     * @return void
      */
-    public function __clone()
+    public function __clone(): void
     {
         $this->query = clone $this->query;
+
+        foreach ($this->onCloneCallbacks as $onCloneCallback) {
+            $onCloneCallback($this);
+        }
     }
 }

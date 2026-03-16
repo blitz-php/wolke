@@ -11,10 +11,11 @@
 
 namespace BlitzPHP\Wolke\Relations\Concerns;
 
-use BlitzPHP\Database\Builder\BaseBuilder;
+use BlitzPHP\Database\Builder\JoinClause;
 use BlitzPHP\Utilities\Helpers;
+use BlitzPHP\Utilities\Invade\Invader;
 use BlitzPHP\Utilities\Iterable\Arr;
-use BlitzPHP\Utilities\Support\Invader;
+use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Wolke\Builder;
 use Closure;
 use InvalidArgumentException;
@@ -39,7 +40,8 @@ trait CanBeOneOfMany
     /**
      * Add constraints for inner join subselect for one of many relationships.
 	 * 
-	 * @param array|string|null $aggregate
+	 * @param Builder<*>  $query
+     * @param array|string|null $aggregate
      */
     abstract public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void;
 
@@ -53,14 +55,14 @@ trait CanBeOneOfMany
     /**
      * Add join query constraints for one of many relationships.
      */
-    abstract public function addOneOfManyJoinSubQueryConstraints(BaseBuilder $join, string $on): void;
+    abstract public function addOneOfManyJoinSubQueryConstraints(JoinClause $join): void;
 
     /**
      * Indicate that the relation is a single result of a larger one-to-many relationship.
      *
      * @throws InvalidArgumentException
      */
-    public function ofMany(array|Closure|string|null $column = 'id', Closure|string|null $aggregate = 'MAX', ?string $relation = null): self
+    public function ofMany(array|Closure|string|null $column = 'id', Closure|string|null $aggregate = 'MAX', ?string $relation = null): static
     {
         $this->isOneOfMany = true;
 
@@ -120,9 +122,9 @@ trait CanBeOneOfMany
 
         $this->addConstraints();
 
-        $columns = Invader::make($this->query->getQuery())->fields;
+        $columns = $this->query->getQuery()->columns;
 
-        if (null === $columns || $columns === ['*']) {
+        if ([] === $columns || $columns === ['*']) {
             $this->select([$this->qualifyColumn('*')]);
         }
 
@@ -132,9 +134,13 @@ trait CanBeOneOfMany
     /**
      * Indicate that the relation is the latest single result of a larger one-to-many relationship.
      */
-    public function latestOfMany(array|string|null $column = 'id', ?string $relation = null): self
+    public function latestOfMany(array|string|null $column = 'id', ?string $relation = null): static
     {
-        return $this->ofMany(Helpers::collect(Arr::wrap($column))->mapWithKeys(static fn ($column) => [$column => 'MAX'])->all(), 'MAX', $relation);
+        return $this->ofMany(
+            Collection::wrap($column)->mapWithKeys(static fn($column) => [$column => 'MAX'])->all(), 
+            'MAX', 
+            $relation
+        );
     }
 
     /**
@@ -142,7 +148,11 @@ trait CanBeOneOfMany
      */
     public function oldestOfMany(array|string|null $column = 'id', ?string $relation = null): self
     {
-        return $this->ofMany(Helpers::collect(Arr::wrap($column))->mapWithKeys(static fn ($column) => [$column => 'MIN'])->all(), 'MIN', $relation);
+        return $this->ofMany(
+            Collection::wrap($column)->mapWithKeys(static fn($column) => [$column => 'MIN'])->all(), 
+            'MIN', 
+            $relation
+        );
     }
 
     /**
@@ -159,6 +169,8 @@ trait CanBeOneOfMany
      * Get a new query for the related model, grouping the query by the given column, often the foreign key of the relationship.
      *
      * @param list<string>|null $columns
+     * 
+     * @return Builder<*>
      */
     protected function newOneOfManySubQuery(array|string $groupBy, ?array $columns = null, ?string $aggregate = null): Builder
     {
@@ -180,11 +192,11 @@ trait CanBeOneOfMany
                     $aggregatedColumn = "min({$aggregatedColumn})";
                 }
 
-                $subQuery->select($aggregatedColumn . ' as ' . $column . '_aggregate');
+                $subQuery->selectRaw($aggregatedColumn . ' as ' . $column . '_aggregate');
             }
         }
 
-        $this->addOneOfManySubQueryConstraints($subQuery, $groupBy, $columns, $aggregate);
+        $this->addOneOfManySubQueryConstraints($subQuery, column: null, aggregate: $aggregate);
 
         return $subQuery;
     }
@@ -192,9 +204,9 @@ trait CanBeOneOfMany
     /**
      * Add the join subquery to the given query on the given column and the relationship's foreign key.
      *
+     * @param Builder<*> $parent
+     * @param Builder<*> $subQuery
      * @param list<string> $on
-     *
-     * @todo Modifier en fonction du querybuilder de blitz
      */
     protected function addOneOfManyJoinSubQuery(Builder $parent, Builder $subQuery, array $on): void
     {
@@ -213,18 +225,18 @@ trait CanBeOneOfMany
 
     /**
      * Merge the relationship query joins to the given query builder.
-     *
-     * @todo Modifier en fonction du querybuilder de blitz
      */
     protected function mergeOneOfManyJoinsTo(Builder $query): void
     {
-        $query->getQuery()->beforeQueryCallbacks = $this->query->getQuery()->beforeQueryCallbacks;
+        Invader::make($query->getQuery())->beforeQueryCallbacks = $this->query->getQuery()->beforeQueryCallbacks;
 
         $query->applyBeforeQueryCallbacks();
     }
 
     /**
      * Get the query builder that will contain the relationship constraints.
+     *
+     * @return Builder<*>
      */
     protected function getRelationQuery(): Builder
     {
@@ -235,6 +247,8 @@ trait CanBeOneOfMany
 
     /**
      * Get the one of many inner join subselect builder instance.
+     *
+     * @return Builder<*>|null
      */
     public function getOneOfManySubQuery(): ?Builder
     {
@@ -246,7 +260,7 @@ trait CanBeOneOfMany
      */
     public function qualifySubSelectColumn(string $column): string
     {
-        return $this->getRelationName() . '.' . end($parts = explode('.', $column));
+        return $this->getRelationName() . '.' . Helpers::last(explode('.', $column));
     }
 
     /**
@@ -254,7 +268,7 @@ trait CanBeOneOfMany
      */
     protected function qualifyRelatedColumn(string $column): string
     {
-        return str_contains($column, '.') ? $column : $this->query->getModel()->getTable() . '.' . $column;
+        return $this->query->getModel()->qualifyColumn($column);
     }
 
     /**

@@ -13,7 +13,6 @@ namespace BlitzPHP\Wolke\Casts;
 
 use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsAttributes;
-use BlitzPHP\Wolke\Contracts\SerializesCastableAttributes;
 use BlitzPHP\Wolke\Model;
 
 class AsArrayObject implements Castable
@@ -23,7 +22,7 @@ class AsArrayObject implements Castable
      */
     public static function castUsing(array $arguments): CastsAttributes
     {
-        return new class () implements CastsAttributes, SerializesCastableAttributes {
+        return new class () implements CastsAttributes {
             public function get(Model $model, string $key, mixed $value, array $attributes): mixed
             {
                 if (! isset($attributes[$key])) {

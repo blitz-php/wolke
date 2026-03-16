@@ -25,6 +25,8 @@ class Pivot extends Model
 
     /**
      * The attributes that aren't mass assignable.
+     * 
+     * @var list<string>
      */
-    protected array|bool $guarded = [];
+    protected array $guarded = [];
 }

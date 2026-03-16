@@ -11,21 +11,26 @@
 
 namespace BlitzPHP\Wolke\Pagination;
 
-use BlitzPHP\Container\Services;
+use BlitzPHP\Contracts\Container\ContainerInterface;
+use BlitzPHP\Contracts\View\RendererInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class PaginationState
 {
     /**
      * Bind the pagination state resolvers using the given application container as a base.
      */
-    public static function resolveUsing(): void
+    public static function resolveUsing(ContainerInterface $container): void
     {
-        Paginator::viewFactoryResolver(static fn () => new ViewBridge());
-
-        Paginator::currentPathResolver(static fn () => current_url());
-
-        Paginator::currentPageResolver(static function ($pageName = 'page') {
-            $page = Services::request()->get($pageName);
+        /** @var \BlitzPHP\Http\Request */
+        $request = $container->get(ServerRequestInterface::class);
+        
+        Paginator::viewFactoryResolver(fn () => $container->get(RendererInterface::class));
+       
+        Paginator::currentPathResolver(fn () => $request->fullUrl());
+       
+        Paginator::currentPageResolver(function ($pageName) use($request) {
+            $page = $request->input($pageName);
 
             if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
                 return (int) $page;
@@ -34,8 +39,8 @@ class PaginationState
             return 1;
         });
 
-        Paginator::queryStringResolver(static fn () => Services::uri()->getQuery());
+        Paginator::queryStringResolver(static fn () => $request->query());
 
-        CursorPaginator::currentCursorResolver(static fn ($cursorName = 'cursor') => Cursor::fromEncoded(Services::request()->get($cursorName)));
+        CursorPaginator::currentCursorResolver(static fn ($cursorName = 'cursor') => Cursor::fromEncoded($request->input($cursorName)));
     }
 }

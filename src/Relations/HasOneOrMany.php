@@ -11,22 +11,36 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
+use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
 use BlitzPHP\Utilities\Helpers;
+use BlitzPHP\Utilities\Invade\Invader;
+use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
-use BlitzPHP\Utilities\Support\Invader;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\Concerns\InteractsWithDictionary;
+use BlitzPHP\Wolke\Relations\Concerns\SupportsInverseRelations;
+use Closure;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ * @template TResult
+ *
+ * @extends Relation<TRelatedModel, TDeclaringModel, TResult>
+ */
 abstract class HasOneOrMany extends Relation
 {
     use InteractsWithDictionary;
+    use SupportsInverseRelations;
 
     /**
      * Create a new has one or many relationship instance.
      *
+     * @param Builder<TRelatedModel>  $query
+     * @param TDeclaringModel  $parent
      * @param string $foreignKey The foreign key of the parent model.
      * @param string $localKey   The local key of the parent model.
      */
@@ -37,16 +51,21 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Create and return an un-saved instance of the related model.
+     * 
+     * @return TRelatedModel
      */
     public function make(array $attributes = []): Model
     {
         return Helpers::tap($this->related->newInstance($attributes), function ($instance) {
             $this->setForeignAttributesForCreate($instance);
+            $this->applyInverseRelationToModel($instance);
         });
     }
 
     /**
      * Create and return an un-saved instance of the related models.
+     * 
+     * @return Collection<int, TRelatedModel>
      */
     public function makeMany(iterable $records): Collection
     {
@@ -74,7 +93,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Set the constraints for an eager load of the relation.
+     * {@inheritDoc}
      */
     public function addEagerConstraints(array $models): void
     {
@@ -90,6 +109,11 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Match the eagerly loaded results to their single parents.
+     *
+     * @param array<int, TDeclaringModel>  $models
+     * @param Collection<int, TRelatedModel>  $results
+     * 
+     * @return array<int, TDeclaringModel>
      */
     public function matchOne(array $models, Collection $results, string $relation): array
     {
@@ -98,6 +122,11 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Match the eagerly loaded results to their many parents.
+     *
+     * @param array<int, TDeclaringModel>  $models
+     * @param Collection<int, TRelatedModel>  $results
+     * 
+     * @return array<int, TDeclaringModel>
      */
     public function matchMany(array $models, Collection $results, string $relation): array
     {
@@ -106,6 +135,11 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Match the eagerly loaded results to their many parents.
+     *
+     * @param array<int, TDeclaringModel>  $models
+     * @param Collection<int, TRelatedModel>  $results
+     * 
+     * @return array<int, TDeclaringModel>
      */
     protected function matchOneOrMany(array $models, Collection $results, string $relation, string $type): array
     {
@@ -115,11 +149,17 @@ abstract class HasOneOrMany extends Relation
         // link them up with their children using the keyed dictionary to make the
         // matching very convenient and easy work. Then we'll just return them.
         foreach ($models as $model) {
-            if (isset($dictionary[$key = $this->getDictionaryKey($model->getAttribute($this->localKey))])) {
-                $model->setRelation(
-                    $relation,
-                    $this->getRelationValue($dictionary, $key, $type)
-                );
+            $key = $this->getDictionaryKey($model->getAttribute($this->localKey));
+
+            if ($key !== null && isset($dictionary[$key])) {
+                $related = $this->getRelationValue($dictionary, $key, $type);
+
+                $model->setRelation($relation, $related);
+
+                // Apply the inverse relation if we have one...
+                $type === 'one'
+                    ? $this->applyInverseRelationToModel($related, $model)
+                    : $this->applyInverseRelationToCollection($related, $model);
             }
         }
 
@@ -138,18 +178,36 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Build model dictionary keyed by the relation's foreign key.
+     * 
+     * @param Collection<int, TRelatedModel>  $results
+     * 
+     * @return array<array<array-key, TRelatedModel>>
      */
     protected function buildDictionary(Collection $results): array
     {
         $foreign = $this->getForeignKeyName();
 
-        return $results->mapToDictionary(fn ($result) => [$this->getDictionaryKey($result->{$foreign}) => $result])->all();
+        $dictionary = [];
+
+        $isAssociative = Arr::isAssoc($results->all());
+
+        foreach ($results as $key => $item) {
+            $pairKey = $this->getDictionaryKey($item->{$foreign});
+
+            if ($isAssociative) {
+                $dictionary[$pairKey][$key] = $item;
+            } else {
+                $dictionary[$pairKey][] = $item;
+            }
+        }
+
+        return $dictionary;
     }
 
     /**
      * Find a model by its primary key or return a new instance of the related model.
      *
-     * @return IterableCollection|Model
+     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel)
      */
     public function findOrNew(mixed $id, array $columns = ['*'])
     {
@@ -164,6 +222,8 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Get the first related model record matching the attributes or instantiate it.
+     * 
+     * @return TRelatedModel
      */
     public function firstOrNew(array $attributes = [], array $values = []): Model
     {
@@ -178,8 +238,12 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Get the first related record matching the attributes or create it.
+     * 
+     * @param  (Closure(): array)|array  $values
+     * 
+     * @return TRelatedModel
      */
-    public function firstOrCreate(array $attributes = [], array $values = []): Model
+    public function firstOrCreate(array $attributes = [], array|Closure $values = []): Model
     {
         if (null === $instance = (clone $this)->where($attributes)->first()) {
             $instance = $this->createOrFirst($attributes, $values);
@@ -190,11 +254,15 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     * 
+     * @param  (Closure(): array)|array  $values
+     * 
+     * @return TRelatedModel
      */
-    public function createOrFirst(array $attributes = [], array $values = []): Model
+    public function createOrFirst(array $attributes = [], array|Closure $values = []): Model
     {
         try {
-            return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, $values)));
+            return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, Helpers::value($values))));
         } catch (UniqueConstraintViolationException $e) {
             return $this->where($attributes)->first() ?? throw $e;
         }
@@ -202,6 +270,8 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Create or update a related record matching the attributes, and fill it with values.
+     * 
+     * @return TRelatedModel
      */
     public function updateOrCreate(array $attributes, array $values = []): Model
     {
@@ -213,9 +283,27 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
+     * Insert new records or update the existing ones.
+     */
+    public function upsert(array $values, array|string $uniqueBy, ?array $update = null): int
+    {
+        if ($values !== [] && ! is_array(Arr::first($values))) {
+            $values = [$values];
+        }
+
+        foreach ($values as $key => $value) {
+            $values[$key][$this->getForeignKeyName()] = $this->getParentKey();
+        }
+
+        return $this->getQuery()->upsert($values, $uniqueBy, $update);
+    }
+
+    /**
      * Attach a model instance to the parent model.
      *
-     * @return false|Model
+     * @param  TRelatedModel  $model
+     * 
+     * @return TRelatedModel|false
      */
     public function save(Model $model)
     {
@@ -227,7 +315,9 @@ abstract class HasOneOrMany extends Relation
     /**
      * Attach a model instance without raising any events to the parent model.
      *
-     * @return false|Model
+     * @param  TRelatedModel  $model
+     * 
+     * @return TRelatedModel|false
      */
     public function saveQuietly(Model $model)
     {
@@ -236,6 +326,10 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Attach a collection of models to the parent instance.
+     *
+     * @param  iterable<TRelatedModel>  $models
+     * 
+     * @return iterable<TRelatedModel>
      */
     public function saveMany(iterable $models): iterable
     {
@@ -248,6 +342,10 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Attach a collection of models to the parent instance without raising any events to the parent model.
+     *
+     * @param  iterable<TRelatedModel>  $models
+     * 
+     * @return iterable<TRelatedModel>
      */
     public function saveManyQuietly(iterable $models): iterable
     {
@@ -263,6 +361,8 @@ abstract class HasOneOrMany extends Relation
             $this->setForeignAttributesForCreate($instance);
 
             $instance->save();
+
+            $this->applyInverseRelationToModel($instance);
         });
     }
 
@@ -276,16 +376,20 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Create a new instance of the related model. Allow mass-assignment.
+     * 
+     * @return TRelatedModel
      */
     public function forceCreate(array $attributes = []): Model
     {
         $attributes[$this->getForeignKeyName()] = $this->getParentKey();
 
-        return $this->related->forceCreate($attributes);
+        return $this->applyInverseRelationToModel($this->related->forceCreate($attributes));
     }
 
     /**
      * Create a new instance of the related model with mass assignment without raising model events.
+     * 
+     * @return TRelatedModel
      */
     public function forceCreateQuietly(array $attributes = []): Model
     {
@@ -294,6 +398,8 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Create a Collection of new instances of the related model.
+     * 
+     * @return Collection<int, TRelatedModel>
      */
     public function createMany(iterable $records): Collection
     {
@@ -308,6 +414,8 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Create a Collection of new instances of the related model without raising any events to the parent model.
+     * 
+     * @return Collection<int, TRelatedModel>
      */
     public function createManyQuietly(iterable $records): Collection
     {
@@ -315,21 +423,59 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
+     * Create a Collection of new instances of the related model, allowing mass-assignment.
+     *
+     * @param  iterable  $records
+     * 
+     * @return Collection<int, TRelatedModel>
+     */
+    public function forceCreateMany(iterable $records): Collection
+    {
+        $instances = $this->related->newCollection();
+
+        foreach ($records as $record) {
+            $instances->push($this->forceCreate($record));
+        }
+
+        return $instances;
+    }
+
+    /**
+     * Create a Collection of new instances of the related model, allowing mass-assignment and without raising any events to the parent model.
+     *
+     * @return Collection<int, TRelatedModel>
+     */
+    public function forceCreateManyQuietly(iterable $records): Collection
+    {
+        return Model::withoutEvents(fn () => $this->forceCreateMany($records));
+    }
+
+    /**
      * Set the foreign ID for creating a related model.
+     * 
+     * @param  TRelatedModel  $model
      */
     protected function setForeignAttributesForCreate(Model $model): void
     {
         $model->setAttribute($this->getForeignKeyName(), $this->getParentKey());
+
+        foreach ($this->getQuery()->pendingAttributes as $key => $value) {
+            $attributes ??= $model->getAttributes();
+
+            if (! array_key_exists($key, $attributes)) {
+                $model->setAttribute($key, $value);
+            }
+        }
+
+        $this->applyInverseRelationToModel($model);
     }
 
     /**
-     * Add the constraints for a relationship query.
-     *
-     * @param array|mixed $columns
+     * {@inheritDoc}
      */
     public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
-        if (Invader::make($query->getQuery())->table === Invader::make($parentQuery->getQuery())->table) {
+        if ($query->getQuery()->from === $parentQuery->getQuery()->from) {
             return $this->getRelationExistenceQueryForSelfRelation($query, $parentQuery, $columns);
         }
 
@@ -339,7 +485,10 @@ abstract class HasOneOrMany extends Relation
     /**
      * Add the constraints for a relationship query on the same table.
      *
-     * @param array|mixed $columns
+     * @param Builder<TRelatedModel>  $query
+     * @param Builder<TDeclaringModel>  $parentQuery
+     * 
+     * @returnBuilder<TRelatedModel>
      */
     public function getRelationExistenceQueryForSelfRelation(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {

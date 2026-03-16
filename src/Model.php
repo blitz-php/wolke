@@ -25,6 +25,8 @@ use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Utilities\String\Text;
+use BlitzPHP\Wolke\Attributes\Scope as LocalScope;
+use BlitzPHP\Wolke\Attributes\UseWolkeBuilder;
 use BlitzPHP\Wolke\Concerns\GuardsAttributes;
 use BlitzPHP\Wolke\Concerns\HasAttributes;
 use BlitzPHP\Wolke\Concerns\HasEvents;
@@ -33,28 +35,35 @@ use BlitzPHP\Wolke\Concerns\HasRelationships;
 use BlitzPHP\Wolke\Concerns\HasTimestamps;
 use BlitzPHP\Wolke\Concerns\HasUniqueIds;
 use BlitzPHP\Wolke\Concerns\HidesAttributes;
+use BlitzPHP\Wolke\Concerns\PreventsCircularRecursion;
 use BlitzPHP\Wolke\Contracts\Dispatcher;
 use BlitzPHP\Wolke\Contracts\Scope;
 use BlitzPHP\Wolke\Exceptions\JsonEncodingException;
 use BlitzPHP\Wolke\Exceptions\MassAssignmentException;
-use BlitzPHP\Wolke\Exceptions\MissingAttributeException;
 use BlitzPHP\Wolke\Relations\Concerns\AsPivot;
 use BlitzPHP\Wolke\Relations\Pivot;
+use Closure;
+use JsonException;
 use JsonSerializable;
 use LogicException;
+use ReflectionClass;
+use ReflectionMethod;
+use Stringable;
 use Throwable;
 
-class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, QueueableEntity
+class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, QueueableEntity, Stringable
 {
     use ForwardsCalls;
     use GuardsAttributes;
     use HasAttributes;
+    use HasCollection;
     use HasEvents;
     use HasGlobalScopes;
     use HasRelationships;
     use HasTimestamps;
     use HasUniqueIds;
     use HidesAttributes;
+    use PreventsCircularRecursion;
 
     /**
      * The name of the "created at" column.
@@ -73,7 +82,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * The connection name for the model.
      */
-    protected string $connection = 'default';
+    protected ?string $connection = null;
 
     /**
      * The table associated with the model.
@@ -139,15 +148,18 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * The event dispatcher instance.
-     *
-     * @var Dispatcher
      */
-    protected static $dispatcher;
+    protected static ?Dispatcher $dispatcher = null;
 
     /**
      * The array of booted models.
      */
     protected static array $booted = [];
+
+    /**
+     * The callbacks that should be executed after the model has booted.
+     */
+    protected static array $bootedCallbacks = [];
 
     /**
      * The array of trait initializers that will be called on each new instance.
@@ -170,9 +182,14 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     protected static bool $modelsShouldPreventLazyLoading = false;
 
     /**
+     * Indicates whether relations should be automatically loaded on all models when they are accessed.
+     */
+    protected static bool $modelsShouldAutomaticallyEagerLoadRelationships = false;
+
+    /**
      * The callback that is responsible for handling lazy loading violations.
      *
-     * @var callable|null
+     * @var (callable(self, string))|null
      */
     protected static $lazyLoadingViolationCallback;
 
@@ -184,7 +201,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * The callback that is responsible for handling discarded attribute violations.
      *
-     * @var callable|null
+     * @var (callable(self, array))|null
      */
     protected static $discardedAttributeViolationCallback;
 
@@ -196,12 +213,35 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * The callback that is responsible for handling missing attribute violations.
      *
-     * @var callable|null
+     * @var (callable(self, array))|null
      */
     protected static $missingAttributeViolationCallback;
 
     /**
-     * Create a new Eloquent model instance.
+     * The Wolke query builder class to use for the model.
+     *
+     * @var class-string<Builder<*>>
+     */
+    protected static string $builder = Builder::class;
+
+    /**
+     * The Wolke collection class to use for the model.
+     *
+     * @var class-string<Collection<*, *>>
+     */
+    protected static string $collectionClass = Collection::class;
+
+    /**
+     * Cache of soft deletable models.
+     *
+     * @var array<class-string<self>, bool>
+     */
+    protected static array $isSoftDeletable = [];
+    
+    /**
+     * Create a new Wolke model instance.
+     *
+     * @param  array<string, mixed>  $attributes
      */
     public function __construct(array $attributes = [])
     {
@@ -227,6 +267,12 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             static::booting();
             static::boot();
             static::booted();
+
+            static::$bootedCallbacks[static::class] ??= [];
+
+            foreach (static::$bootedCallbacks[static::class] as $callback) {
+                $callback();
+            }
 
             $this->fireModelEvent('booted', false);
         }
@@ -258,23 +304,25 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
         static::$traitInitializers[$class] = [];
 
-        foreach (Helpers::classUsesRecursive($class) as $trait) {
-            $method = 'boot' . Helpers::classBasename($trait);
+        $uses = Helpers::classUsesRecursive($class);
 
-            if (method_exists($class, $method) && ! in_array($method, $booted, true)) {
-                forward_static_call([$class, $method]);
+        $conventionalBootMethods = array_map(static fn ($trait) => 'boot' . Helpers::classBasename($trait), $uses);
+        $conventionalInitMethods = array_map(static fn ($trait) => 'initialize' . Helpers::classBasename($trait), $uses);
 
-                $booted[] = $method;
+        foreach ((new ReflectionClass($class))->getMethods() as $method) {
+            if (! in_array($method->getName(), $booted) &&
+                $method->isStatic() && in_array($method->getName(), $conventionalBootMethods)) {
+                $method->invoke(null);
+
+                $booted[] = $method->getName();
             }
 
-            if (method_exists($class, $method = 'initialize' . Helpers::classBasename($trait))) {
-                static::$traitInitializers[$class][] = $method;
-
-                static::$traitInitializers[$class] = array_unique(
-                    static::$traitInitializers[$class]
-                );
+            if (in_array($method->getName(), $conventionalInitMethods)) {
+                static::$traitInitializers[$class][] = $method->getName();
             }
         }
+
+        static::$traitInitializers[$class] = array_unique(static::$traitInitializers[$class]);
     }
 
     /**
@@ -295,11 +343,22 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
+     * Register a closure to be executed after the model has booted.
+     */
+    protected static function whenBooted(Closure $callback)
+    {
+        static::$bootedCallbacks[static::class] ??= [];
+
+        static::$bootedCallbacks[static::class][] = $callback;
+    }
+
+    /**
      * Clear the list of booted models so they will be re-booted.
      */
     public static function clearBootedModels(): void
     {
         static::$booted = [];
+        static::$bootedCallbacks = [];
 
         static::$globalScopes = [];
     }
@@ -365,7 +424,17 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
+     * Determine if model relationships should be automatically eager loaded when accessed.
+     */
+    public static function automaticallyEagerLoadRelationships(bool $value = true): void
+    {
+        static::$modelsShouldAutomaticallyEagerLoadRelationships = $value;
+    }
+
+    /**
      * Register a callback that is responsible for handling lazy loading violations.
+     * 
+     * @param  (callable(self, string))|null  $callback
      */
     public static function handleLazyLoadingViolationUsing(?callable $callback): void
     {
@@ -382,6 +451,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Register a callback that is responsible for handling discarded attribute violations.
+     * 
+     * @param  (callable(self, array))|null  $callback
      */
     public static function handleDiscardedAttributeViolationUsing(?callable $callback): void
     {
@@ -398,6 +469,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Register a callback that is responsible for handling missing attribute violations.
+     * 
+     * @param  (callable(self, string))|null  $callback
      */
     public static function handleMissingAttributeViolationUsing(?callable $callback): void
     {
@@ -409,7 +482,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      *
      * @throws MassAssignmentException
      */
-    public function fill(array $attributes): self
+    public function fill(array $attributes): static
     {
         $totallyGuarded = $this->totallyGuarded();
         $fillable       = $this->fillableFromArray($attributes);
@@ -454,7 +527,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Fill the model with an array of attributes. Force mass assignment.
      */
-    public function forceFill(array $attributes): self
+    public function forceFill(array $attributes): static
     {
         return static::unguarded(fn () => $this->fill($attributes));
     }
@@ -476,15 +549,17 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function qualifyColumns(array $columns): array
     {
-        return Helpers::collect($columns)->map(fn ($column) => $this->qualifyColumn($column))->all();
+        return (new IterableCollection($columns))
+            ->map(fn ($column) => $this->qualifyColumn($column))
+            ->all();
     }
 
     /**
      * Create a new instance of the given model.
      *
-     * @return static
+     * @param  array<string, mixed>  $attributes
      */
-    public function newInstance(array $attributes = [], bool $exists = false)
+    public function newInstance(array $attributes = [], bool $exists = false): static
     {
         // This method just provides a convenient way for us to generate fresh model
         // instances of this current model. It is particularly useful during the
@@ -508,10 +583,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Create a new model instance that is existing.
-     *
-     * @return static
      */
-    public function newFromBuilder(array $attributes = [], ?string $connection = null)
+    public function newFromBuilder(array $attributes = [], ?string $connection = null): static
     {
         $model = $this->newInstance([], true);
 
@@ -526,21 +599,21 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Begin querying the model on a given connection.
+     * 
+     * @return Builder<static>
      */
     public static function on(?string $connection = null): Builder
     {
         // First we will just create a fresh instance of this model, and then we can set the
         // connection on the model so that it is used for the queries we execute, as well
         // as being set on every relation we retrieve without a custom connection name.
-        $instance = new static();
-
-        $instance->setConnection($connection);
-
-        return $instance->newQuery();
+        return (new static())->setConnection($connection)->newQuery();
     }
 
     /**
      * Begin querying the model on the write connection.
+     * 
+     * @return Builder<static>
      */
     public static function onWriteConnection(): BaseBuilder
     {
@@ -550,9 +623,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Get all of the models from the database.
      *
-     * @param  array|...string  $columns
+     * @param  array|string  $columns
      *
-     * @return Collection<static>
+     * @return Collection<int, static>
      */
     public static function all(array|string $columns = ['*']): Collection
     {
@@ -563,8 +636,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Begin querying a model with eager loading.
-     *
-     * @param  array|...string  $relations
+     * 
+     * @return Builder<static>
      */
     public static function with(array|string $relations): Builder
     {
@@ -575,10 +648,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Eager load relations on the model.
-     *
-     * @param  array|...string  $relations
      */
-    public function load($relations): self
+    public function load(array|string $relations): static
     {
         $query = $this->newQueryWithoutRelationships()->with(
             is_string($relations) ? func_get_args() : $relations
@@ -592,7 +663,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relationships on the polymorphic relation of a model.
      */
-    public function loadMorph(string $relation, array $relations): self
+    public function loadMorph(string $relation, array $relations): static
     {
         if (! $this->{$relation}) {
             return $this;
@@ -607,10 +678,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Eager load relations on the model if they are not already eager loaded.
-     *
-     * @param  array|...string  $relations
      */
-    public function loadMissing($relations): self
+    public function loadMissing(array|string $relations): static
     {
         $relations = is_string($relations) ? func_get_args() : $relations;
 
@@ -631,10 +700,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Eager load relation counts on the model.
-     *
-     * @param  array|...string  $relations
      */
-    public function loadCount($relations): self
+    public function loadCount(array|string $relations): static
     {
         $relations = is_string($relations) ? func_get_args() : $relations;
 
@@ -643,10 +710,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Eager load relation max column values on the model.
-     *
-     * @param  array|...string  $relations
      */
-    public function loadMax($relations, string $column): self
+    public function loadMax(array|string $relations, string $column): static
     {
         return $this->loadAggregate($relations, $column, 'max');
     }
@@ -654,7 +719,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relation min column values on the model.
      */
-    public function loadMin(array|string $relations, string $column): self
+    public function loadMin(array|string $relations, string $column): static
     {
         return $this->loadAggregate($relations, $column, 'min');
     }
@@ -662,7 +727,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relation's column summations on the model.
      */
-    public function loadSum(array|string $relations, string $column): self
+    public function loadSum(array|string $relations, string $column): static
     {
         return $this->loadAggregate($relations, $column, 'sum');
     }
@@ -670,7 +735,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relation average column values on the model.
      */
-    public function loadAvg(array|string $relations, string $column): self
+    public function loadAvg(array|string $relations, string $column): static
     {
         return $this->loadAggregate($relations, $column, 'avg');
     }
@@ -678,7 +743,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load related model existence values on the model.
      */
-    public function loadExists(array|string $relations): self
+    public function loadExists(array|string $relations): static
     {
         return $this->loadAggregate($relations, '*', 'exists');
     }
@@ -686,7 +751,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relationship column aggregation on the polymorphic relation of a model.
      */
-    public function loadMorphAggregate(string $relation, array $relations, string $column, ?string $function = null): self
+    public function loadMorphAggregate(string $relation, array $relations, string $column, ?string $function = null): static
     {
         if (! $this->{$relation}) {
             return $this;
@@ -702,7 +767,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relationship counts on the polymorphic relation of a model.
      */
-    public function loadMorphCount(string $relation, array $relations): self
+    public function loadMorphCount(string $relation, array $relations): static
     {
         return $this->loadMorphAggregate($relation, $relations, '*', 'count');
     }
@@ -710,7 +775,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relationship max column values on the polymorphic relation of a model.
      */
-    public function loadMorphMax(string $relation, array $relations, string $column): self
+    public function loadMorphMax(string $relation, array $relations, string $column): static
     {
         return $this->loadMorphAggregate($relation, $relations, $column, 'max');
     }
@@ -718,7 +783,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relationship min column values on the polymorphic relation of a model.
      */
-    public function loadMorphMin(string $relation, array $relations, string $column): self
+    public function loadMorphMin(string $relation, array $relations, string $column): static
     {
         return $this->loadMorphAggregate($relation, $relations, $column, 'min');
     }
@@ -726,7 +791,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relationship column summations on the polymorphic relation of a model.
      */
-    public function loadMorphSum(string $relation, array $relations, string $column): self
+    public function loadMorphSum(string $relation, array $relations, string $column): static
     {
         return $this->loadMorphAggregate($relation, $relations, $column, 'sum');
     }
@@ -734,7 +799,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Eager load relationship average column values on the polymorphic relation of a model.
      */
-    public function loadMorphAvg(string $relation, array $relations, string $column): self
+    public function loadMorphAvg(string $relation, array $relations, string $column): static
     {
         return $this->loadMorphAggregate($relation, $relations, $column, 'avg');
     }
@@ -780,6 +845,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             return false;
         }
 
+        if ($this->isClassDeviable($column)) {
+            $amount = (clone $this)->setAttribute($column, $amount)->getAttributeFromArray($column);
+        }
+
         return Helpers::tap($this->setKeysForSaveQuery($this->newQueryWithoutScopes())->{$method}($column, $amount, $extra), function () use ($column) {
             $this->syncChanges();
 
@@ -791,6 +860,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Update the model in the database.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $options
      */
     public function update(array $attributes = [], array $options = []): bool
     {
@@ -803,6 +875,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Update the model in the database within a transaction.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $options
      *
      * @throws Throwable
      */
@@ -817,6 +892,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Update the model in the database without raising any events.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $options
      */
     public function updateQuietly(array $attributes = [], array $options = []): bool
     {
@@ -829,16 +907,20 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Increment a column's value by a given amount without raising any events.
+     * 
+     * @return false|float|int
      */
-    protected function incrementQuietly(string $column, float|int $amount = 1, array $extra = []): int
+    protected function incrementQuietly(string $column, float|int $amount = 1, array $extra = [])
     {
         return static::withoutEvents(fn () => $this->incrementOrDecrement($column, $amount, $extra, 'increment'));
     }
 
     /**
      * Decrement a column's value by a given amount without raising any events.
+     * 
+     * @return false|float|int
      */
-    protected function decrementQuietly(string $column, float|int $amount = 1, array $extra = []): int
+    protected function decrementQuietly(string $column, float|int $amount = 1, array $extra = [])
     {
         return static::withoutEvents(fn () => $this->incrementOrDecrement($column, $amount, $extra, 'decrement'));
     }
@@ -848,25 +930,28 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function push(): bool
     {
-        if (! $this->save()) {
-            return false;
-        }
+        return $this->withoutRecursion(function () {
+            if (! $this->save()) {
+                return false;
+            }
 
-        // To sync all of the relationships to the database, we will simply spin through
-        // the relationships and save each model via this "push" method, which allows
-        // us to recurse into all of these nested relations for the model instance.
-        foreach ($this->relations as $models) {
-            $models = $models instanceof Collection
-                        ? $models->all() : [$models];
+            // To sync all of the relationships to the database, we will simply spin through
+            // the relationships and save each model via this "push" method, which allows
+            // us to recurse into all of these nested relations for the model instance.
+            foreach ($this->relations as $models) {
+                $models = $models instanceof Collection
+                    ? $models->all()
+                    : [$models];
 
-            foreach (array_filter($models) as $model) {
-                if (! $model->push()) {
-                    return false;
+                foreach (array_filter($models) as $model) {
+                    if (! $model->push()) {
+                        return false;
+                    }
                 }
             }
-        }
 
-        return true;
+            return true;
+        }, true);
     }
 
     /**
@@ -956,6 +1041,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Perform a model update operation.
+     *
+     * @param Builder<static>
      */
     protected function performUpdate(Builder $query): bool
     {
@@ -995,6 +1082,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Set the keys for a select query.
+     *
+     * @param  Builder<static>  $query
+     * 
+     * @return Builder<static>
      */
     protected function setKeysForSelectQuery(Builder $query): Builder
     {
@@ -1013,6 +1104,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Set the keys for a save update query.
+     *
+     * @param  Builder<static>  $query
+     * 
+     * @return Builder<static>
      */
     protected function setKeysForSaveQuery(Builder $query): Builder
     {
@@ -1031,6 +1126,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Perform a model insert operation.
+     *
+     * @param Builder<static> $query
      */
     protected function performInsert(Builder $query): bool
     {
@@ -1087,18 +1184,21 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Insert the given attributes and set the ID on the model.
+     *
+     * @param Builder<static>  $query
+     * @param array<string, mixed>  $attributes
      */
     protected function insertAndSetId(Builder $query, array $attributes): void
     {
-        if ($query->insert($attributes)) {
-            $this->setAttribute($this->getKeyName(), $query->db()->insertID());
-        }
+        $id = $query->insertGetId($attributes, $keyName = $this->getKeyName());
+   
+        $this->setAttribute($keyName, $id);
     }
 
     /**
      * Destroy the models for the given IDs.
      *
-     * @param array|Collection|int|string $ids
+     * @param array|IterableCollection|int|string $ids
      */
     public static function destroy($ids): int
     {
@@ -1135,11 +1235,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Delete the model from the database.
      *
-     * @return bool|null
-     *
      * @throws LogicException
      */
-    public function delete()
+    public function delete(): ?bool
     {
         $this->mergeAttributesFromCachedCasts();
 
@@ -1206,6 +1304,18 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
+     * Force a hard destroy on a soft deleted model.
+     *
+     * This method protects developers from running forceDestroy when the trait is missing.
+     *
+     * @param IterableCollection|array|int|string  $ids
+     */
+    public static function forceDestroy($ids): ?bool
+    {
+        return static::destroy($ids);
+    }
+
+    /**
      * Perform the actual delete query on this model instance.
      *
      * @return void
@@ -1219,6 +1329,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Begin querying the model.
+     *
+     * @return Builder<static>
      */
     public static function query(): Builder
     {
@@ -1227,6 +1339,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Get a new query builder for the model's table.
+     *
+     * @return Builder<static>
      */
     public function newQuery(): Builder
     {
@@ -1235,6 +1349,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Get a new query builder that doesn't have any global scopes or eager loading.
+     *
+     * @return Builder<static>
      */
     public function newModelQuery(): Builder
     {
@@ -1243,6 +1359,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Get a new query builder with no relationships loaded.
+     *
+     * @return Builder<static>
      */
     public function newQueryWithoutRelationships(): Builder
     {
@@ -1251,6 +1369,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Register the global scopes for this builder instance.
+     *
+     * @param Builder<static> $builder
+     *
+     * @return Builder<static>
      */
     public function registerGlobalScopes(Builder $builder): Builder
     {
@@ -1263,6 +1385,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Get a new query builder that doesn't have any global scopes.
+     *
+     * @return Builder<static>
      */
     public function newQueryWithoutScopes(): Builder
     {
@@ -1273,6 +1397,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Get a new query instance without a given scope.
+     *
+     * @return Builder<static>
      */
     public function newQueryWithoutScope(Scope|string $scope): Builder
     {
@@ -1281,6 +1407,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Get a new query to restore one or more models by their queueable IDs.
+     *
+     * @return Builder<static>
      */
     public function newQueryForRestoration(array|int $ids): Builder
     {
@@ -1289,10 +1417,32 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Create a new Wolke query builder for the model.
+     * 
+     * @return Builder<*>
      */
     public function newWolkeBuilder(BaseBuilder $query): Builder
     {
-        return new Builder($query);
+        $builderClass = $this->resolveCustomBuilderClass();
+
+        if ($builderClass && is_subclass_of($builderClass, Builder::class)) {
+            return new $builderClass($query);
+        }
+
+        return new static::$builder($query);
+    }
+
+    /**
+     * Resolve the custom Eloquent builder class from the model attributes.
+     *
+     * @return class-string<Builder>|false
+     */
+    protected function resolveCustomBuilderClass()
+    {
+        $attributes = (new ReflectionClass($this))->getAttributes(UseWolkeBuilder::class);
+
+        return ! empty($attributes)
+            ? $attributes[0]->newInstance()->builderClass
+            : false;
     }
 
     /**
@@ -1300,19 +1450,13 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     protected function newBaseQueryBuilder(): BaseBuilder
     {
-        return $this->getConnection()->table($this->getTable());
-    }
-
-    /**
-     * Create a new Wolke Collection instance.
-     */
-    public function newCollection(array $models = []): Collection
-    {
-        return new Collection($models);
+        return $this->getConnection()->newQuery();
     }
 
     /**
      * Create a new pivot model instance.
+     * 
+     * @param  array<string, mixed>  $attributes
      */
     public function newPivot(self $parent, array $attributes, string $table, bool $exists, ?string $using = null): Pivot
     {
@@ -1325,7 +1469,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function hasNamedScope(string $scope): bool
     {
-        return method_exists($this, 'scope' . ucfirst($scope));
+        return method_exists($this, 'scope' . ucfirst($scope)) 
+            || static::isScopeMethodWithAttribute($scope);
     }
 
     /**
@@ -1333,7 +1478,21 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function callNamedScope(string $scope, array $parameters = []): mixed
     {
+        if ($this->isScopeMethodWithAttribute($scope)) {
+            return $this->{$scope}(...$parameters);
+        }
+        
         return $this->{'scope' . ucfirst($scope)}(...$parameters);
+    }
+
+    /**
+     * Determine if the given method has a scope attribute.
+     */
+    protected static function isScopeMethodWithAttribute(string $method): bool
+    {
+        return method_exists(static::class, $method) &&
+            (new ReflectionMethod(static::class, $method))
+                ->getAttributes(LocalScope::class) !== [];
     }
 
     /**
@@ -1341,7 +1500,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function toArray(): array
     {
-        return array_merge($this->attributesToArray(), $this->relationsToArray());
+        return $this->withoutRecursion(
+            fn () => array_merge($this->attributesToArray(), $this->relationsToArray()),
+            fn () => $this->attributesToArray(),
+        );
     }
 
     /**
@@ -1351,13 +1513,23 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function toJson(int $options = 0): string
     {
-        $json = json_encode($this->jsonSerialize(), $options);
-
-        if (JSON_ERROR_NONE !== json_last_error()) {
-            throw JsonEncodingException::forModel($this, json_last_error_msg());
+         try {
+            $json = json_encode($this->jsonSerialize(), $options | JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw JsonEncodingException::forModel($this, $e->getMessage());
         }
 
         return $json;
+    }
+
+    /**
+     * Convert the model instance to pretty print formatted JSON.
+     *
+     * @throws JsonEncodingException
+     */
+    public function toPrettyJson(int $options = 0): string
+    {
+        return $this->toJson(JSON_PRETTY_PRINT | $options);
     }
 
     /**
@@ -1370,12 +1542,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Reload a fresh model instance from the database.
-     *
-     * @param  array|...string  $with
-     *
-     * @return static|null
      */
-    public function fresh(array|string $with = [])
+    public function fresh(array|string $with = []): ?static
     {
         if (! $this->exists) {
             return null;
@@ -1389,18 +1557,22 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Reload the current model instance with fresh attributes from the database.
      */
-    public function refresh(): self
+    public function refresh(): static
     {
         if (! $this->exists) {
             return $this;
         }
 
         $this->setRawAttributes(
-            $this->setKeysForSelectQuery($this->newQueryWithoutScopes())->firstOrFail()->attributes
+            $this->setKeysForSelectQuery($this->newQueryWithoutScopes())
+                ->firstOrFail()
+                ->attributes
         );
 
-        $this->load(Helpers::collect($this->relations)->reject(static fn ($relation) => $relation instanceof Pivot
-                || (is_object($relation) && in_array(AsPivot::class, Helpers::classUsesRecursive($relation), true)))->keys()->all());
+        $this->load((new IterableCollection($this->relations))->reject(
+            static fn ($relation) => $relation instanceof Pivot
+                || (is_object($relation) && in_array(AsPivot::class, Helpers::classUsesRecursive($relation), true))
+        )->keys()->all());
 
         $this->syncOriginal();
 
@@ -1409,16 +1581,15 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Clone the model into a new, non-existing instance.
-     *
-     * @return static
      */
-    public function replicate(?array $except = null)
+    public function replicate(?array $except = null): static
     {
         $defaults = array_values(array_filter([
             $this->getKeyName(),
             $this->getCreatedAtColumn(),
             $this->getUpdatedAtColumn(),
             ...$this->uniqueIds(),
+            'blitz_through_key',
         ]));
 
         $attributes = Arr::except(
@@ -1437,10 +1608,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Clone the model into a new, non-existing instance without raising any events.
-     *
-     * @return static
      */
-    public function replicateQuietly(?array $except = null)
+    public function replicateQuietly(?array $except = null): static
     {
         return static::withoutEvents(fn () => $this->replicate($except));
     }
@@ -1483,7 +1652,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Définissez la connexion associée au modèle.
      */
-    public function setConnection(?string $name): self
+    public function setConnection(?string $name): static
     {
         $this->connection = $name;
 
@@ -1623,29 +1792,31 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function getQueueableRelations(): array
     {
-        $relations = [];
+        return $this->withoutRecursion(function () {
+            $relations = [];
 
-        foreach ($this->getRelations() as $key => $relation) {
-            if (! method_exists($this, $key)) {
-                continue;
-            }
+            foreach ($this->getRelations() as $key => $relation) {
+                if (! method_exists($this, $key)) {
+                    continue;
+                }
 
-            $relations[] = $key;
+                $relations[] = $key;
 
-            if ($relation instanceof QueueableCollection) {
-                foreach ($relation->getQueueableRelations() as $collectionValue) {
-                    $relations[] = $key . '.' . $collectionValue;
+                if ($relation instanceof QueueableCollection) {
+                    foreach ($relation->getQueueableRelations() as $collectionValue) {
+                        $relations[] = $key.'.'.$collectionValue;
+                    }
+                }
+
+                if ($relation instanceof QueueableEntity) {
+                    foreach ($relation->getQueueableRelations() as $entityValue) {
+                        $relations[] = $key.'.'.$entityValue;
+                    }
                 }
             }
 
-            if ($relation instanceof QueueableEntity) {
-                foreach ($relation->getQueueableRelations() as $entityValue) {
-                    $relations[] = $key . '.' . $entityValue;
-                }
-            }
-        }
-
-        return array_unique($relations);
+            return array_unique($relations);
+        }, []);
     }
 
     /**
@@ -1683,11 +1854,27 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
+     * Determine if the model is soft deletable.
+     */
+    public static function isSoftDeletable(): bool
+    {
+        return static::$isSoftDeletable[static::class] ??= in_array(SoftDeletes::class, Helpers::classUsesRecursive(static::class));
+    }
+
+    /**
      * Determine if lazy loading is disabled.
      */
     public static function preventsLazyLoading(): bool
     {
         return static::$modelsShouldPreventLazyLoading;
+    }
+
+    /**
+     * Determine if relationships are being automatically eager loaded when accessed.
+     */
+    public static function isAutomaticallyEagerLoadingRelationships(): bool
+    {
+        return static::$modelsShouldAutomaticallyEagerLoadRelationships;
     }
 
     /**
@@ -1727,10 +1914,14 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function offsetExists(mixed $offset): bool
     {
+        $shouldPrevent = static::$modelsShouldPreventAccessingMissingAttributes;
+
+        static::$modelsShouldPreventAccessingMissingAttributes = false;
+
         try {
             return null !== $this->getAttribute($offset);
-        } catch (MissingAttributeException) {
-            return false;
+        } finally {
+            static::$modelsShouldPreventAccessingMissingAttributes = $shouldPrevent;
         }
     }
 
@@ -1755,7 +1946,12 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function offsetUnset(mixed $offset): void
     {
-        unset($this->attributes[$offset], $this->relations[$offset]);
+         unset(
+            $this->attributes[$offset],
+            $this->relations[$offset],
+            $this->attributeCastCache[$offset],
+            $this->classCastCache[$offset]
+        );
     }
 
     /**
@@ -1800,6 +1996,10 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public static function __callStatic(string $method, array $parameters = []): mixed
     {
+        if (static::isScopeMethodWithAttribute($method)) {
+            return static::query()->$method(...$parameters);
+        }
+
         return (new static())->{$method}(...$parameters);
     }
 
@@ -1808,7 +2008,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function __toString(): string
     {
-        return $this->escapeWhenCastingToString && function_exists('esc')
+        return $this->escapeWhenCastingToString
             ? Helpers::esc($this->toJson())
             : $this->toJson();
     }
@@ -1816,7 +2016,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Indicate that the object's string representation should be escaped when __toString is invoked.
      */
-    public function escapeWhenCastingToString(bool $escape = true): self
+    public function escapeWhenCastingToString(bool $escape = true): static
     {
         $this->escapeWhenCastingToString = $escape;
 
@@ -1832,8 +2032,20 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
         $this->classCastCache     = [];
         $this->attributeCastCache = [];
+        $this->relationAutoloadCallback = null;
+        $this->relationAutoloadContext = null;
 
-        return array_keys(get_object_vars($this));
+        $keys = get_object_vars($this);
+
+        if (version_compare(PHP_VERSION, '8.4.0', '>=')) {
+            foreach ((new ReflectionClass($this))->getProperties() as $property) {
+                if ($property->hasHooks()) {
+                    unset($keys[$property->getName()]);
+                }
+            }
+        }
+
+        return array_keys($keys);
     }
 
     /**
@@ -1843,5 +2055,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     {
         $this->bootIfNotBooted();
         $this->initializeTraits();
+
+        if (static::isAutomaticallyEagerLoadingRelationships()) {
+            $this->withRelationshipAutoloading();
+        }
     }
 }

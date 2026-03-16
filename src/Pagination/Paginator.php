@@ -20,6 +20,18 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 
+/**
+ * @template TKey of array-key
+ *
+ * @template-covariant TValue
+ *
+ * @extends AbstractPaginator<TKey, TValue>
+ *
+ * @implements Arrayable<TKey, TValue>
+ * @implements ArrayAccess<TKey, TValue>
+ * @implements IteratorAggregate<TKey, TValue>
+ * @implements PaginatorContract<TKey, TValue>
+ */
 class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, PaginatorContract
 {
     /**
@@ -31,6 +43,9 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
 
     /**
      * Create a new paginator instance.
+     * 
+     * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>  $items
+     * @param  array{path: string, query: array, fragment: ?string, pageName: string}  $options
      */
     public function __construct(mixed $items, int $perPage, ?int $currentPage = null, array $options = [])
     {
@@ -50,7 +65,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     /**
      * Get the current page for the request.
      */
-    protected function setCurrentPage(int $currentPage): int
+    protected function setCurrentPage(?int $currentPage): int
     {
         $currentPage = $currentPage ?: static::resolveCurrentPage();
 
@@ -59,10 +74,12 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
 
     /**
      * Set the items for the paginator.
+     * 
+     * @param Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null $items
      */
     protected function setItems(mixed $items): void
     {
-        $this->items = $items instanceof Collection ? $items : Collection::make($items);
+        $this->items = $items instanceof Collection ? $items : new Collection($items);
 
         $this->hasMore = $this->items->count() > $this->perPage;
 
@@ -94,15 +111,15 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
      */
     public function render(?string $view = null, array $data = []): string
     {
-        return static::viewFactory()->addData(array_merge($data, [
-            'paginator' => $this,
-        ]))->render($view ?: static::$defaultSimpleView);
+        return static::viewFactory()
+            ->addData(array_merge($data, ['paginator' => $this]))
+            ->render($view ?: static::$defaultSimpleView);
     }
 
     /**
      * Manually indicate that the paginator does have more pages.
      */
-    public function hasMorePagesWhen(bool $hasMore = true): self
+    public function hasMorePagesWhen(bool $hasMore = true): static
     {
         $this->hasMore = $hasMore;
 
@@ -123,15 +140,16 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     public function toArray(): array
     {
         return [
-            'current_page'   => $this->currentPage(),
-            'data'           => $this->items->toArray(),
-            'first_page_url' => $this->url(1),
-            'from'           => $this->firstItem(),
-            'next_page_url'  => $this->nextPageUrl(),
-            'path'           => $this->path(),
-            'per_page'       => $this->perPage(),
-            'prev_page_url'  => $this->previousPageUrl(),
-            'to'             => $this->lastItem(),
+            'current_page'     => $this->currentPage(),
+            'current_page_url' => $this->url($this->currentPage()),
+            'data'             => $this->items->toArray(),
+            'first_page_url'   => $this->url(1),
+            'from'             => $this->firstItem(),
+            'next_page_url'    => $this->nextPageUrl(),
+            'path'             => $this->path(),
+            'per_page'         => $this->perPage(),
+            'prev_page_url'    => $this->previousPageUrl(),
+            'to'               => $this->lastItem(),
         ];
     }
 
@@ -149,5 +167,13 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     public function toJson(int $options = 0): string
     {
         return json_encode($this->jsonSerialize(), $options);
+    }
+
+    /**
+     * Convert the object to pretty print formatted JSON.
+     */
+    public function toPrettyJson(int $options = 0): string
+    {
+        return $this->toJson(JSON_PRETTY_PRINT | $options);
     }
 }

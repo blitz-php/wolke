@@ -13,13 +13,18 @@ namespace BlitzPHP\Wolke\Relations;
 
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
+use BlitzPHP\Database\Query\Expression;
+use BlitzPHP\Database\Exceptions\MultipleRecordsFoundException;
 use BlitzPHP\Utilities\Helpers;
+use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Utilities\Iterable\LazyCollection;
 use BlitzPHP\Utilities\String\Text;
-use BlitzPHP\Utilities\Support\Invader;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
+use BlitzPHP\Wolke\Contracts\CursorPaginator;
+use BlitzPHP\Wolke\Contracts\LengthAwarePaginator;
+use BlitzPHP\Wolke\Contracts\Paginator;
 use BlitzPHP\Wolke\Exceptions\ModelNotFoundException;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\Concerns\AsPivot;
@@ -28,6 +33,14 @@ use BlitzPHP\Wolke\Relations\Concerns\InteractsWithPivotTable;
 use Closure;
 use InvalidArgumentException;
 
+/**
+ * @template TRelatedModel of Model
+ * @template TDeclaringModel of Model
+ * @template TPivotModel of Pivot = Pivot
+ * @template TAccessor of string = 'pivot'
+ *
+ * @extends Relation<TRelatedModel, TDeclaringModel, Collection<int, TRelatedModel&object{pivot: TPivotModel}>>
+ */
 class BelongsToMany extends Relation
 {
     use InteractsWithDictionary;
@@ -40,6 +53,8 @@ class BelongsToMany extends Relation
 
     /**
      * The pivot table columns to retrieve.
+     * 
+     * @var list<string|Expression>
      */
     protected array $pivotColumns = [];
 
@@ -70,40 +85,39 @@ class BelongsToMany extends Relation
 
     /**
      * The custom pivot table column for the created_at timestamp.
-     *
-     * @var string
      */
-    protected $pivotCreatedAt;
+    protected ?string $pivotCreatedAt = null;
 
     /**
      * The custom pivot table column for the updated_at timestamp.
-     *
-     * @var string
      */
-    protected $pivotUpdatedAt;
+    protected ?string $pivotUpdatedAt = null;
 
     /**
      * The class name of the custom pivot model to use for the relationship.
      *
-     * @var string
+     * @var class-string<TPivotModel>
      */
-    protected $using;
+    protected string $using = null;
 
     /**
      * The name of the accessor to use for the "pivot" relationship.
+     *
+     * @var TAccessor
      */
     protected string $accessor = 'pivot';
 
     /**
      * Create a new belongs to many relationship instance.
      *
+     * @param Builder<TRelatedModel>  $query
+     * @param TDeclaringModel  $parent
+     * @param string|class-string<TRelatedModel>  $table
      * @param string  $foreignPivotKey The foreign key of the parent model.
      * @param string  $relatedPivotKey The associated key of the relation.
      * @param string  $parentKey       The key name of the parent model.
      * @param string  $relatedKey      The key name of the related model.
      * @param ?string $relationName    The "name" of the relationship.
-     *
-     * @return void
      */
     public function __construct(
         Builder $query,
@@ -156,8 +170,10 @@ class BelongsToMany extends Relation
 
     /**
      * Set the join clause for the relation query.
+     *
+     * @param Builder<TRelatedModel>|null $query
      */
-    protected function performJoin(?Builder $query = null): self
+    protected function performJoin(?Builder $query = null): static
     {
         $query = $query ?: $this->query;
 
@@ -166,7 +182,9 @@ class BelongsToMany extends Relation
         // model instance. Then we can set the "where" for the parent models.
         $query->join(
             $this->table,
-            [$this->getQualifiedRelatedKeyName() => $this->getQualifiedRelatedPivotKeyName()]
+            $this->getQualifiedRelatedKeyName(),
+            '=',
+            $this->getQualifiedRelatedPivotKeyName()
         );
 
         return $this;
@@ -175,7 +193,7 @@ class BelongsToMany extends Relation
     /**
      * Set the where clause for the relation query.
      */
-    protected function addWhereConstraints(): self
+    protected function addWhereConstraints(): static
     {
         $this->query->where(
             $this->getQualifiedForeignPivotKeyName(),
@@ -242,6 +260,10 @@ class BelongsToMany extends Relation
 
     /**
      * Build model dictionary keyed by the relation's foreign key.
+     *
+     * @param Collection<int, TRelatedModel>  $results
+     * 
+     * @return array<array<array-key, TRelatedModel>>
      */
     protected function buildDictionary(Collection $results): array
     {
@@ -250,10 +272,16 @@ class BelongsToMany extends Relation
         // parents without having a possibly slow inner loops for every models.
         $dictionary = [];
 
-        foreach ($results as $result) {
+        $isAssociative = Arr::isAssoc($results->all());
+
+        foreach ($results as $key => $result) {
             $value = $this->getDictionaryKey($result->{$this->accessor}->{$this->foreignPivotKey});
 
-            $dictionary[$value][] = $result;
+            if ($isAssociative) {
+                $dictionary[$value][$key] = $result;
+            } else {
+                $dictionary[$value][] = $result;
+            }
         }
 
         return $dictionary;
@@ -261,6 +289,8 @@ class BelongsToMany extends Relation
 
     /**
      * Get the class being used for pivot models.
+     *
+     * @return class-string<TPivotModel>
      */
     public function getPivotClass(): string
     {
@@ -269,8 +299,14 @@ class BelongsToMany extends Relation
 
     /**
      * Specify the custom pivot model to use for the relationship.
+     *
+     * @template TNewPivotModel of Pivot
+     *
+     * @param  class-string<TNewPivotModel>  $class
+     * 
+     * @phpstan-this-out static<TRelatedModel, TDeclaringModel, TNewPivotModel, TAccessor>
      */
-    public function using(string $class): self
+    public function using(string $class): static
     {
         $this->using = $class;
 
@@ -279,8 +315,10 @@ class BelongsToMany extends Relation
 
     /**
      * Specify the custom pivot accessor to use for the relationship.
+     * 
+     * @phpstan-this-out static<TRelatedModel, TDeclaringModel, TPivotModel, TNewAccessor>
      */
-    public function as(string $accessor): self
+    public function as(string $accessor): static
     {
         $this->accessor = $accessor;
 
@@ -290,7 +328,7 @@ class BelongsToMany extends Relation
     /**
      * Set a where clause for a pivot table column.
      */
-    public function wherePivot(string $column, mixed $operator = null, mixed $value = null, string $boolean = 'and'): self
+    public function wherePivot(string|Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and'): static
     {
         $this->pivotWheres[] = func_get_args();
 
@@ -300,7 +338,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "where between" clause for a pivot table column.
      */
-    public function wherePivotBetween(string $column, array $values, string $boolean = 'and', bool $not = false): self
+    public function wherePivotBetween(string|Expression $column, array $values, string $boolean = 'and', bool $not = false): static
     {
         return $this->whereBetween($this->qualifyPivotColumn($column), $values, $boolean, $not);
     }
@@ -308,7 +346,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "or where between" clause for a pivot table column.
      */
-    public function orWherePivotBetween(string $column, array $values): self
+    public function orWherePivotBetween(string|Expression $column, array $values): static
     {
         return $this->wherePivotBetween($column, $values, 'or');
     }
@@ -316,7 +354,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "where pivot not between" clause for a pivot table column.
      */
-    public function wherePivotNotBetween(string $column, array $values, string $boolean = 'and'): self
+    public function wherePivotNotBetween(string|Expression $column, array $values, string $boolean = 'and'): static
     {
         return $this->wherePivotBetween($column, $values, $boolean, true);
     }
@@ -324,7 +362,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "or where not between" clause for a pivot table column.
      */
-    public function orWherePivotNotBetween(string $column, array $values): self
+    public function orWherePivotNotBetween(string|Expression $column, array $values): static
     {
         return $this->wherePivotBetween($column, $values, 'or', true);
     }
@@ -332,7 +370,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "where in" clause for a pivot table column.
      */
-    public function wherePivotIn(string $column, mixed $values, string $boolean = 'and', bool $not = false): self
+    public function wherePivotIn(string|Expression $column, mixed $values, string $boolean = 'and', bool $not = false): static
     {
         $this->pivotWhereIns[] = func_get_args();
 
@@ -342,7 +380,7 @@ class BelongsToMany extends Relation
     /**
      * Set an "or where" clause for a pivot table column.
      */
-    public function orWherePivot(string $column, mixed $operator = null, mixed $value = null): self
+    public function orWherePivot(string|Expression $column, mixed $operator = null, mixed $value = null): static
     {
         return $this->wherePivot($column, $operator, $value, 'or');
     }
@@ -352,9 +390,11 @@ class BelongsToMany extends Relation
      *
      * In addition, new pivot records will receive this value.
      *
+     * @param string|Expression|array<string, string> $column
+     * 
      * @throws InvalidArgumentException
      */
-    public function withPivotValue(array|string $column, mixed $value = null): self
+    public function withPivotValue(array|string|Expression $column, mixed $value = null): static
     {
         if (is_array($column)) {
             foreach ($column as $name => $value) {
@@ -376,7 +416,7 @@ class BelongsToMany extends Relation
     /**
      * Set an "or where in" clause for a pivot table column.
      */
-    public function orWherePivotIn(string $column, mixed $values): self
+    public function orWherePivotIn(string|Expression $column, mixed $values): static
     {
         return $this->wherePivotIn($column, $values, 'or');
     }
@@ -384,7 +424,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "where not in" clause for a pivot table column.
      */
-    public function wherePivotNotIn(string $column, mixed $values, string $boolean = 'and'): self
+    public function wherePivotNotIn(string|Expression $column, mixed $values, string $boolean = 'and'): static
     {
         return $this->wherePivotIn($column, $values, $boolean, true);
     }
@@ -392,7 +432,7 @@ class BelongsToMany extends Relation
     /**
      * Set an "or where not in" clause for a pivot table column.
      */
-    public function orWherePivotNotIn(string $column, mixed $values): self
+    public function orWherePivotNotIn(string|Expression $column, mixed $values): static
     {
         return $this->wherePivotNotIn($column, $values, 'or');
     }
@@ -400,7 +440,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "where null" clause for a pivot table column.
      */
-    public function wherePivotNull(string $column, string $boolean = 'and', bool $not = false): self
+    public function wherePivotNull(string|Expression $column, string $boolean = 'and', bool $not = false): static
     {
         $this->pivotWhereNulls[] = func_get_args();
 
@@ -410,7 +450,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "where not null" clause for a pivot table column.
      */
-    public function wherePivotNotNull(string $column, string $boolean = 'and'): self
+    public function wherePivotNotNull(string|Expression $column, string $boolean = 'and'): static
     {
         return $this->wherePivotNull($column, $boolean, true);
     }
@@ -418,7 +458,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "or where null" clause for a pivot table column.
      */
-    public function orWherePivotNull(string $column, bool $not = false): self
+    public function orWherePivotNull(string|Expression $column, bool $not = false): static
     {
         return $this->wherePivotNull($column, 'or', $not);
     }
@@ -426,7 +466,7 @@ class BelongsToMany extends Relation
     /**
      * Set a "or where not null" clause for a pivot table column.
      */
-    public function orWherePivotNotNull(string $column): self
+    public function orWherePivotNotNull(string|Expression $column): static
     {
         return $this->orWherePivotNull($column, true);
     }
@@ -434,15 +474,27 @@ class BelongsToMany extends Relation
     /**
      * Add an "order by" clause for a pivot table column.
      */
-    public function orderByPivot(string $column, string $direction = 'asc'): self
+    public function orderByPivot(string|Expression $column, string $direction = 'asc'): static
     {
         return $this->orderBy($this->qualifyPivotColumn($column), $direction);
     }
 
     /**
+     * Add an "order by desc" clause for a pivot table column.
+     */
+    public function orderByPivotDesc(string|Expression $column): static
+    {
+        return $this->orderBy($this->qualifyPivotColumn($column), 'desc');
+    }
+
+    /**
      * Find a related model by its primary key or return a new instance of the related model.
      *
-     * @return Collection|Model
+     * @return (
+     *     $id is (Arrayable<array-key, mixed>|array<mixed>)
+     *     ? Collection<int, TRelatedModel&object{pivot: TPivotModel}>
+     *     : TRelatedModel&object{pivot: TPivotModel}
+     * )
      */
     public function findOrNew(mixed $id, array $columns = ['*'])
     {
@@ -455,6 +507,8 @@ class BelongsToMany extends Relation
 
     /**
      * Get the first related model record matching the attributes or instantiate it.
+     * 
+     * @return TRelatedModel&object{pivot: TPivotModel}
      */
     public function firstOrNew(array $attributes, array $values = []): Model
     {
@@ -467,8 +521,12 @@ class BelongsToMany extends Relation
 
     /**
      * Get the first related record matching the attributes or create it.
+     *
+     * @param  (Closure(): array)|array  $values
+     * 
+     * @return TRelatedModel&object{pivot: TPivotModel}
      */
-    public function firstOrCreate(array $attributes = [], array $values = [], array $joining = [], bool $touch = true): Model
+    public function firstOrCreate(array $attributes = [], array|Closure $values = [], array $joining = [], bool $touch = true): Model
     {
         if (null === ($instance = (clone $this)->where($attributes)->first())) {
             if (null === ($instance = $this->related->where($attributes)->first())) {
@@ -487,11 +545,15 @@ class BelongsToMany extends Relation
 
     /**
      * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     *
+     * @param  (Closure(): array)|array  $values
+     * 
+     * @return TRelatedModel&object{pivot: TPivotModel}
      */
-    public function createOrFirst(array $attributes = [], array $values = [], array $joining = [], bool $touch = true): Model
+    public function createOrFirst(array $attributes = [], array|Closure $values = [], array $joining = [], bool $touch = true): Model
     {
         try {
-            return $this->getQuery()->withSavePointIfNeeded(fn () => $this->create(array_merge($attributes, $values), $joining, $touch));
+            return $this->getQuery()->withSavePointIfNeeded(fn () => $this->create(array_merge($attributes, Helpers::value($values)), $joining, $touch));
         } catch (UniqueConstraintViolationException $e) {
             // ...
         }
@@ -507,6 +569,8 @@ class BelongsToMany extends Relation
 
     /**
      * Create or update a related record matching the attributes, and fill it with values.
+     * 
+     * @return TRelatedModel&object{pivot: TPivotModel}
      */
     public function updateOrCreate(array $attributes, array $values = [], array $joining = [], bool $touch = true): Model
     {
@@ -522,7 +586,11 @@ class BelongsToMany extends Relation
     /**
      * Find a related model by its primary key.
      *
-     * @return Collection<Model>|Model|null
+     * @return (
+     *     $id is (Arrayable<array-key, mixed>|array<mixed>)
+     *     ? Collection<int, TRelatedModel&object{pivot: TPivotModel}>
+     *     : (TRelatedModel&object{pivot: TPivotModel})|null
+     * )
      */
     public function find(mixed $id, array $columns = ['*'])
     {
@@ -538,15 +606,32 @@ class BelongsToMany extends Relation
     }
 
     /**
+     * Find a sole related model by its primary key.
+     *
+     * @return TRelatedModel&object{pivot: TPivotModel}
+     *
+     * @throws ModelNotFoundException<TRelatedModel>
+     * @throws MultipleRecordsFoundException
+     */
+    public function findSole(mixed $id, array $columns = ['*'])
+    {
+        return $this->where(
+            $this->getRelated()->getQualifiedKeyName(), 
+            '=', 
+            $this->parseId($id)
+        )->sole($columns);
+    }
+
+    /**
      * Find multiple related models by their primary keys.
      *
-     * @return Collection<Model>
+     * @return Collection<int, TRelatedModel&object{pivot: TPivotModel}>
      */
     public function findMany(array|Arrayable $ids, array $columns = ['*']): Collection
     {
         $ids = $ids instanceof Arrayable ? $ids->toArray() : $ids;
 
-        if (empty($ids)) {
+        if ($ids === []) {
             return $this->getRelated()->newCollection();
         }
 
@@ -558,10 +643,15 @@ class BelongsToMany extends Relation
     /**
      * Find a related model by its primary key or throw an exception.
      *
-     * @return Collection<Model>|Model
+     * @return (
+     *     $id is (Arrayable<array-key, mixed>|array<mixed>)
+     *     ? Collection<int, TRelatedModel&object{pivot: TPivotModel}>
+     *     : TRelatedModel&object{pivot: TPivotModel}
+     * )
      *
-     * @throws ModelNotFoundException
+     * @throws ModelNotFoundException<TRelatedModel>
      */
+    
     public function findOrFail(mixed $id, array $columns = ['*'])
     {
         $result = $this->find($id, $columns);
@@ -582,7 +672,16 @@ class BelongsToMany extends Relation
     /**
      * Find a related model by its primary key or call a callback.
      *
-     * @return Collection<Model>|mixed|Model
+     * @template TValue
+     *
+     * @param  (Closure(): TValue)|list<string>|string  $columns
+     * @param  (Closure(): TValue)|null  $callback
+     * 
+     * @return (
+     *     $id is (Arrayable<array-key, mixed>|array<mixed>)
+     *     ? Collection<int, TRelatedModel&object{pivot: TPivotModel}>|TValue
+     *     : (TRelatedModel&object{pivot: TPivotModel})|TValue
+     * )
      */
     public function findOr(mixed $id, array|Closure $columns = ['*'], ?Closure $callback = null)
     {
@@ -612,7 +711,7 @@ class BelongsToMany extends Relation
      *
      * @param array|Closure|string $column
      *
-     * @return Model|static
+     * @return (TRelatedModel&object{pivot: TPivotModel})|null
      */
     public function firstWhere($column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
     {
@@ -621,8 +720,10 @@ class BelongsToMany extends Relation
 
     /**
      * Execute the query and get the first result.
+     * 
+     * @return (TRelatedModel&object{pivot: TPivotModel})|null
      */
-    public function first(array $columns = ['*']): mixed
+    public function first(array $columns = ['*'])
     {
         $results = $this->limit(1)->get($columns);
 
@@ -632,7 +733,7 @@ class BelongsToMany extends Relation
     /**
      * Execute the query and get the first result or throw an exception.
      *
-     * @return Model|static
+     * @return TRelatedModel&object{pivot: TPivotModel}
      *
      * @throws ModelNotFoundException
      */
@@ -648,7 +749,12 @@ class BelongsToMany extends Relation
     /**
      * Execute the query and get the first result or call a callback.
      *
-     * @return mixed|Model|static
+     * @template TValue
+     *
+     * @param  (Closure(): TValue)|list<string>  $columns
+     * @param  (Closure(): TValue)|null  $callback
+     * 
+     * @return (TRelatedModel&object{pivot: TPivotModel})|TValue
      */
     public function firstOr(array|Closure $columns = ['*'], ?Closure $callback = null)
     {
@@ -685,8 +791,7 @@ class BelongsToMany extends Relation
         // models with the result of those columns as a separate model relation.
         $builder = $this->query->applyScopes();
 
-        $fields  = Invader::make($builder->getQuery())->fields;
-        $columns = $fields !== [] ? [] : $columns;
+        $columns = $builder->getQuery()->columns !== [] ? [] : $columns;
 
         $models = $builder->select(
             $this->shouldSelect($columns)
@@ -701,7 +806,9 @@ class BelongsToMany extends Relation
             $models = $builder->eagerLoadRelations($models);
         }
 
-        return $this->related->newCollection($models);
+        return $this->query->applyAfterQueryCallbacks(
+            $this->related->newCollection($models)
+        );
     }
 
     /**
@@ -710,7 +817,7 @@ class BelongsToMany extends Relation
     protected function shouldSelect(array $columns = ['*']): array
     {
         if ($columns === ['*']) {
-            $columns = [$this->related->getTable() . '.*'];
+            $columns = [$this->related->qualifyColumn('*')];
         }
 
         return array_merge($columns, $this->aliasedPivotColumns());
@@ -723,17 +830,22 @@ class BelongsToMany extends Relation
      */
     protected function aliasedPivotColumns(): array
     {
-        $defaults = [$this->foreignPivotKey, $this->relatedPivotKey];
-
-        return Helpers::collect(array_merge($defaults, $this->pivotColumns))->map(fn ($column) => $this->qualifyPivotColumn($column) . ' as pivot_' . $column)->unique()->all();
+        return (new IterableCollection([
+            $this->foreignPivotKey, 
+            $this->relatedPivotKey,
+            ...$this->pivotColumns,
+        ]))
+        ->map(fn($column) => $this->qualifyPivotColumn($column) . ' as pivot_' . $column)
+        ->unique()
+        ->all();
     }
 
     /**
      * Get a paginator for the "select" statement.
      *
-     * @return \BlitzPHP\Wolke\Contracts\LengthAwarePaginator
+     * @return LengthAwarePaginator<int, TRelatedModel&object{pivot: TPivotModel}>
      */
-    public function paginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null)
+    public function paginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null): LengthAwarePaginator
     {
         $this->query->select($this->shouldSelect($columns));
 
@@ -745,9 +857,9 @@ class BelongsToMany extends Relation
     /**
      * Paginate the given query into a simple paginator.
      *
-     * @return \BlitzPHP\Wolke\Contracts\Paginator
+     * @return Paginator<int, TRelatedModel&object{pivot: TPivotModel}>
      */
-    public function simplePaginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null)
+    public function simplePaginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator
     {
         $this->query->select($this->shouldSelect($columns));
 
@@ -759,9 +871,9 @@ class BelongsToMany extends Relation
     /**
      * Paginate the given query into a cursor paginator.
      *
-     * @return \BlitzPHP\Wolke\Contracts\CursorPaginator
+     * @return CursorPaginator<int, TRelatedModel&object{pivot: TPivotModel}>
      */
-    public function cursorPaginate(?int $perPage = null, array $columns = ['*'], string $cursorName = 'cursor', ?string $cursor = null)
+    public function cursorPaginate(?int $perPage = null, array $columns = ['*'], string $cursorName = 'cursor', ?string $cursor = null): CursorPaginator
     {
         $this->query->select($this->shouldSelect($columns));
 
@@ -787,19 +899,49 @@ class BelongsToMany extends Relation
      */
     public function chunkById(int $count, callable $callback, ?string $column = null, ?string $alias = null): bool
     {
-        $this->prepareQueryBuilder();
+        return $this->orderedChunkById($count, $callback, $column, $alias);
+    }
 
+    /**
+     * Chunk the results of a query by comparing IDs in descending order.
+     */
+    public function chunkByIdDesc(int $count, callable $callback, ?string $column = null, ?string $alias = null): bool
+    {
+        return $this->orderedChunkById($count, $callback, $column, $alias, descending: true);
+    }
+
+    /**
+     * Execute a callback over each item while chunking by ID.
+     */
+    public function eachById(callable $callback, int $count = 1000, ?string $column = null, ?string $alias = null): bool
+    {
+        return $this->chunkById($count, function ($results, $page) use ($callback, $count) {
+            foreach ($results as $key => $value) {
+                if ($callback($value, (($page - 1) * $count) + $key) === false) {
+                    return false;
+                }
+            }
+
+            return true;
+        }, $column, $alias);
+    }
+
+    /**
+     * Chunk the results of a query by comparing IDs in a given order.
+     */
+    public function orderedChunkById(int $count, callable $callback, ?string $column = null, ?string $alias = null, bool $descending = false): bool
+    {
         $column ??= $this->getRelated()->qualifyColumn(
             $this->getRelatedKeyName()
         );
 
         $alias ??= $this->getRelatedKeyName();
 
-        return $this->query->chunkById($count, function ($results) use ($callback) {
+        return $this->prepareQueryBuilder()->orderedChunkById($count, function ($results, $page) use ($callback) {
             $this->hydratePivotRelation($results->all());
 
-            return $callback($results);
-        }, $column, $alias);
+            return $callback($results, $page);
+        }, $column, $alias, $descending);
     }
 
     /**
@@ -820,6 +962,8 @@ class BelongsToMany extends Relation
 
     /**
      * Query lazily, by chunks of the given size.
+     * 
+     * @return LazyCollection<int, TRelatedModel&object{pivot: TPivotModel}>
      */
     public function lazy(int $chunkSize = 1000): LazyCollection
     {
@@ -832,8 +976,28 @@ class BelongsToMany extends Relation
 
     /**
      * Query lazily, by chunking the results of a query by comparing IDs.
+     * 
+     * @return LazyCollection<int, TRelatedModel&object{pivot: TPivotModel}>
      */
     public function lazyById(int $chunkSize = 1000, ?string $column = null, ?string $alias = null): LazyCollection
+    {
+        return $this->orderedLazyById($chunkSize, $column, $alias);
+    }
+
+    /**
+     * Query lazily, by chunking the results of a query by comparing IDs in descending order.
+     *
+     * @return LazyCollection<int, TRelatedModel&object{pivot: TPivotModel}>
+     */
+    public function lazyByIdDesc(int $chunkSize = 1000, ?string $column = null, ?string $alias = null): LazyCollection
+    {
+        return $this->orderedLazyById($chunkSize, $column, $alias, true);
+    }
+
+    /**
+     * Query lazily, by chunking the results of a query by comparing IDs in a given order.
+     */
+    public function orderedLazyById(int $chunkSize = 1000, ?string $column = null, ?string $alias = null, bool $descending = false): LazyCollection
     {
         $column ??= $this->getRelated()->qualifyColumn(
             $this->getRelatedKeyName()
@@ -841,7 +1005,7 @@ class BelongsToMany extends Relation
 
         $alias ??= $this->getRelatedKeyName();
 
-        return $this->prepareQueryBuilder()->lazyById($chunkSize, $column, $alias)->map(function ($model) {
+        return $this->prepareQueryBuilder()->orderedLazyById($chunkSize, $column, $alias, $descending)->map(function ($model) {
             $this->hydratePivotRelation([$model]);
 
             return $model;
@@ -850,6 +1014,8 @@ class BelongsToMany extends Relation
 
     /**
      * Get a lazy collection for the given query.
+     * 
+     * @return LazyCollection<int, TRelatedModel&object{pivot: TPivotModel}>
      */
     public function cursor(): LazyCollection
     {
@@ -862,6 +1028,8 @@ class BelongsToMany extends Relation
 
     /**
      * Prepare the query builder for query execution.
+     *
+     * @return Builder<TRelatedModel>
      */
     protected function prepareQueryBuilder(): Builder
     {
@@ -870,6 +1038,8 @@ class BelongsToMany extends Relation
 
     /**
      * Hydrate the pivot table relationship on the models.
+     * 
+     * @param  array<int, TRelatedModel>  $models
      */
     protected function hydratePivotRelation(array $models): void
     {
@@ -885,6 +1055,8 @@ class BelongsToMany extends Relation
 
     /**
      * Get the pivot attributes from a model.
+     *
+     * @param  TRelatedModel  $model
      */
     protected function migratePivotAttributes(Model $model): array
     {
@@ -957,14 +1129,20 @@ class BelongsToMany extends Relation
 
     /**
      * Get all of the IDs for the related models.
+     *
+     * @return IterableCollection<int, int|string>
      */
     public function allRelatedIds(): IterableCollection
     {
-        return Helpers::collect($this->newPivotQuery()->value($this->relatedPivotKey));
+        return new IterableCollection($this->newPivotQuery()->value($this->relatedPivotKey));
     }
 
     /**
      * Save a new model and attach it to the parent model.
+     *
+     * @param  TRelatedModel  $model
+     * 
+     * @return TRelatedModel&object{pivot: TPivotModel}
      */
     public function save(Model $model, array $pivotAttributes = [], bool $touch = true): Model
     {
@@ -977,6 +1155,10 @@ class BelongsToMany extends Relation
 
     /**
      * Save a new model without raising any events and attach it to the parent model.
+     *
+     * @param  TRelatedModel  $model
+     * 
+     * @return TRelatedModel&object{pivot: TPivotModel}
      */
     public function saveQuietly(Model $model, array $pivotAttributes = [], bool $touch = true): Model
     {
@@ -986,9 +1168,11 @@ class BelongsToMany extends Relation
     /**
      * Save an array of new models and attach them to the parent model.
      *
-     * @param Collection<Model>|list<Model> $models
+     * @template TContainer of Collection<array-key, TRelatedModel>|array<array-key, TRelatedModel>
      *
-     * @return Collection<Model>|list<Model>
+     * @param  TContainer  $models
+     * 
+     * @return TContainer
      */
     public function saveMany(array|Collection $models, array $pivotAttributes = [])
     {
@@ -1004,9 +1188,11 @@ class BelongsToMany extends Relation
     /**
      * Save an array of new models without raising any events and attach them to the parent model.
      *
-     * @param Collection<Model>|list<Model> $models
+     * @template TContainer of Collection<array-key, TRelatedModel>|array<array-key, TRelatedModel>
      *
-     * @return Collection<Model>|list<Model>
+     * @param  TContainer  $models
+     * 
+     * @return TContainer
      */
     public function saveManyQuietly(array|Collection $models, array $pivotAttributes = [])
     {
@@ -1015,9 +1201,13 @@ class BelongsToMany extends Relation
 
     /**
      * Create a new instance of the related model.
+     * 
+     * @return TRelatedModel&object{pivot: TPivotModel}
      */
     public function create(array $attributes = [], array $joining = [], bool $touch = true): Model
     {
+        $attributes = array_merge($this->getQuery()->pendingAttributes, $attributes);
+
         $instance = $this->related->newInstance($attributes);
 
         // Once we save the related model, we need to attach it to the base model via
@@ -1033,7 +1223,7 @@ class BelongsToMany extends Relation
     /**
      * Create an array of new instances of the related models.
      *
-     * @return list<Model>
+     * @return list<TRelatedModel&object{pivot: TPivotModel}>
      */
     public function createMany(iterable $records, array $joinings = []): array
     {
@@ -1055,7 +1245,7 @@ class BelongsToMany extends Relation
      */
     public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
-        if (Invader::make($parentQuery->getQuery())->table === Invader::make($query->getQuery())->table) {
+        if ($parentQuery->getQuery()->from === $query->getQuery()->from) {
             return $this->getRelationExistenceQueryForSelfJoin($query, $parentQuery, $columns);
         }
 
@@ -1067,7 +1257,10 @@ class BelongsToMany extends Relation
     /**
      * Add the constraints for a relationship query on the same table.
      *
-     * @param array|mixed $columns
+     * @param  Builder<TRelatedModel>  $query
+     * @param  Builder<TDeclaringModel>  $parentQuery
+     * 
+     * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQueryForSelfJoin(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
@@ -1093,14 +1286,19 @@ class BelongsToMany extends Relation
     /**
      * Specify that the pivot table has creation and update timestamps.
      */
-    public function withTimestamps(?string $createdAt = null, ?string $updatedAt = null): self
+    public function withTimestamps(string|null|false $createdAt = null, string|null|false $updatedAt = null): static
     {
-        $this->withTimestamps = true;
+         $this->pivotCreatedAt = $createdAt !== false ? $createdAt : null;
+        $this->pivotUpdatedAt = $updatedAt !== false ? $updatedAt : null;
 
-        $this->pivotCreatedAt = $createdAt;
-        $this->pivotUpdatedAt = $updatedAt;
+        $pivots = array_filter([
+            $createdAt !== false ? $this->createdAt() : null,
+            $updatedAt !== false ? $this->updatedAt() : null,
+        ]);
 
-        return $this->withPivot($this->createdAt(), $this->updatedAt());
+        $this->withTimestamps = $pivots !== [];
+
+        return $this->withTimestamps ? $this->withPivot($pivots) : $this;
     }
 
     /**
@@ -1108,7 +1306,7 @@ class BelongsToMany extends Relation
      */
     public function createdAt(): string
     {
-        return $this->pivotCreatedAt ?: $this->parent->getCreatedAtColumn();
+        return $this->pivotCreatedAt ?? $this->parent->getCreatedAtColumn() ?? Model::CREATED_AT;
     }
 
     /**
@@ -1116,7 +1314,7 @@ class BelongsToMany extends Relation
      */
     public function updatedAt(): string
     {
-        return $this->pivotUpdatedAt ?: $this->parent->getUpdatedAtColumn();
+        return $this->pivotUpdatedAt ?? $this->parent->getUpdatedAtColumn() ?? Model::UPDATED_AT;
     }
 
     /**
@@ -1218,8 +1416,12 @@ class BelongsToMany extends Relation
     /**
      * Qualify the given column name by the pivot table.
      */
-    public function qualifyPivotColumn(string $column): string
+    public function qualifyPivotColumn(string|Expression $column): string|Expression
     {
+        if ($column instanceof Expression) {
+            return $column;
+        }
+
         return str_contains($column, '.')
             ? $column
             : $this->table . '.' . $column;

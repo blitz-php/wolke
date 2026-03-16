@@ -19,8 +19,6 @@ class UrlWindow
      * Create a new URL window instance.
      *
      * @param PaginatorContract $paginator The paginator implementation.
-     *
-     * @return void
      */
     public function __construct(protected PaginatorContract $paginator)
     {

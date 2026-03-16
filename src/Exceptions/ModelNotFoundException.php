@@ -11,29 +11,35 @@
 
 namespace BlitzPHP\Wolke\Exceptions;
 
+use BlitzPHP\Database\Exceptions\RecordsNotFoundException;
 use BlitzPHP\Utilities\Iterable\Arr;
-use Exception;
 
-class ModelNotFoundException extends Exception
+/**
+ * @template TModel of \BlitzPHP\Wolke\Model
+ */
+class ModelNotFoundException extends RecordsNotFoundException
 {
     /**
      * Name of the affected Eloquent model.
      *
-     * @var string
+     * @var class-string<TModel>
      */
     protected $model;
 
     /**
      * The affected model IDs.
      *
-     * @var array|int
+     * @var list<int|string>
      */
     protected $ids;
 
     /**
      * Set the affected Eloquent model and instance ids.
+     *
+     * @param  class-string<TModel>  $model
+     * @param  list<int|string>|int|string  $ids
      */
-    public function setModel(string $model, array|int $ids = []): self
+    public function setModel(string $model, array|int|string $ids = []): self
     {
         $this->model = $model;
         $this->ids   = Arr::wrap($ids);
@@ -51,6 +57,8 @@ class ModelNotFoundException extends Exception
 
     /**
      * Get the affected Wolke model.
+     *
+     * @return class-string<TModel>
      */
     public function getModel(): string
     {
@@ -60,7 +68,7 @@ class ModelNotFoundException extends Exception
     /**
      * Get the affected Wolke model IDs.
      *
-     * @return array|int
+     * @return list<int|string>
      */
     public function getIds()
     {

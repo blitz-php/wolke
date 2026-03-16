@@ -16,7 +16,6 @@ use ArrayIterator;
 use BlitzPHP\Contracts\View\RendererInterface;
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Traits\Support\Tappable;
-use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Utilities\String\Text;
@@ -25,8 +24,16 @@ use BlitzPHP\Wolke\Relations\Pivot;
 use Closure;
 use Exception;
 use stdClass;
+use Stringable;
 
-abstract class AbstractCursorPaginator
+/**
+ * @template TKey of array-key
+ *
+ * @template-covariant TValue
+ *
+ * @mixin Collection<TKey, TValue>
+ */
+abstract class AbstractCursorPaginator implements Stringable
 {
     use ForwardsCalls;
     use Tappable;
@@ -41,7 +48,7 @@ abstract class AbstractCursorPaginator
     /**
      * All of the items being paginated.
      *
-     * @var Collection
+     * @var Collection<TKey, TValue>
      */
     protected $items;
 
@@ -187,7 +194,8 @@ abstract class AbstractCursorPaginator
      */
     public function getParametersForItem(ArrayAccess|stdClass $item): array
     {
-        return Helpers::collect($this->parameters)
+        return (new Collection($this->parameters))
+            ->filter()
             ->flip()
             ->map(function ($_, $parameterName) use ($item) {
                 if ($item instanceof Model
@@ -223,6 +231,8 @@ abstract class AbstractCursorPaginator
                 );
             }
         }
+
+        return null;
     }
 
     /**
@@ -256,7 +266,7 @@ abstract class AbstractCursorPaginator
     /**
      * Add a set of query string values to the paginator.
      */
-    public function appends(array|string|null $key, ?string $value = null): self
+    public function appends(array|string|null $key, ?string $value = null): static
     {
         if (null === $key) {
             return $this;
@@ -272,7 +282,7 @@ abstract class AbstractCursorPaginator
     /**
      * Add an array of query string values.
      */
-    protected function appendArray(array $keys): self
+    protected function appendArray(array $keys): static
     {
         foreach ($keys as $key => $value) {
             $this->addQuery($key, $value);
@@ -284,7 +294,7 @@ abstract class AbstractCursorPaginator
     /**
      * Add all current query string values to the paginator.
      */
-    public function withQueryString(): self
+    public function withQueryString(): static
     {
         if (null !== ($query = Paginator::resolveQueryString())) {
             return $this->appends($query);
@@ -296,7 +306,7 @@ abstract class AbstractCursorPaginator
     /**
      * Add a query string value to the paginator.
      */
-    protected function addQuery(string $key, string $value): self
+    protected function addQuery(string $key, string $value): static
     {
         if ($key !== $this->cursorName) {
             $this->query[$key] = $value;
@@ -316,7 +326,7 @@ abstract class AbstractCursorPaginator
     /**
      * Load a set of relationships onto the mixed relationship collection.
      */
-    public function loadMorph(string $relation, array $relations): self
+    public function loadMorph(string $relation, array $relations): static
     {
         $this->getCollection()->loadMorph($relation, $relations);
 
@@ -326,7 +336,7 @@ abstract class AbstractCursorPaginator
     /**
      * Load a set of relationship counts onto the mixed relationship collection.
      */
-    public function loadMorphCount(string $relation, array $relations): self
+    public function loadMorphCount(string $relation, array $relations): static
     {
         $this->getCollection()->loadMorphCount($relation, $relations);
 
@@ -335,6 +345,8 @@ abstract class AbstractCursorPaginator
 
     /**
      * Get the slice of items being paginated.
+     *
+     * @return array<TKey, TValue>
      */
     public function items(): array
     {
@@ -343,8 +355,14 @@ abstract class AbstractCursorPaginator
 
     /**
      * Transform each item in the slice of items using a callback.
+     *
+     * @template TThroughValue
+     *
+     * @param  callable(TValue, TKey): TThroughValue  $callback
+     * 
+     * @phpstan-this-out static<TKey, TThroughValue>
      */
-    public function through(callable $callback): self
+    public function through(callable $callback): static
     {
         $this->items->transform($callback);
 
@@ -378,7 +396,7 @@ abstract class AbstractCursorPaginator
     /**
      * Set the query string variable used to store the cursor.
      */
-    public function setCursorName(string $name): self
+    public function setCursorName(string $name): static
     {
         $this->cursorName = $name;
 
@@ -388,7 +406,7 @@ abstract class AbstractCursorPaginator
     /**
      * Set the base path to assign to all URLs.
      */
-    public function withPath(string $path): self
+    public function withPath(string $path): static
     {
         return $this->setPath($path);
     }
@@ -396,7 +414,7 @@ abstract class AbstractCursorPaginator
     /**
      * Set the base path to assign to all URLs.
      */
-    public function setPath(string $path): self
+    public function setPath(string $path): static
     {
         $this->path = $path;
 
@@ -413,12 +431,8 @@ abstract class AbstractCursorPaginator
 
     /**
      * Resolve the current cursor or return the default value.
-     *
-     * @param mixed|null $default
-     *
-     * @return Cursor|null
      */
-    public static function resolveCurrentCursor(string $cursorName = 'cursor', $default = null)
+    public static function resolveCurrentCursor(string $cursorName = 'cursor', ?Cursor $default = null): ?Cursor
     {
         if (isset(static::$currentCursorResolver)) {
             return call_user_func(static::$currentCursorResolver, $cursorName);
@@ -477,6 +491,8 @@ abstract class AbstractCursorPaginator
 
     /**
      * Get the paginator's underlying collection.
+     *
+     * @return Collection<TKey, TValue>
      */
     public function getCollection(): Collection
     {
@@ -485,8 +501,15 @@ abstract class AbstractCursorPaginator
 
     /**
      * Set the paginator's underlying collection.
+     *
+     * @template TSetKey of array-key
+     * @template TSetValue
+     *
+     * @param Collection<TSetKey, TSetValue>  $collection
+     * 
+     * @phpstan-this-out static<TSetKey, TSetValue>
      */
-    public function setCollection(Collection $collection): self
+    public function setCollection(Collection $collection): static
     {
         $this->items = $collection;
 

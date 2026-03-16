@@ -11,7 +11,7 @@
 
 namespace BlitzPHP\Wolke\Casts;
 
-use BlitzPHP\Utilities\String\Text;
+use BlitzPHP\Utilities\String\Stringable;
 use BlitzPHP\Wolke\Contracts\Castable;
 use BlitzPHP\Wolke\Contracts\CastsAttributes;
 use BlitzPHP\Wolke\Model;
@@ -26,7 +26,7 @@ class AsStringable implements Castable
         return new class () implements CastsAttributes {
             public function get(Model $model, string $key, mixed $value, array $attributes): mixed
             {
-                return isset($value) ? Text::of($value) : null;
+                return isset($value) ? new Stringable($value) : null;
             }
 
             public function set(Model $model, string $key, mixed $value, array $attributes): mixed

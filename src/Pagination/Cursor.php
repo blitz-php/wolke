@@ -12,7 +12,7 @@
 namespace BlitzPHP\Wolke\Pagination;
 
 use BlitzPHP\Contracts\Support\Arrayable;
-use BlitzPHP\Utilities\Helpers;
+use BlitzPHP\Utilities\Iterable\Collection;
 use UnexpectedValueException;
 
 class Cursor implements Arrayable
@@ -46,7 +46,9 @@ class Cursor implements Arrayable
      */
     public function parameters(array $parameterNames): array
     {
-        return Helpers::collect($parameterNames)->map(fn ($parameterName) => $this->parameter($parameterName))->toArray();
+        return (new Collection($parameterNames))
+            ->map(fn ($parameterName) => $this->parameter($parameterName))
+            ->toArray();
     }
 
     /**
@@ -85,10 +87,8 @@ class Cursor implements Arrayable
 
     /**
      * Get a cursor instance from the encoded string representation.
-     *
-     * @return static|null
      */
-    public static function fromEncoded(?string $encodedString)
+    public static function fromEncoded(?string $encodedString): ?static
     {
         if (null === $encodedString) {
             return null;
