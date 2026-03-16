@@ -18,12 +18,15 @@ use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\Pivot;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Concerns\InteractsWithPivotTable</a>
+ */
 trait InteractsWithPivotTable
 {
     /**
-     * Toggles a model (or models) from the parent.
+     * Bascule un modèle (ou des modèles) depuis le parent.
      *
-     * Each existing model is detached, and non existing ones are attached.
+     * Chaque modèle existant est détaché, et les non existants sont attachés.
      */
     public function toggle(mixed $ids, bool $touch = true): array
     {
@@ -33,9 +36,9 @@ trait InteractsWithPivotTable
 
         $records = $this->formatRecordsList($this->parseIds($ids));
 
-        // Next, we will determine which IDs should get removed from the join table by
-        // checking which of the given ID/records is in the list of current records
-        // and removing all of those rows from this "intermediate" joining table.
+        // Ensuite, nous déterminerons quels IDs doivent être supprimés de la table de jointure en
+        // vérifiant lesquels des IDs/enregistrements donnés se trouvent dans la liste des enregistrements actuels
+        // et en supprimant toutes ces lignes de cette table de jointure "intermédiaire".
         $detach = array_values(array_intersect(
             $this->newPivotQuery()->values($this->relatedPivotKey),
             array_keys($records)
@@ -47,9 +50,9 @@ trait InteractsWithPivotTable
             $changes['detached'] = $this->castKeys($detach);
         }
 
-        // Finally, for all of the records which were not "detached", we'll attach the
-        // records into the intermediate table. Then, we will add those attaches to
-        // this change list and get ready to return these results to the callers.
+        // Enfin, pour tous les enregistrements qui n'ont pas été "détachés", nous attacherons les
+        // enregistrements dans la table intermédiaire. Ensuite, nous ajouterons ces attaches à
+        // cette liste de modifications et nous préparerons à retourner ces résultats aux appelants.
         $attach = array_diff_key($records, array_flip($detach));
 
         if (count($attach) > 0) {
@@ -58,9 +61,9 @@ trait InteractsWithPivotTable
             $changes['attached'] = array_keys($attach);
         }
 
-        // Once we have finished attaching or detaching the records, we will see if we
-        // have done any attaching or detaching, and if we have we will touch these
-        // relationships if they are configured to touch on any database updates.
+        // Une fois que nous avons fini d'attacher ou de détacher les enregistrements, nous verrons si nous
+        // avons fait des attaches ou des détachements, et si c'est le cas, nous toucherons ces
+        // relations si elles sont configurées pour être touchées lors des mises à jour de la base de données.
         if (
             $touch && (count($changes['attached'])
                        || count($changes['detached']))
@@ -72,7 +75,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Sync the intermediate tables with a list of IDs without detaching.
+     * Synchronise les tables intermédiaires avec une liste d'IDs sans détacher.
      *
      * @param IterableCollection|Model|array|int|string $ids
      * 
@@ -84,7 +87,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Sync the intermediate tables with a list of IDs or collection of models.
+     * Synchronise les tables intermédiaires avec une liste d'IDs ou une collection de modèles.
      *
      * @param IterableCollection|Model|array|int|string $ids
      * 
@@ -102,15 +105,15 @@ trait InteractsWithPivotTable
             return $changes;
         }
         
-        // First we need to attach any of the associated models that are not currently
-        // in this joining table. We'll spin through the given IDs, checking to see
-        // if they exist in the array of current ones, and if not we will insert.
+        // Nous devons d'abord attacher tous les modèles associés qui ne sont pas actuellement
+        // dans cette table de jointure. Nous parcourrons les IDs donnés, en vérifiant
+        // s'ils existent dans le tableau des IDs actuels, et sinon nous insérerons.
         $current = $this->getCurrentlyAttachedPivots()
             ->pluck($this->relatedPivotKey)->all();
 
-        // Next, we will take the differences of the currents and given IDs and detach
-        // all of the entities that exist in the "current" array but are not in the
-        // array of the new IDs given to the method which will complete the sync.
+        // Ensuite, nous prendrons les différences des IDs actuels et donnés et détacherons
+        // toutes les entités qui existent dans le tableau "actuel" mais qui ne sont pas dans le
+        // tableau des nouveaux IDs donnés à la méthode, ce qui complétera la synchronisation.
         if ($detaching) {
             $detach = array_diff($current, array_keys($records));
 
@@ -121,17 +124,17 @@ trait InteractsWithPivotTable
             }
         }
 
-        // Now we are finally ready to attach the new records. Note that we'll disable
-        // touching until after the entire operation is complete so we don't fire a
-        // ton of touch operations until we are totally done syncing the records.
+        // Maintenant, nous sommes enfin prêts à attacher les nouveaux enregistrements. Notez que nous désactiverons
+        // le touch jusqu'à ce que toute l'opération soit terminée afin de ne pas déclencher
+        // une tonne d'opérations de touch jusqu'à ce que nous ayons totalement fini de synchroniser les enregistrements.
         $changes = array_merge(
             $changes,
             $this->attachNew($records, $current, false)
         );
 
-        // Once we have finished attaching or detaching the records, we will see if we
-        // have done any attaching or detaching, and if we have we will touch these
-        // relationships if they are configured to touch on any database updates.
+        // Une fois que nous avons fini d'attacher ou de détacher les enregistrements, nous verrons si nous
+        // avons fait des attaches ou des détachements, et si c'est le cas, nous toucherons ces
+        // relations si elles sont configurées pour être touchées lors des mises à jour de la base de données.
         if (count($changes['attached'])
             || count($changes['updated'])
             || count($changes['detached'])) {
@@ -142,7 +145,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Sync the intermediate tables with a list of IDs or collection of models with the given pivot values.
+     * Synchronise les tables intermédiaires avec une liste d'IDs ou une collection de modèles avec les valeurs pivot données.
      *
      * @param IterableCollection|Model|array|int|string $ids
      * 
@@ -157,7 +160,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Format the sync / toggle record list so that it is keyed by ID.
+     * Formate la liste d'enregistrements de synchronisation/basculement pour qu'elle soit indexée par ID.
      */
     protected function formatRecordsList(array $records): array
     {
@@ -175,25 +178,25 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Attach all of the records that aren't in the given current records.
+     * Attache tous les enregistrements qui ne sont pas dans la liste des enregistrements actuels donnés.
      */
     protected function attachNew(array $records, array $current, bool $touch = true): array
     {
         $changes = ['attached' => [], 'updated' => []];
 
         foreach ($records as $id => $attributes) {
-            // If the ID is not in the list of existing pivot IDs, we will insert a new pivot
-            // record, otherwise, we will just update this existing record on this joining
-            // table, so that the developers will easily update these records pain free.
+            // Si l'ID n'est pas dans la liste des IDs pivot existants, nous insérerons un nouvel enregistrement pivot,
+            // sinon, nous mettrons simplement à jour cet enregistrement existant sur cette table de jointure,
+            // afin que les développeurs puissent facilement mettre à jour ces enregistrements sans douleur.
             if (! in_array($id, $current, true)) {
                 $this->attach($id, $attributes, $touch);
 
                 $changes['attached'][] = $this->castKey($id);
             }
 
-            // Now we'll try to update an existing pivot record with the attributes that were
-            // given to the method. If the model is actually updated we will add it to the
-            // list of updated pivot records so we return them back out to the consumer.
+            // Maintenant, nous allons essayer de mettre à jour un enregistrement pivot existant avec les attributs qui ont été
+            // donnés à la méthode. Si le modèle est réellement mis à jour, nous l'ajouterons à la
+            // liste des enregistrements pivot mis à jour pour les retourner au consommateur.
             elseif (
                 count($attributes) > 0
                 && $this->updateExistingPivot($id, $attributes, $touch)
@@ -206,7 +209,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Update an existing pivot record on the table.
+     * Met à jour un enregistrement pivot existant sur la table.
      */
     public function updateExistingPivot(mixed $id, array $attributes, bool $touch = true): int
     {
@@ -230,7 +233,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Update an existing pivot record on the table via a custom class.
+     * Met à jour un enregistrement pivot existant sur la table via une classe personnalisée.
      */
     protected function updateExistingPivotUsingCustomClass(mixed $id, array $attributes, bool $touch): int
     {
@@ -250,16 +253,16 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Attach a model to the parent.
+     * Attache un modèle au parent.
      */
     public function attach(mixed $id, array $attributes = [], bool $touch = true): void
     {
         if ($this->using) {
             $this->attachUsingCustomClass($id, $attributes);
         } else {
-            // Here we will insert the attachment records into the pivot table. Once we have
-            // inserted the records, we will touch the relationships if necessary and the
-            // function will return. We can parse the IDs before inserting the records.
+            // Ici, nous insérerons les enregistrements d'attachement dans la table pivot. Une fois que nous avons
+            // inséré les enregistrements, nous toucherons les relations si nécessaire et la
+            // fonction retournera. Nous pouvons analyser les IDs avant d'insérer les enregistrements.
             $this->newPivotStatement()->bulkInsert($this->formatAttachRecords(
                 $this->parseIds($id),
                 $attributes
@@ -272,7 +275,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Attach a model to the parent using a custom class.
+     * Attache un modèle au parent en utilisant une classe personnalisée.
      */
     protected function attachUsingCustomClass(mixed $id, array $attributes): void
     {
@@ -287,7 +290,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Create an array of records to insert into the pivot table.
+     * Crée un tableau d'enregistrements à insérer dans la table pivot.
      */
     protected function formatAttachRecords(array $ids, array $attributes): array
     {
@@ -296,9 +299,9 @@ trait InteractsWithPivotTable
         $hasTimestamps = ($this->hasPivotColumn($this->createdAt())
                   || $this->hasPivotColumn($this->updatedAt()));
 
-        // To create the attachment records, we will simply spin through the IDs given
-        // and create a new record to insert for each ID. Each ID may actually be a
-        // key in the array, with extra attributes to be placed in other columns.
+        // Pour créer les enregistrements d'attachement, nous parcourrons simplement les IDs donnés
+        // et créerons un nouvel enregistrement à insérer pour chaque ID. Chaque ID peut en fait être une
+        // clé dans le tableau, avec des attributs supplémentaires à placer dans d'autres colonnes.
         foreach ($ids as $key => $value) {
             $records[] = $this->formatAttachRecord(
                 $key,
@@ -312,7 +315,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Create a full attachment record payload.
+     * Crée une charge utile complète d'enregistrement d'attachement.
      */
     protected function formatAttachRecord(int $key, mixed $value, array $attributes, bool $hasTimestamps): array
     {
@@ -325,7 +328,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Get the attach record ID and extra attributes.
+     * Obtient l'ID de l'enregistrement d'attachement et les attributs supplémentaires.
      */
     protected function extractAttachIdAndAttributes(mixed $key, mixed $value, array $attributes): array
     {
@@ -335,7 +338,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Create a new pivot attachment record.
+     * Crée un nouvel enregistrement d'attachement pivot.
      */
     protected function baseAttachRecord(int|string $id, bool $timed): array
     {
@@ -343,9 +346,9 @@ trait InteractsWithPivotTable
 
         $record[$this->foreignPivotKey] = $this->parent->{$this->parentKey};
 
-        // If the record needs to have creation and update timestamps, we will make
-        // them by calling the parent model's "freshTimestamp" method which will
-        // provide us with a fresh timestamp in this model's preferred format.
+        // Si l'enregistrement a besoin d'avoir des horodatages de création et de mise à jour, nous les ferons
+        // en appelant la méthode "freshTimestamp" du modèle parent qui nous
+        // fournira un horodatage frais dans le format préféré de ce modèle.
         if ($timed) {
             $record = $this->addTimestampsToAttachment($record);
         }
@@ -358,7 +361,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Set the creation and update timestamps on an attach record.
+     * Définit les horodatages de création et de mise à jour sur un enregistrement d'attachement.
      */
     protected function addTimestampsToAttachment(array $record, bool $exists = false): array
     {
@@ -383,7 +386,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Determine whether the given column is defined as a pivot column.
+     * Détermine si la colonne donnée est définie comme une colonne pivot.
      */
     public function hasPivotColumn(string $column): bool
     {
@@ -391,7 +394,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Detach models from the relationship.
+     * Détache les modèles de la relation.
      */
     public function detach(mixed $ids = null, bool $touch = true): int
     {
@@ -400,9 +403,9 @@ trait InteractsWithPivotTable
         } else {
             $query = $this->newPivotQuery();
 
-            // If associated IDs were passed to the method we will only delete those
-            // associations, otherwise all of the association ties will be broken.
-            // We'll return the numbers of affected rows when we do the deletes.
+            // Si des IDs associés ont été passés à la méthode, nous ne supprimerons que ces
+            // associations, sinon tous les liens d'association seront rompus.
+            // Nous retournerons le nombre de lignes affectées lorsque nous ferons les suppressions.
             if (null !== $ids) {
                 $ids = $this->parseIds($ids);
 
@@ -413,9 +416,9 @@ trait InteractsWithPivotTable
                 $query->whereIn($this->getQualifiedRelatedPivotKeyName(), $ids);
             }
 
-            // Once we have all of the conditions set on the statement, we are ready
-            // to run the delete on the pivot table. Then, if the touch parameter
-            // is true, we will go ahead and touch all related models to sync.
+            // Une fois que nous avons toutes les conditions définies sur la déclaration, nous sommes prêts
+            // à exécuter la suppression sur la table pivot. Ensuite, si le paramètre touch
+            // est vrai, nous irons toucher tous les modèles liés pour synchroniser.
             $results = $query->delete();
         }
 
@@ -427,7 +430,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Detach models from the relationship using a custom class.
+     * Détache les modèles de la relation en utilisant une classe personnalisée.
      */
     protected function detachUsingCustomClass(mixed $ids): int
     {
@@ -442,7 +445,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Get the pivot models that are currently attached.
+     * Obtient les modèles pivot actuellement attachés.
      */
     protected function getCurrentlyAttachedPivots(): IterableCollection
     {
@@ -450,7 +453,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Get the pivot models that are currently attached, filtered by related model keys.
+     * Obtient les modèles pivot actuellement attachés, filtrés par les clés du modèle lié.
      */
     protected function getCurrentlyAttachedPivotsForIds(mixed $ids = null): IterableCollection
     {
@@ -471,7 +474,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Create a new pivot model instance.
+     * Crée une nouvelle instance de modèle pivot.
      */
     public function newPivot(array $attributes = [], bool $exists = false): Pivot
     {
@@ -491,7 +494,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Create a new existing pivot model instance.
+     * Crée une nouvelle instance de modèle pivot existant.
      */
     public function newExistingPivot(array $attributes = []): Pivot
     {
@@ -499,7 +502,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Get a new plain query builder for the pivot table.
+     * Obtient un nouveau constructeur de requête simple pour la table pivot.
      */
     public function newPivotStatement(): BaseBuilder
     {
@@ -507,7 +510,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Get a new pivot statement for a given "other" ID.
+     * Obtient une nouvelle déclaration pivot pour un ID "autre" donné.
      */
     public function newPivotStatementForId(mixed $id): BaseBuilder
     {
@@ -518,7 +521,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Create a new query builder for the pivot table.
+     * Crée un nouveau constructeur de requête pour la table pivot.
      */
     public function newPivotQuery(): BaseBuilder
     {
@@ -543,7 +546,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Set the columns on the pivot table to retrieve.
+     * Définit les colonnes de la table pivot à récupérer.
      *
      * @param array|mixed $columns
      */
@@ -558,7 +561,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Get all of the IDs from the given mixed value.
+     * Obtient tous les IDs de la valeur mixte donnée.
      */
     protected function parseIds(mixed $value): array
     {
@@ -580,7 +583,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Get the ID from the given mixed value.
+     * Obtient l'ID de la valeur mixte donnée.
      */
     protected function parseId(mixed $value): mixed
     {
@@ -588,7 +591,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Cast the given keys to integers if they are numeric and string otherwise.
+     * Convertit les clés données en entiers si elles sont numériques, sinon en chaînes.
      */
     protected function castKeys(array $keys): array
     {
@@ -596,7 +599,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Cast the given key to convert to primary key type.
+     * Convertit la clé donnée pour la convertir en type de clé primaire.
      */
     protected function castKey(mixed $key): mixed
     {
@@ -607,7 +610,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Cast the given pivot attributes.
+     * Convertit les attributs pivot donnés.
      */
     protected function castAttributes(array $attributes): array
     {
@@ -617,7 +620,7 @@ trait InteractsWithPivotTable
     }
 
     /**
-     * Converts a given value to a given type value.
+     * Convertit une valeur donnée en un type de valeur donné.
      */
     protected function getTypeSwapValue(string $type, mixed $value): mixed
     {

@@ -21,28 +21,31 @@ use InvalidArgumentException;
 use ReflectionClass;
 use RuntimeException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasEvents</a>
+ */
 trait HasEvents
 {
     /**
-     * The event map for the model.
+     * La carte des événements pour le modèle.
      *
-     * Allows for object-based events for native Wolke events.
+     * Permet des événements basés sur des objets pour les événements natifs de Wolke.
      *
      * @var array<string, class-string>
      */
     protected array $dispatchesEvents = [];
 
     /**
-     * User exposed observable events.
+     * Événements observables exposés par l'utilisateur.
      *
-     * These are extra user-defined events observers may subscribe to.
+     * Ce sont des événements supplémentaires définis par l'utilisateur auxquels les observateurs peuvent s'abonner.
      *
      * @var list<string>
      */
     protected array $observables = [];
 
     /**
-     * Boot the has event trait for a model.
+     * Initialise le trait d'événements pour un modèle.
      */
     public static function bootHasEvents(): void
     {
@@ -50,7 +53,7 @@ trait HasEvents
     }
 
     /**
-     * Resolve the observe class names from the attributes.
+     * Résout les noms de classe d'observation à partir des attributs.
      */
     public static function resolveObserveAttributes(): array
     {
@@ -70,7 +73,7 @@ trait HasEvents
     }
 
     /**
-     * Register observers with the model.
+     * Enregistre des observateurs avec le modèle.
      *
      * @param  object|list<string>|string  $classes
      *
@@ -86,7 +89,7 @@ trait HasEvents
     }
 
     /**
-     * Register a single observer with the model.
+     * Enregistre un seul observateur avec le modèle.
      *
      * @throws RuntimeException
      */
@@ -94,9 +97,9 @@ trait HasEvents
     {
         $className = $this->resolveObserverClassName($class);
 
-        // When registering a model observer, we will spin through the possible events
-        // and determine if this observer has that method. If it does, we will hook
-        // it into the model's event system, making it convenient to watch these.
+        // Lors de l'enregistrement d'un observateur de modèle, nous parcourrons les événements possibles
+        // et déterminerons si cet observateur a cette méthode. Si c'est le cas, nous l'accrocherons
+        // dans le système d'événements du modèle, ce qui facilite la surveillance de ceux-ci.
         foreach ($this->getObservableEvents() as $event) {
             if (method_exists($class, $event)) {
                 static::registerModelEvent($event, $className . '@' . $event);
@@ -105,7 +108,7 @@ trait HasEvents
     }
 
     /**
-     * Resolve the observer's class name from an object or string.
+     * Résout le nom de classe de l'observateur à partir d'un objet ou d'une chaîne.
      * 
      * @return class-string
      *
@@ -121,11 +124,11 @@ trait HasEvents
             return $class;
         }
 
-        throw new InvalidArgumentException('Unable to find observer: ' . $class);
+        throw new InvalidArgumentException('Impossible de trouver l\'observateur : ' . $class);
     }
 
     /**
-     * Get the observable event names.
+     * Obtient les noms des événements observables.
      *
      * @return list<string>
      */
@@ -142,7 +145,7 @@ trait HasEvents
     }
 
     /**
-     * Set the observable event names.
+     * Définit les noms des événements observables.
      *
      * @param  list<string>  $observables
      */
@@ -154,7 +157,7 @@ trait HasEvents
     }
 
     /**
-     * Add an observable event name.
+     * Ajoute un nom d'événement observable.
      *
      * @param  list<string>|string  $observables
      */
@@ -167,7 +170,7 @@ trait HasEvents
     }
 
     /**
-     * Remove an observable event name.
+     * Supprime un nom d'événement observable.
      *
      * @param  list<string>|string  $observables
      */
@@ -180,7 +183,7 @@ trait HasEvents
     }
 
     /**
-     * Register a model event with the dispatcher.
+     * Enregistre un événement de modèle avec le répartiteur.
      * 
      * @param callable|array|class-string  $callback
      */
@@ -194,7 +197,7 @@ trait HasEvents
     }
 
     /**
-     * Fire the given event for the model.
+     * Déclenche l'événement donné pour le modèle.
      */
     protected function fireModelEvent(string $event, bool $halt = true): mixed
     {
@@ -202,9 +205,9 @@ trait HasEvents
             return true;
         }
 
-        // First, we will get the proper method to call on the event dispatcher, and then we
-        // will attempt to fire a custom, object based event for the given event. If that
-        // returns a result we can return that result, or we'll call the string events.
+        // D'abord, nous obtiendrons la méthode appropriée à appeler sur le répartiteur d'événements, puis nous
+        // tenterons de déclencher un événement personnalisé basé sur un objet pour l'événement donné. Si cela
+        // retourne un résultat, nous pouvons retourner ce résultat, ou nous appellerons les événements de chaîne.
         $method = $halt ? 'until' : 'dispatch';
 
         $result = $this->filterModelEventResults(
@@ -221,7 +224,7 @@ trait HasEvents
     }
 
     /**
-     * Fire a custom model event for the given event.
+     * Déclenche un événement de modèle personnalisé pour l'événement donné.
      * 
      * @param  'until'|'dispatch'  $method
      * 
@@ -241,7 +244,7 @@ trait HasEvents
     }
 
     /**
-     * Filter the model event results.
+     * Filtre les résultats de l'événement de modèle.
      */
     protected function filterModelEventResults(mixed $result): mixed
     {
@@ -253,7 +256,7 @@ trait HasEvents
     }
 
     /**
-     * Register a retrieved model event with the dispatcher.
+     * Enregistre un événement de modèle "retrieved" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -263,7 +266,7 @@ trait HasEvents
     }
 
     /**
-     * Register a saving model event with the dispatcher.
+     * Enregistre un événement de modèle "saving" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -273,7 +276,7 @@ trait HasEvents
     }
 
     /**
-     * Register a saved model event with the dispatcher.
+     * Enregistre un événement de modèle "saved" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -283,7 +286,7 @@ trait HasEvents
     }
 
     /**
-     * Register an updating model event with the dispatcher.
+     * Enregistre un événement de modèle "updating" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -293,7 +296,7 @@ trait HasEvents
     }
 
     /**
-     * Register an updated model event with the dispatcher.
+     * Enregistre un événement de modèle "updated" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -303,7 +306,7 @@ trait HasEvents
     }
 
     /**
-     * Register a creating model event with the dispatcher.
+     * Enregistre un événement de modèle "creating" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -313,7 +316,7 @@ trait HasEvents
     }
 
     /**
-     * Register a created model event with the dispatcher.
+     * Enregistre un événement de modèle "created" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -323,7 +326,7 @@ trait HasEvents
     }
 
     /**
-     * Register a replicating model event with the dispatcher.
+     * Enregistre un événement de modèle "replicating" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -333,7 +336,7 @@ trait HasEvents
     }
 
     /**
-     * Register a deleting model event with the dispatcher.
+     * Enregistre un événement de modèle "deleting" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -343,7 +346,7 @@ trait HasEvents
     }
 
     /**
-     * Register a deleted model event with the dispatcher.
+     * Enregistre un événement de modèle "deleted" avec le répartiteur.
      *
      * @param callable|array|class-string  $callback
      */
@@ -353,7 +356,7 @@ trait HasEvents
     }
 
     /**
-     * Remove all of the event listeners for the model.
+     * Supprime tous les écouteurs d'événements pour le modèle.
      */
     public static function flushEventListeners(): void
     {
@@ -373,7 +376,7 @@ trait HasEvents
     }
 
     /**
-     * Get the event map for the model.
+     * Obtient la carte des événements pour le modèle.
      */
     public function dispatchesEvents(): array
     {
@@ -381,7 +384,7 @@ trait HasEvents
     }
 
     /**
-     * Get the event dispatcher instance.
+     * Obtient l'instance du répartiteur d'événements.
      */
     public static function getEventDispatcher(): ?Dispatcher
     {
@@ -389,7 +392,7 @@ trait HasEvents
     }
 
     /**
-     * Set the event dispatcher instance.
+     * Définit l'instance du répartiteur d'événements.
      */
     public static function setEventDispatcher(Dispatcher $dispatcher): void
     {
@@ -397,7 +400,7 @@ trait HasEvents
     }
 
     /**
-     * Unset the event dispatcher for models.
+     * Supprime le répartiteur d'événements pour les modèles.
      */
     public static function unsetEventDispatcher(): void
     {
@@ -405,7 +408,7 @@ trait HasEvents
     }
 
     /**
-     * Execute a callback without firing any model events for any model type.
+     * Exécute un rappel sans déclencher d'événements de modèle pour aucun type de modèle.
      */
     public static function withoutEvents(callable $callback): mixed
     {

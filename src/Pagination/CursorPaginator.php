@@ -31,11 +31,13 @@ use JsonSerializable;
  * @implements ArrayAccess<TKey, TValue>
  * @implements IteratorAggregate<TKey, TValue>
  * @implements PaginatorContract<TKey, TValue>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\CursorPaginator</a>
  */
 class CursorPaginator extends AbstractCursorPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, PaginatorContract
 {
     /**
-     * Create a new paginator instance.
+     * Crée une nouvelle instance de paginateur.
      *
      * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $items
      * @param  array{path: string, query: array, fragment: ?string, pageName: string}  $options
@@ -56,7 +58,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Set the items for the paginator.
+     * Définit les éléments pour le paginateur.
      */
     protected function setItems(mixed $items): void
     {
@@ -72,7 +74,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Render the paginator using the given view.
+     * Affiche le paginateur en utilisant la vue donnée.
      */
     public function links(?string $view = null, array $data = []): string
     {
@@ -80,7 +82,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Render the paginator using the given view.
+     * Affiche le paginateur en utilisant la vue donnée.
      */
     public function render(?string $view = null, array $data = []): string
     {
@@ -90,7 +92,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Determine if there are more items in the data source.
+     * Détermine s'il y a plus d'éléments dans la source de données.
      */
     public function hasMorePages(): bool
     {
@@ -100,7 +102,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Determine if there are enough items to split into multiple pages.
+     * Détermine s'il y a assez d'éléments pour diviser en plusieurs pages.
      */
     public function hasPages(): bool
     {
@@ -108,7 +110,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Determine if the paginator is on the first page.
+     * Détermine si le paginateur est sur la première page.
      */
     public function onFirstPage(): bool
     {
@@ -116,7 +118,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Determine if the paginator is on the last page.
+     * Détermine si le paginateur est sur la dernière page.
      */
     public function onLastPage(): bool
     {
@@ -124,7 +126,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Get the instance as an array.
+     * Obtient l'instance sous forme de tableau.
      */
     public function toArray(): array
     {
@@ -140,7 +142,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Convert the object into something JSON serializable.
+     * Convertit l'objet en quelque chose de sérialisable en JSON.
      */
     public function jsonSerialize(): array
     {
@@ -148,7 +150,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Convert the object to its JSON representation.
+     * Convertit l'objet en sa représentation JSON.
      */
     public function toJson(int $options = 0): string
     {
@@ -156,7 +158,7 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     }
 
     /**
-     * Convert the object to pretty print formatted JSON.
+     * Convertit l'objet en JSON formaté de façon jolie.
      */
     public function toPrettyJson(int $options = 0): string
     {

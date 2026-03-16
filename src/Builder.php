@@ -50,6 +50,8 @@ use ReflectionMethod;
  * @property-read HigherOrderBuilderProxy|$this $orWhereNot
  *
  * @mixin BaseBuilder
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Builder</a>
  */
 class Builder
 {
@@ -58,41 +60,41 @@ class Builder
     }
 
     /**
-     * The model being queried.
+     * Le modèle en cours d'interrogation.
      *
      * @var TModel
      */
     protected $model;
 
     /**
-     * The attributes that should be added to new models created by this builder.
+     * Les attributs qui doivent être ajoutés aux nouveaux modèles créés par ce constructeur.
      */
     public array $pendingAttributes = [];
 
     /**
-     * The relationships that should be eager loaded.
+     * Les relations qui doivent être chargées avec empressement.
      */
     protected array $eagerLoad = [];
 
     /**
-     * All of the globally registered builder macros.
+     * Toutes les macros de constructeur enregistrées globalement.
      */
     protected static array $macros = [];
 
     /**
-     * All of the locally registered builder macros.
+     * Toutes les macros de constructeur enregistrées localement.
      */
     protected array $localMacros = [];
 
     /**
-     * A replacement for the typical delete function.
+     * Un remplacement pour la fonction de suppression typique.
      *
      * @var Closure
      */
     protected $onDelete;
 
     /**
-     * The properties that should be returned from query builder.
+     * Les propriétés qui doivent être retournées par le constructeur de requête.
      *
      * @var list<string>
      */
@@ -101,7 +103,7 @@ class Builder
     ];
 
     /**
-     * The methods that should be returned from query builder.
+     * Les méthodes qui doivent être retournées par le constructeur de requête.
      *
      * @var list<string>
      */
@@ -136,38 +138,38 @@ class Builder
     ];
 
     /**
-     * Applied global scopes.
+     * Portées globales appliquées.
      */
     protected array $scopes = [];
 
     /**
-     * Removed global scopes.
+     * Portées globales supprimées.
      */
     protected array $removedScopes = [];
 
     /**
-     * The callbacks that should be invoked after retrieving data from the database.
+     * Les rappels qui doivent être invoqués après la récupération des données de la base de données.
      */
     protected array $afterQueryCallbacks = [];
 
     /**
-     * The callbacks that should be invoked on clone.
+     * Les rappels qui doivent être invoqués lors du clonage.
      * 
      * @var list<Closure(static): void>
      */
     protected array $onCloneCallbacks = [];
 
     /**
-     * Create a new Orm query builder instance.
+     * Crée une nouvelle instance de constructeur de requête Orm.
      *
-     * @param BaseBuilder $query The base query builder instance.
+     * @param BaseBuilder $query L'instance de constructeur de requête de base.
      */
     public function __construct(protected BaseBuilder $query)
     {
     }
 
     /**
-     * Create and return an un-saved model instance.
+     * Crée et retourne une instance de modèle non sauvegardée.
      *
      * @return TModel
      */
@@ -177,7 +179,7 @@ class Builder
     }
 
     /**
-     * Register a new global scope.
+     * Enregistre une nouvelle portée globale.
      */
     public function withGlobalScope(string $identifier, Closure|Scope $scope): static
     {
@@ -191,7 +193,7 @@ class Builder
     }
 
     /**
-     * Remove a registered global scope.
+     * Supprime une portée globale enregistrée.
      */
     public function withoutGlobalScope(Scope|string $scope): static
     {
@@ -207,7 +209,7 @@ class Builder
     }
 
     /**
-     * Remove all or passed registered global scopes.
+     * Supprime toutes les portées globales enregistrées ou celles passées.
      */
     public function withoutGlobalScopes(?array $scopes = null): static
     {
@@ -223,7 +225,7 @@ class Builder
     }
 
     /**
-     * Remove all global scopes except the given scopes.
+     * Supprime toutes les portées globales sauf celles données.
      */
     public function withoutGlobalScopesExcept(array $scopes = []): static
     {
@@ -235,7 +237,7 @@ class Builder
     }
 
     /**
-     * Get an array of global scopes that were removed from the query.
+     * Obtient un tableau des portées globales qui ont été supprimées de la requête.
      */
     public function removedScopes(): array
     {
@@ -243,7 +245,7 @@ class Builder
     }
 
     /**
-     * Add a where clause on the primary key to the query.
+     * Ajoute une clause where sur la clé primaire à la requête.
      */
     public function whereKey(mixed $id): static
     {
@@ -265,7 +267,7 @@ class Builder
     }
 
     /**
-     * Add a where clause on the primary key to the query.
+     * Ajoute une clause where sur la clé primaire à la requête.
      */
     public function whereKeyNot(mixed $id): static
     {
@@ -287,7 +289,7 @@ class Builder
     }
 
     /**
-     * Exclude the given models from the query results.
+     * Exclut les modèles donnés des résultats de la requête.
      *
      * @param  iterable|mixed  $models
      */
@@ -301,7 +303,7 @@ class Builder
     }
 
     /**
-     * Ajoute une clause "where" basique a la requete.
+     * Ajoute une clause "where" basique à la requête.
      * 
      * @param  (\Closure(static): mixed)|string|array|Expression  $column
      */
@@ -321,7 +323,7 @@ class Builder
     }
 
     /**
-     * Add a basic where clause to the query, and return the first result.
+     * Ajoute une clause where de base à la requête et retourne le premier résultat.
      *
      * @param  (Closure(static): mixed)|string|array|Expression  $column
      * 
@@ -333,7 +335,7 @@ class Builder
     }
 
     /**
-     * Add an "or where" clause to the query.
+     * Ajoute une clause "or where" à la requête.
      * 
      * @param  (Closure(static): mixed)|array|string|Expression  $column
      */
@@ -347,7 +349,7 @@ class Builder
     }
 
     /**
-     * Add a basic "where not" clause to the query.
+     * Ajoute une clause "where not" de base à la requête.
      * 
      * @param  (Closure(static): mixed)|array|string|Expression  $column
      */
@@ -357,7 +359,7 @@ class Builder
     }
 
     /**
-     * Add a basic "or where not" clause to the query.
+     * Ajoute une clause "or where not" de base à la requête.
      * 
      * @param  (Closure(static): mixed)|array|string|Expression  $column
      */
@@ -367,7 +369,7 @@ class Builder
     }
 
     /**
-     * Add an "order by" clause for a timestamp to the query.
+     * Ajoute une clause "order by" pour un horodatage à la requête.
      */
     public function latest(Expression|string|null $column = null): static
     {
@@ -381,7 +383,7 @@ class Builder
     }
 
     /**
-     * Add an "order by" clause for a timestamp to the query.
+     * Ajoute une clause "order by" pour un horodatage à la requête.
      */
     public function oldest(?string $column = null): static
     {
@@ -395,7 +397,7 @@ class Builder
     }
 
     /**
-     * Create a collection of models from plain arrays.
+     * Crée une collection de modèles à partir de tableaux simples.
      * 
      * @return Collection<int, TModel>
      */
@@ -415,7 +417,7 @@ class Builder
     }
 
     /**
-     * Insert into the database after merging the model's default attributes, setting timestamps, and casting values.
+     * Insère dans la base de données après avoir fusionné les attributs par défaut du modèle, défini les horodatages et casté les valeurs.
      *
      * @param  array<int, array<string, mixed>>  $values
      */
@@ -425,7 +427,7 @@ class Builder
     }
 
     /**
-     * Insert (ignoring errors) into the database after merging the model's default attributes, setting timestamps, and casting values.
+     * Insère (en ignorant les erreurs) dans la base de données après avoir fusionné les attributs par défaut du modèle, défini les horodatages et casté les valeurs.
      *
      * @param  array<int, array<string, mixed>>  $values
      */
@@ -435,7 +437,7 @@ class Builder
     }
 
     /**
-     * Insert a record into the database and get its ID after merging the model's default attributes, setting timestamps, and casting values.
+     * Insère un enregistrement dans la base de données et obtient son ID après avoir fusionné les attributs par défaut du modèle, défini les horodatages et casté les valeurs.
      *
      * @param  array<string, mixed>  $values
      */
@@ -445,7 +447,7 @@ class Builder
     }
 
     /**
-     * Enrich the given values by merging in the model's default attributes, adding timestamps, and casting values.
+     * Enrichit les valeurs données en fusionnant les attributs par défaut du modèle, en ajoutant les horodatages et en castant les valeurs.
      *
      * @param  array<int, array<string, mixed>>  $values
      * 
@@ -474,7 +476,7 @@ class Builder
     }
 
     /**
-     * Create a collection of models from a raw query.
+     * Crée une collection de modèles à partir d'une requête brute.
      * 
      * @return Collection<int, TModel>
      */
@@ -486,7 +488,7 @@ class Builder
     }
 
     /**
-     * Find a model by its primary key.
+     * Trouve un modèle par sa clé primaire.
      *
      * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel|null)
      */
@@ -500,7 +502,7 @@ class Builder
     }
 
     /**
-     * Find a sole model by its primary key.
+     * Trouve un seul modèle par sa clé primaire.
      *
      * @return TModel
      *
@@ -513,7 +515,7 @@ class Builder
     }
 
     /**
-     * Find multiple models by their primary keys.
+     * Trouve plusieurs modèles par leurs clés primaires.
      * 
      * @return Collection<int, TModel>
      */
@@ -529,7 +531,7 @@ class Builder
     }
 
     /**
-     * Find a model by its primary key or throw an exception.
+     * Trouve un modèle par sa clé primaire ou lance une exception.
      *
      * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel)
      *
@@ -563,7 +565,7 @@ class Builder
     }
 
     /**
-     * Find a model by its primary key or return fresh model instance.
+     * Trouve un modèle par sa clé primaire ou retourne une nouvelle instance de modèle.
      *
      * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel)
      */
@@ -577,7 +579,7 @@ class Builder
     }
 
     /**
-     * Find a model by its primary key or call a callback.
+     * Trouve un modèle par sa clé primaire ou appelle un rappel.
      *
      * @template TValue
      *
@@ -606,7 +608,7 @@ class Builder
     }
 
     /**
-     * Get the first record matching the attributes or instantiate it.
+     * Obtient le premier enregistrement correspondant aux attributs ou l'instancie.
      *
      * @return TModel
      */
@@ -620,7 +622,7 @@ class Builder
     }
 
     /**
-     * Get the first record matching the attributes or create it.
+     * Obtient le premier enregistrement correspondant aux attributs ou le crée.
      *
      * @param  (Closure(): array)|array  $values
      * 
@@ -636,7 +638,7 @@ class Builder
     }
 
     /**
-     * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     * Tente de créer l'enregistrement. Si une violation de contrainte unique se produit, tente de trouver l'enregistrement correspondant.
      *
      * @param  (Closure(): array)|array  $values
      * 
@@ -652,7 +654,7 @@ class Builder
     }
 
     /**
-     * Create or update a record matching the attributes, and fill it with values.
+     * Crée ou met à jour un enregistrement correspondant aux attributs, et le remplit avec des valeurs.
      *
      * @return TModel
      */
@@ -666,7 +668,7 @@ class Builder
     }
 
     /**
-     * Create a record matching the attributes, or increment the existing record.
+     * Crée un enregistrement correspondant aux attributs, ou incrémente l'enregistrement existant.
      *
      * @return TModel
      */
@@ -680,7 +682,7 @@ class Builder
     }
 
     /**
-     * Execute the query and get the first result or throw an exception.
+     * Exécute la requête et obtient le premier résultat ou lance une exception.
      *
      * @return TModel
      *
@@ -696,7 +698,7 @@ class Builder
     }
 
     /**
-     * Execute the query and get the first result or call a callback.
+     * Exécute la requête et obtient le premier résultat ou appelle un rappel.
      *
      * @template TValue
      *
@@ -721,7 +723,7 @@ class Builder
     }
 
     /**
-     * Execute the query and get the first result if it's the sole matching record.
+     * Exécute la requête et obtient le premier résultat s'il est le seul enregistrement correspondant.
      *
      * @return TModel
      *
@@ -738,7 +740,7 @@ class Builder
     }
 
     /**
-     * Get a single column's value from the first result of a query.
+     * Obtient la valeur d'une seule colonne à partir du premier résultat d'une requête.
      */
     public function value(string|Expression $column): mixed
     {
@@ -752,7 +754,7 @@ class Builder
     }
 
     /**
-     * Get a single column's value from the first result of a query if it's the sole matching record.
+     * Obtient la valeur d'une seule colonne à partir du premier résultat d'une requête s'il est le seul enregistrement correspondant.
      *
      * @throws ModelNotFoundException<TModel>
      * @throws MultipleRecordsFoundException
@@ -765,7 +767,7 @@ class Builder
     }
 
     /**
-     * Get a single column's value from the first result of the query or throw an exception.
+     * Obtient la valeur d'une seule colonne à partir du premier résultat de la requête ou lance une exception.
      *
      * @throws ModelNotFoundException<Model>
      */
@@ -777,7 +779,7 @@ class Builder
     }
 
     /**
-     * Execute the query as a "select" statement.
+     * Exécute la requête en tant qu'instruction "select".
      * 
      * @return list<TModel>
      */
@@ -787,7 +789,7 @@ class Builder
     }
 
     /**
-     * Execute the query as a "select" statement.
+     * Exécute la requête en tant qu'instruction "select".
      *
      * @return Collection<int, TModel>
      */
@@ -795,10 +797,9 @@ class Builder
     {
         $builder = $this->applyScopes();
 
-        // If we actually found models we will also eager load any relationships that
-        // have been specified as needing to be eager loaded, which will solve the
-        // n+1 query issue for the developers to avoid running a lot of queries.
-
+        // Si nous avons effectivement trouvé des modèles, nous chargerons également avec empressement toutes les relations qui
+        // ont été spécifiées comme devant être chargées avec empressement, ce qui résoudra le
+        // problème de requête n+1 pour les développeurs afin d'éviter d'exécuter beaucoup de requêtes.
         if (count($models = $builder->getModels($columns)) > 0) {
             $models = $builder->eagerLoadRelations($models);
         }
@@ -809,7 +810,7 @@ class Builder
     }
 
     /**
-     * Get the hydrated models without eager loading.
+     * Obtient les modèles hydratés sans chargement empressé.
      *
      * @return list<TModel>
      */
@@ -821,7 +822,7 @@ class Builder
     }
 
     /**
-     * Eager load the relationships for the models.
+     * Charge avec empressement les relations pour les modèles.
      * 
      * @param  list<TModel>  $models
      * 
@@ -830,9 +831,9 @@ class Builder
     public function eagerLoadRelations(array $models): array
     {
         foreach ($this->eagerLoad as $name => $constraints) {
-            // For nested eager loads we'll skip loading them here and they will be set as an
-            // eager load on the query to retrieve the relation so that they will be eager
-            // loaded on that query, because that is where they get hydrated as models.
+            // Pour les chargements empressés imbriqués, nous sauterons le chargement ici et ils seront définis comme un
+            // chargement empressé sur la requête pour récupérer la relation afin qu'ils soient chargés
+            // avec empressement sur cette requête, car c'est là qu'ils sont hydratés en tant que modèles.
             if (! str_contains($name, '.')) {
                 $models = $this->eagerLoadRelation($models, $name, $constraints);
             }
@@ -842,22 +843,22 @@ class Builder
     }
 
     /**
-     * Eagerly load the relationship on a set of models.
+     * Charge avec empressement la relation sur un ensemble de modèles.
      */
     protected function eagerLoadRelation(array $models, string $name, Closure $constraints): array
     {
-        // First we will "back up" the existing where conditions on the query so we can
-        // add our eager constraints. Then we will merge the wheres that were on the
-        // query back to it in order that any where conditions might be specified.
+        // Nous allons d'abord "sauvegarder" les conditions where existantes sur la requête afin de pouvoir
+        // ajouter nos contraintes empressées. Ensuite, nous fusionnerons les wheres qui étaient sur la
+        // requête pour qu'en ordre, toutes les conditions where puissent être spécifiées.
         $relation = $this->getRelation($name);
 
         $relation->addEagerConstraints($models);
 
         $constraints($relation);
 
-        // Once we have the results, we just match those back up to their parent models
-        // using the relationship instance. Then we just return the finished arrays
-        // of models which have been eagerly hydrated and are readied for return.
+        // Une fois que nous avons les résultats, nous les faisons simplement correspondre à leurs modèles parents
+        // en utilisant l'instance de relation. Ensuite, nous retournons simplement les tableaux finis
+        // de modèles qui ont été hydratés avec empressement et sont prêts à être retournés.
         return $relation->match(
             $relation->initRelation($models, $name),
             $relation->getEager(),
@@ -866,15 +867,15 @@ class Builder
     }
 
     /**
-     * Get the relation instance for the given relation name.
+     * Obtient l'instance de relation pour le nom de relation donné.
      * 
      * @return Relation<Model, TModel, *>
      */
     public function getRelation(string $name): Relation
     {
-        // We want to run a relationship query without any constrains so that we will
-        // not have to remove these where clauses manually which gets really hacky
-        // and error prone. We don't want constraints because we add eager ones.
+        // Nous voulons exécuter une requête de relation sans aucune contrainte afin de
+        // ne pas avoir à supprimer ces clauses where manuellement, ce qui devient vraiment compliqué
+        // et sujet aux erreurs. Nous ne voulons pas de contraintes car nous ajoutons des contraintes empressées.
         $relation = Relation::noConstraints(function () use ($name) {
             try {
                 return $this->getModel()->newInstance()->{$name}();
@@ -885,9 +886,9 @@ class Builder
 
         $nested = $this->relationsNestedUnder($name);
 
-        // If there are nested relationships set on the query, we will put those onto
-        // the query instances so that they can be handled after this relationship
-        // is loaded. In this way they will all trickle down as they are loaded.
+        // S'il y a des relations imbriquées définies sur la requête, nous les mettrons sur
+        // les instances de requête afin qu'elles puissent être traitées après que cette relation
+        // soit chargée. De cette façon, elles descendront toutes en cascade lorsqu'elles seront chargées.
         if (count($nested) > 0) {
             $relation->getQuery()->with($nested);
         }
@@ -896,15 +897,15 @@ class Builder
     }
 
     /**
-     * Get the deeply nested relations for a given top-level relation.
+     * Obtient les relations profondément imbriquées pour une relation de niveau supérieur donnée.
      */
     protected function relationsNestedUnder(string $relation): array
     {
         $nested = [];
 
-        // We are basically looking for any relationships that are nested deeper than
-        // the given top-level relationship. We will just check for any relations
-        // that start with the given top relations and adds them to our arrays.
+        // Nous cherchons essentiellement toutes les relations qui sont imbriquées plus profondément que
+        // la relation de niveau supérieur donnée. Nous vérifierons simplement toutes les relations
+        // qui commencent par les relations supérieures données et les ajouterons à nos tableaux.
         foreach ($this->eagerLoad as $name => $constraints) {
             if ($this->isNestedUnder($relation, $name)) {
                 $nested[substr($name, strlen($relation . '.'))] = $constraints;
@@ -915,7 +916,7 @@ class Builder
     }
 
     /**
-     * Determine if the relationship is nested.
+     * Détermine si la relation est imbriquée.
      */
     protected function isNestedUnder(string $relation, string $name): bool
     {
@@ -923,7 +924,7 @@ class Builder
     }
 
     /**
-     * Register a closure to be invoked after the query is executed.
+     * Enregistre une fermeture à invoquer après l'exécution de la requête.
      *
      * @param Closure(mixed): mixed  $callback
      */
@@ -935,7 +936,7 @@ class Builder
     }
 
     /**
-     * Invoke the "after query" modification callbacks.
+     * Invoque les rappels de modification "après la requête".
      */
     public function applyAfterQueryCallbacks(mixed $result): mixed
     {
@@ -947,7 +948,7 @@ class Builder
     }
 
     /**
-     * Get a lazy collection for the given query.
+     * Obtient une collection paresseuse pour la requête donnée.
      *
      * @return LazyCollection<int, TModel>
      */
@@ -965,7 +966,7 @@ class Builder
     }
 
     /**
-     * Add a generic "order by" clause if the query doesn't already have one.
+     * Ajoute une clause "order by" générique si la requête n'en a pas déjà une.
      */
     protected function enforceOrderBy(): void
     {
@@ -975,7 +976,7 @@ class Builder
     }
 
     /**
-     * Get an array with the values of a given column.
+     * Obtient un tableau avec les valeurs d'une colonne donnée.
      * 
      * @return IterableCollection<array-key, mixed>
      */
@@ -987,9 +988,9 @@ class Builder
 
         $column = Text::after($column, "{$this->model->getTable()}.");
 
-        // If the model has a mutator for the requested column, we will spin through
-        // the results and mutate the values so that the mutated version of these
-        // columns are returned as you would expect from these Wolke models.
+        // Si le modèle a un mutateur pour la colonne demandée, nous parcourrons
+        // les résultats et muterons les valeurs afin que la version mutée de ces
+        // colonnes soit retournée comme vous vous y attendriez de ces modèles Wolke.
         if (! $this->model->hasAnyGetMutator($column) &&
             ! $this->model->hasCast($column) &&
             ! in_array($column, $this->model->getDates())) {
@@ -1004,7 +1005,7 @@ class Builder
     }
 
     /**
-     * Paginate the given query.
+     * Pagine la requête donnée.
      *
      * @throws InvalidArgumentException
      */
@@ -1025,7 +1026,7 @@ class Builder
     }
 
     /**
-     * Paginate the given query into a simple paginator.
+     * Pagine la requête donnée dans un paginateur simple.
      *
      * @return Contracts\Paginator
      */
@@ -1035,10 +1036,9 @@ class Builder
 
         $perPage = $perPage ?: $this->model->getPerPage();
 
-        // Next we will set the limit and offset for this query so that when we get the
-        // results we get the proper section of results. Then, we'll create the full
-        // paginator instances for these results with the given page and per page.
-
+        // Ensuite, nous définirons la limite et le décalage pour cette requête afin que lorsque nous obtenons
+        // les résultats, nous obtenions la section appropriée des résultats. Ensuite, nous créerons les
+        // instances de paginateur complètes pour ces résultats avec la page et le nombre par page donnés.
         $this->offset(($page - 1) * $perPage)->limit($perPage + 1);
 
         return $this->simplePaginator($this->get($columns), $perPage, $page, [
@@ -1048,7 +1048,7 @@ class Builder
     }
 
     /**
-     * Paginate the given query into a cursor paginator.
+     * Pagine la requête donnée dans un paginateur à curseur.
      *
      * @return Contracts\CursorPaginator
      *
@@ -1062,7 +1062,7 @@ class Builder
     }
 
     /**
-     * Ensure the proper order by required for cursor pagination.
+     * Assure l'ordre approprié requis pour la pagination par curseur.
      */
     protected function ensureOrderForCursorPagination(bool $shouldReverse = false): IterableCollection
     {
@@ -1092,7 +1092,7 @@ class Builder
     }
 
     /**
-     * Save a new model and return the instance.
+     * Sauvegarde un nouveau modèle et retourne l'instance.
      *
      * @return TModel
      */
@@ -1104,7 +1104,7 @@ class Builder
     }
 
     /**
-     * Save a new model and return the instance without raising model events.
+     * Sauvegarde un nouveau modèle et retourne l'instance sans déclencher d'événements.
      *
      * @return TModel
      */
@@ -1114,7 +1114,7 @@ class Builder
     }
 
     /**
-     * Save a new model and return the instance. Allow mass-assignment.
+     * Sauvegarde un nouveau modèle et retourne l'instance. Permet l'assignation en masse.
      *
      * @return TModel
      */
@@ -1124,7 +1124,7 @@ class Builder
     }
 
     /**
-     * Save a new model instance with mass assignment without raising model events.
+     * Sauvegarde une nouvelle instance de modèle avec assignation en masse sans déclencher d'événements.
      *
      * @return TModel
      */
@@ -1134,7 +1134,7 @@ class Builder
     }
 
     /**
-     * Update records in the database.
+     * Met à jour les enregistrements dans la base de données.
      */
     public function update(array $values): int
     {
@@ -1142,7 +1142,7 @@ class Builder
     }
 
     /**
-     * Insert new records or update the existing ones.
+     * Insère de nouveaux enregistrements ou met à jour ceux existants.
      */
     public function upsert(array $values, array|string $uniqueBy, ?array $update = null): int
     {
@@ -1164,7 +1164,7 @@ class Builder
     }
 
     /**
-     * Update the column's update timestamp.
+     * Met à jour l'horodatage de mise à jour de la colonne.
      *
      * @return false|int
      */
@@ -1186,7 +1186,7 @@ class Builder
     }
 
     /**
-     * Increment a column's value by a given amount.
+     * Incrémente la valeur d'une colonne d'un montant donné.
      */
     public function increment(string $column, float|int $amount = 1, array $extra = []): int
     {
@@ -1194,7 +1194,7 @@ class Builder
     }
 
     /**
-     * Decrement a column's value by a given amount.
+     * Décrémente la valeur d'une colonne d'un montant donné.
      */
     public function decrement(string $column, float|int $amount = 1, array $extra = []): bool
     {
@@ -1202,7 +1202,7 @@ class Builder
     }
 
     /**
-     * Add the "updated at" column to an array of values.
+     * Ajoute la colonne "updated at" à un tableau de valeurs.
      */
     protected function addUpdatedAtColumn(array $values): array
     {
@@ -1243,7 +1243,7 @@ class Builder
     }
 
     /**
-     * Add unique IDs to the inserted values.
+     * Ajoute des IDs uniques aux valeurs insérées.
      */
     protected function addUniqueIdsToUpsertValues(array $values): array
     {
@@ -1263,7 +1263,7 @@ class Builder
     }
 
     /**
-     * Add timestamps to the inserted values.
+     * Ajoute des horodatages aux valeurs insérées.
      */
     protected function addTimestampsToUpsertValues(array $values): array
     {
@@ -1288,7 +1288,7 @@ class Builder
     }
 
     /**
-     * Add the "updated at" column to the updated columns.
+     * Ajoute la colonne "updated at" aux colonnes mises à jour.
      */
     protected function addUpdatedAtToUpsertColumns(array $update): array
     {
@@ -1310,7 +1310,7 @@ class Builder
     }
 
     /**
-     * Delete records from the database.
+     * Supprime les enregistrements de la base de données.
      */
     public function delete(): mixed
     {
@@ -1322,9 +1322,9 @@ class Builder
     }
 
     /**
-     * Run the default delete function on the builder.
+     * Exécute la fonction de suppression par défaut sur le constructeur.
      *
-     * Since we do not apply scopes here, the row will actually be deleted.
+     * Puisque nous n'appliquons pas de portées ici, la ligne sera effectivement supprimée.
      *
      * @return int
      */
@@ -1334,7 +1334,7 @@ class Builder
     }
 
     /**
-     * Register a replacement for the default delete function.
+     * Enregistre un remplacement pour la fonction de suppression par défaut.
      */
     public function onDelete(Closure $callback): void
     {
@@ -1342,7 +1342,7 @@ class Builder
     }
 
     /**
-     * Determine if the given model has a scope.
+     * Détermine si le modèle donné a une portée.
      */
     public function hasNamedScope(string $scope): bool
     {
@@ -1350,7 +1350,7 @@ class Builder
     }
 
     /**
-     * Call the given local model scopes.
+     * Appelle les portées de modèle locales données.
      *
      * @return mixed|static
      */
@@ -1359,16 +1359,16 @@ class Builder
         $builder = $this;
 
         foreach (Arr::wrap($scopes) as $scope => $parameters) {
-            // If the scope key is an integer, then the scope was passed as the value and
-            // the parameter list is empty, so we will format the scope name and these
-            // parameters here. Then, we'll be ready to call the scope on the model.
+            // Si la clé de portée est un entier, alors la portée a été passée comme valeur et
+            // la liste des paramètres est vide, donc nous formaterons le nom de la portée et ces
+            // paramètres ici. Ensuite, nous serons prêts à appeler la portée sur le modèle.
             if (is_int($scope)) {
                 [$scope, $parameters] = [$parameters, []];
             }
 
-            // Next we'll pass the scope callback to the callScope method which will take
-            // care of grouping the "wheres" properly so the logical order doesn't get
-            // messed up when adding scopes. Then we'll return back out the builder.
+            // Ensuite, nous passerons le rappel de portée à la méthode callScope qui prendra
+            // en charge le regroupement des "wheres" correctement afin que l'ordre logique ne soit pas
+            // perturbé lors de l'ajout de portées. Ensuite, nous retournerons le constructeur.
             $builder = $builder->callNamedScope($scope, Arr::wrap($parameters));
         }
 
@@ -1376,7 +1376,7 @@ class Builder
     }
 
     /**
-     * Apply the scopes to the Orm builder instance and return it.
+     * Applique les portées à l'instance de constructeur Orm et la retourne.
      */
     public function applyScopes(): static
     {
@@ -1392,16 +1392,16 @@ class Builder
             }
 
             $builder->callScope(function (self $builder) use ($scope) {
-                // If the scope is a Closure we will just go ahead and call the scope with the
-                // builder instance. The "callScope" method will properly group the clauses
-                // that are added to this query so "where" clauses maintain proper logic.
+                // Si la portée est une fermeture, nous allons simplement l'appeler avec l'instance
+                // du constructeur. La méthode "callScope" regroupera correctement les clauses
+                // qui sont ajoutées à cette requête afin que les clauses "where" maintiennent une logique appropriée.
                 if ($scope instanceof Closure) {
                     $scope($builder);
                 }
 
-                // If the scope is a scope object, we will call the apply method on this scope
-                // passing in the builder and the model instance. After we run all of these
-                // scopes we will return back the builder instance to the outside caller.
+                // Si la portée est un objet Scope, nous appellerons la méthode apply sur cette portée
+                // en passant le constructeur et l'instance du modèle. Après avoir exécuté toutes ces
+                // portées, nous retournerons l'instance du constructeur à l'appelant externe.
                 if ($scope instanceof Scope) {
                     $scope->apply($builder, $this->getModel());
                 }
@@ -1412,7 +1412,7 @@ class Builder
     }
 
     /**
-     * Apply the given scope on the current builder instance.
+     * Applique la portée donnée sur l'instance de constructeur actuelle.
      */
     protected function callScope(callable $scope, array $parameters = []): mixed
     {
@@ -1420,9 +1420,9 @@ class Builder
 
         $query = $this->getQuery();
 
-        // We will keep track of how many wheres are on the query before running the
-        // scope so that we can properly group the added scope constraints in the
-        // query as their own isolated nested where statement and avoid issues.
+        // Nous garderons une trace du nombre de wheres sur la requête avant d'exécuter la
+        // portée afin que nous puissions regrouper correctement les contraintes de portée ajoutées dans la
+        // requête comme leur propre instruction where imbriquée isolée et éviter les problèmes.
         $originalWhereCount = count($query->wheres);
 
         $result = $scope(...$parameters) ?? $this;
@@ -1435,7 +1435,7 @@ class Builder
     }
 
     /**
-     * Apply the given named scope on the current builder instance.
+     * Applique la portée nommée donnée sur l'instance de constructeur actuelle.
      */
     protected function callNamedScope(string $scope, array $parameters = []): mixed
     {
@@ -1443,13 +1443,13 @@ class Builder
     }
 
     /**
-     * Nest where conditions by slicing them at the given where count.\
+     * Imbrique les conditions where en les découpant au nombre de where donné.
      */
     protected function addNewWheresWithinGroup(BaseBuilder $query, int $originalWhereCount): void
     {
-        // Here, we totally remove all of the where clauses since we are going to
-        // rebuild them as nested queries by slicing the groups of wheres into
-        // their own sections. This is to prevent any confusing logic order.
+        // Ici, nous supprimons totalement toutes les clauses where puisque nous allons
+        // les reconstruire comme des requêtes imbriquées en découpant les groupes de where dans
+        // leurs propres sections. C'est pour éviter toute logique d'ordre confuse.
         $allWheres = $query->wheres;
         
         Invader::make($query)->wheres = [];
@@ -1466,15 +1466,15 @@ class Builder
     }
 
     /**
-     * Slice where conditions at the given offset and add them to the query as a nested condition.
+     * Découpe les conditions where au décalage donné et les ajoute à la requête comme condition imbriquée.
      */
     protected function groupWhereSliceForScope(BaseBuilder $query, array $whereSlice): void
     {
         $whereBooleans = (new IterableCollection($whereSlice))->pluck('boolean');
 
-        // Here we'll check if the given subset of where clauses contains any "or"
-        // booleans and in this case create a nested where expression. That way
-        // we don't add any unnecessary nesting thus keeping the query clean.
+        // Ici, nous vérifierons si le sous-ensemble donné de clauses where contient des booléens "or"
+        // et dans ce cas, créons une expression where imbriquée. De cette façon,
+        // nous n'ajoutons pas d'imbrication inutile, gardant ainsi la requête propre.
         if ($whereBooleans->contains(fn ($logicalOperator) => str_contains($logicalOperator, 'or'))) {
             $wheres = $query->wheres;
 
@@ -1489,7 +1489,7 @@ class Builder
     }
 
     /**
-     * Create a where array with nested where conditions.
+     * Crée un tableau where avec des conditions where imbriquées.
      */
     protected function createNestedWhere(array $whereSlice, string $boolean = 'and'): array
     {
@@ -1501,7 +1501,7 @@ class Builder
     }
 
     /**
-     * Set the relationships that should be eager loaded.
+     * Définit les relations qui doivent être chargées avec empressement.
      *
      * @param array<array-key, array|(Closure(Relation<*,*,*>): mixed)|string>|string  $relations
      * @param (Closure(Relation<*,*,*>): mixed)|string|null  $callback
@@ -1520,7 +1520,7 @@ class Builder
     }
 
     /**
-     * Prevent the specified relations from being eager loaded.
+     * Empêche les relations spécifiées d'être chargées avec empressement.
      */
     public function without(mixed $relations): static
     {
@@ -1532,7 +1532,7 @@ class Builder
     }
 
     /**
-     * Set the relationships that should be eager loaded while removing any previously added eager loading specifications.
+     * Définit les relations qui doivent être chargées avec empressement tout en supprimant toute spécification de chargement empressé précédemment ajoutée.
      * 
      * @param  array<array-key, array|(Closure(Relation<*,*,*>): mixed)|string>|string  $relations
      */
@@ -1544,7 +1544,7 @@ class Builder
     }
 
     /**
-     * Create a new instance of the model being queried.
+     * Crée une nouvelle instance du modèle en cours d'interrogation.
      * 
      * @return TModel
      */
@@ -1558,7 +1558,7 @@ class Builder
     }
 
     /**
-     * Parse a list of relations into individuals.
+     * Analyse une liste de relations en individuelles.
      */
     protected function parseWithRelations(array $relations): array
     {
@@ -1569,9 +1569,9 @@ class Builder
         $results = [];
 
         foreach ($this->prepareNestedWithRelationships($relations) as $name => $constraints) {
-            // We need to separate out any nested includes, which allows the developers
-            // to load deep relationships using "dots" without stating each level of
-            // the relationship with its own key in the array of eager-load names.
+            // Nous devons séparer toutes les inclusions imbriquées, ce qui permet aux développeurs
+            // de charger des relations profondes en utilisant des "points" sans indiquer chaque niveau de
+            // la relation avec sa propre clé dans le tableau des noms de chargement empressé.
             $results = $this->addNestedWiths($name, $results);
 
             $results[$name] = $constraints;
@@ -1581,7 +1581,7 @@ class Builder
     }
 
     /**
-     * Prepare nested with relationships.
+     * Prépare les relations avec chargement empressé imbriquées.
      */
     protected function prepareNestedWithRelationships(array $relations, string $prefix = ''): array
     {
@@ -1591,9 +1591,9 @@ class Builder
             $prefix .= '.';
         }
 
-        // If any of the relationships are formatted with the [$attribute => array()]
-        // syntax, we shall loop over the nested relations and prepend each key of
-        // this array while flattening into the traditional dot notation format.
+        // Si l'une des relations est formatée avec la syntaxe [$attribute => array()],
+        // nous allons boucler sur les relations imbriquées et préfixer chaque clé de
+        // ce tableau tout en aplatissant dans le format de notation par points traditionnel.
         foreach ($relations as $key => $value) {
             if (! is_string($key) || ! is_array($value)) {
                 continue;
@@ -1610,9 +1610,9 @@ class Builder
             unset($relations[$key]);
         }
 
-        // We now know that the remaining relationships are in a dot notation format
-        // and may be a string or Closure. We'll loop over them and ensure all of
-        // the present Closures are merged + strings are made into constraints.
+        // Nous savons maintenant que les relations restantes sont dans un format de notation par points
+        // et peuvent être une chaîne ou une fermeture. Nous allons boucler sur elles et nous assurer que toutes
+        // les fermetures présentes sont fusionnées + les chaînes sont transformées en contraintes.
         foreach ($relations as $key => $value) {
             if (is_numeric($key) && is_string($value)) {
                 [$key, $value] = $this->parseNameAndAttributeSelectionConstraint($value);
@@ -1629,7 +1629,7 @@ class Builder
     }
 
     /**
-     * Combine an array of constraints into a single constraint.
+     * Combine un tableau de contraintes en une seule contrainte.
      */
     protected function combineConstraints(array $constraints): Closure
     {
@@ -1643,7 +1643,7 @@ class Builder
     }
 
     /**
-     * Parse the attribute select constraints from the name.
+     * Analyse les contraintes de sélection d'attribut à partir du nom.
      */
     protected function parseNameAndAttributeSelectionConstraint(string $name): array
     {
@@ -1654,7 +1654,7 @@ class Builder
     }
 
     /**
-     * Create a constraint to select the given columns for the relation.
+     * Crée une contrainte pour sélectionner les colonnes données pour la relation.
      */
     protected function createSelectWithConstraint(string $name): array
     {
@@ -1668,15 +1668,15 @@ class Builder
     }
 
     /**
-     * Parse the nested relationships in a relation.
+     * Analyse les relations imbriquées dans une relation.
      */
     protected function addNestedWiths(string $name, array $results): array
     {
         $progress = [];
 
-        // If the relation has already been set on the result array, we will not set it
-        // again, since that would override any constraints that were already placed
-        // on the relationships. We will only set the ones that are not specified.
+        // Si la relation a déjà été définie dans le tableau de résultats, nous ne la définirons pas
+        // à nouveau, car cela remplacerait toutes les contraintes qui étaient déjà placées
+        // sur les relations. Nous ne définirons que celles qui ne sont pas spécifiées.
         foreach (explode('.', $name) as $segment) {
             $progress[] = $segment;
 
@@ -1690,9 +1690,9 @@ class Builder
     }
 
     /**
-     * Specify attributes that should be added to any new models created by this builder.
+     * Spécifie les attributs qui doivent être ajoutés à tous les nouveaux modèles créés par ce constructeur.
      *
-     * The given key / value pairs will also be added as where conditions to the query.
+     * Les paires clé/valeur données seront également ajoutées comme conditions where à la requête.
      */
     public function withAttributes(Expression|array|string $attributes, mixed $value = null, bool $asConditions = true): static
     {
@@ -1712,7 +1712,7 @@ class Builder
     }
 
     /**
-     * Apply query-time casts to the model instance.
+     * Applique des casts au moment de la requête à l'instance du modèle.
      */
     public function withCasts(array $casts): static
     {
@@ -1722,7 +1722,7 @@ class Builder
     }
 
     /**
-     * Execute the given Closure within a transaction savepoint if needed.
+     * Exécute la fermeture donnée dans un point de sauvegarde de transaction si nécessaire.
      *
      * @template TModelValue
      *
@@ -1738,7 +1738,7 @@ class Builder
     }
 
     /**
-     * Get the Wolke builder instances that are used in the union of the query.
+     * Obtient les instances de constructeur Wolke qui sont utilisées dans l'union de la requête.
      */
     protected function getUnionBuilders(): IterableCollection
     {
@@ -1748,7 +1748,7 @@ class Builder
     }
 
     /**
-     * Get the underlying query builder instance.
+     * Obtient l'instance de constructeur de requête sous-jacente.
      */
     public function getQuery(): BaseBuilder
     {
@@ -1756,7 +1756,7 @@ class Builder
     }
 
     /**
-     * Set the underlying query builder instance.
+     * Définit l'instance de constructeur de requête sous-jacente.
      */
     public function setQuery(BaseBuilder $query): static
     {
@@ -1766,7 +1766,7 @@ class Builder
     }
 
     /**
-     * Get a base query builder instance.
+     * Obtient une instance de constructeur de requête de base.
      */
     public function toBase(): BaseBuilder
     {
@@ -1774,7 +1774,7 @@ class Builder
     }
 
     /**
-     * Get the relationships being eagerly loaded.
+     * Obtient les relations en cours de chargement empressé.
      */
     public function getEagerLoads(): array
     {
@@ -1782,7 +1782,7 @@ class Builder
     }
 
     /**
-     * Set the relationships being eagerly loaded.
+     * Définit les relations en cours de chargement empressé.
      */
     public function setEagerLoads(array $eagerLoad): static
     {
@@ -1792,7 +1792,7 @@ class Builder
     }
 
     /**
-     * Indicate that the given relationships should not be eagerly loaded.
+     * Indique que les relations données ne doivent pas être chargées avec empressement.
      */
     public function withoutEagerLoad(array $relations): static
     {
@@ -1802,7 +1802,7 @@ class Builder
     }
 
     /**
-     * Flush the relationships being eagerly loaded.
+     * Vide les relations en cours de chargement empressé.
      */
     public function withoutEagerLoads(): static
     {
@@ -1810,7 +1810,7 @@ class Builder
     }
 
     /**
-     * Get the "limit" value from the query or null if it's not set.
+     * Obtient la valeur "limit" de la requête ou null si elle n'est pas définie.
      */
     public function getLimit(): ?int
     {
@@ -1818,7 +1818,7 @@ class Builder
     }
 
     /**
-     * Get the "offset" value from the query or null if it's not set.
+     * Obtient la valeur "offset" de la requête ou null si elle n'est pas définie.
      */
     public function getOffset(): ?int
     {
@@ -1826,7 +1826,7 @@ class Builder
     }
 
     /**
-     * Get the default key name of the table.
+     * Obtient le nom de clé par défaut de la table.
      */
     protected function defaultKeyName(): string
     {
@@ -1834,7 +1834,7 @@ class Builder
     }
 
     /**
-     * Get the model instance being queried.
+     * Obtient l'instance de modèle en cours d'interrogation.
      * 
      * @return TModel
      */
@@ -1844,7 +1844,7 @@ class Builder
     }
 
     /**
-     * Set a model instance for the model being queried.
+     * Définit une instance de modèle pour le modèle en cours d'interrogation.
      *
      * @template TModelNew of Model
      *
@@ -1862,7 +1862,7 @@ class Builder
     }
 
     /**
-     * Qualify the given column name by the model's table.
+     * Qualifie le nom de colonne donné par la table du modèle.
      */
     public function qualifyColumn(string|Expression $column): string
     {
@@ -1872,7 +1872,7 @@ class Builder
     }
 
     /**
-     * Qualify the given columns with the model's table.
+     * Qualifie les colonnes données avec la table du modèle.
      */
     public function qualifyColumns(array|Expression $columns): array
     {
@@ -1880,7 +1880,7 @@ class Builder
     }
 
     /**
-     * Get the given macro by name.
+     * Obtient la macro donnée par son nom.
      */
     public function getMacro(string $name): Closure
     {
@@ -1888,7 +1888,7 @@ class Builder
     }
 
     /**
-     * Checks if a macro is registered.
+     * Vérifie si une macro est enregistrée.
      */
     public function hasMacro(string $name): bool
     {
@@ -1896,7 +1896,7 @@ class Builder
     }
 
     /**
-     * Get the given global macro by name.
+     * Obtient la macro globale donnée par son nom.
      */
     public static function getGlobalMacro(string $name): Closure
     {
@@ -1904,7 +1904,7 @@ class Builder
     }
 
     /**
-     * Checks if a global macro is registered.
+     * Vérifie si une macro globale est enregistrée.
      */
     public static function hasGlobalMacro(string $name): bool
     {
@@ -1912,7 +1912,7 @@ class Builder
     }
 
     /**
-     * Dynamically access builder proxies.
+     * Accède dynamiquement aux proxys du constructeur.
      *
      * @throws Exception
      */
@@ -1926,11 +1926,11 @@ class Builder
             return $this->toBase()->{$key};
         }
 
-        throw new Exception("Property [{$key}] does not exist on the Wolke builder instance.");
+        throw new Exception("La propriété [{$key}] n'existe pas sur l'instance du constructeur Wolke.");
     }
 
     /**
-     * Dynamically handle calls into the query instance.
+     * Gère dynamiquement les appels vers l'instance de requête.
      */
     public function __call(string $method, array $parameters = []): mixed
     {
@@ -1970,11 +1970,11 @@ class Builder
             $this->query = $result;
         }
 
-        return $this;
+        return $result;
     }
 
     /**
-     * Dynamically handle calls into the query instance.
+     * Gère dynamiquement les appels vers l'instance de requête.
      *
      * @throws BadMethodCallException
      */
@@ -2006,7 +2006,7 @@ class Builder
     }
 
     /**
-     * Register the given mixin with the builder.
+     * Enregistre le mixin donné avec le constructeur.
      */
     protected static function registerMixin(string $mixin, bool $replace): void
     {
@@ -2022,14 +2022,14 @@ class Builder
     }
 
     /**
-     * Clone the Wolke query builder.
+     * Clone le constructeur de requête Wolke.
      */
     public function clone(): static
     {
         return clone $this;
     }
     /**
-     * Register a closure to be invoked on a clone.
+     * Enregistre une fermeture à invoquer lors d'un clone.
      * 
      * @var Closure(static): void $callback
      */
@@ -2041,7 +2041,7 @@ class Builder
     }
 
     /**
-     * Force a clone of the underlying query builder when cloning.
+     * Force un clone du constructeur de requête sous-jacent lors du clonage.
      */
     public function __clone(): void
     {

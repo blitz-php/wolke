@@ -14,10 +14,13 @@ namespace BlitzPHP\Wolke\Contracts;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Scope</a>
+ */
 interface Scope
 {
     /**
-     * Apply the scope to a given Wolke query builder.
+     * Applique la portée à un constructeur de requête Wolke donné.
      *
      * @template TModel of Model
      *

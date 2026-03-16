@@ -14,10 +14,13 @@ namespace BlitzPHP\Wolke\Relations\Concerns;
 use BlitzPHP\Wolke\Contracts\SupportsPartialRelations;
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Concerns\ComparesRelatedModels</a>
+ */
 trait ComparesRelatedModels
 {
     /**
-     * Determine if the model is the related instance of the relationship.
+     * Détermine si le modèle est l'instance liée de la relation.
      */
     public function is(?Model $model): bool
     {
@@ -36,7 +39,7 @@ trait ComparesRelatedModels
     }
 
     /**
-     * Determine if the model is not the related instance of the relationship.
+     * Détermine si le modèle n'est pas l'instance liée de la relation.
      */
     public function isNot(?Model $model): bool
     {
@@ -44,17 +47,17 @@ trait ComparesRelatedModels
     }
 
     /**
-     * Get the value of the parent model's key.
+     * Obtient la valeur de la clé du modèle parent.
      */
     abstract public function getParentKey(): mixed;
 
     /**
-     * Get the value of the model's related key.
+     * Obtient la valeur de la clé liée du modèle.
      */
     abstract protected function getRelatedKeyFrom(Model $model): mixed;
 
     /**
-     * Compare the parent key with the related key.
+     * Compare la clé parent avec la clé liée.
      */
     protected function compareKeys(mixed $parentKey, mixed $relatedKey): bool
     {

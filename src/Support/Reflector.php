@@ -16,10 +16,13 @@ use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Support\Reflector</a>
+ */
 class Reflector
 {
     /**
-     * This is a PHP 7.4 compatible implementation of is_callable.
+     * Ceci est une implémentation compatible PHP 7.4 de is_callable.
      */
     public static function isCallable(mixed $var, bool $syntaxOnly = false): bool
     {
@@ -66,7 +69,7 @@ class Reflector
     }
 
     /**
-     * Get the class name of the given parameter's type, if possible.
+     * Obtient le nom de classe du type du paramètre donné, si possible.
      */
     public static function getParameterClassName(ReflectionParameter $parameter): ?string
     {
@@ -92,7 +95,7 @@ class Reflector
     }
 
     /**
-     * Determine if the parameter's type is a subclass of the given type.
+     * Détermine si le type du paramètre est une sous-classe du type donné.
      */
     public static function isParameterSubclassOf(ReflectionParameter $parameter, string $className): bool
     {

@@ -16,17 +16,20 @@ use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Support\Onceable;
 use WeakMap;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\PreventsCircularRecursion</a>
+ */
 trait PreventsCircularRecursion
 {
     /**
-     * The cache of objects processed to prevent infinite recursion.
+     * Le cache des objets traités pour éviter la récursion infinie.
      *
      * @var WeakMap<static, array<string, mixed>>
      */
     protected static $recursionCache;
 
     /**
-     * Prevent a method from being called multiple times on the same object within the same call stack.
+     * Empêche qu'une méthode soit appelée plusieurs fois sur le même objet dans la même pile d'appels.
      */
     protected function withoutRecursion(callable $callback, mixed $default = null): mixed
     {
@@ -56,7 +59,7 @@ trait PreventsCircularRecursion
     }
 
     /**
-     * Remove an entry from the recursion cache for an object.
+     * Supprime une entrée du cache de récursion pour un objet.
      */
     protected static function clearRecursiveCallValue(object $object, string $hash): void
     {
@@ -68,7 +71,7 @@ trait PreventsCircularRecursion
     }
 
     /**
-     * Get the stack of methods being called recursively for the current object.
+     * Obtient la pile des méthodes appelées récursivement pour l'objet courant.
      */
     protected static function getRecursiveCallStack(object $object): array
     {
@@ -78,7 +81,7 @@ trait PreventsCircularRecursion
     }
 
     /**
-     * Get the current recursion cache being used by the model.
+     * Obtient le cache de récursion actuel utilisé par le modèle.
      */
     protected static function getRecursionCache(): WeakMap
     {
@@ -86,7 +89,7 @@ trait PreventsCircularRecursion
     }
 
     /**
-     * Set a value in the recursion cache for the given object and method.
+     * Définit une valeur dans le cache de récursion pour l'objet et la méthode donnés.
      */
     protected static function setRecursiveCallValue(object $object, string $hash, mixed $value): mixed
     {

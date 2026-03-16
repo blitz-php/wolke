@@ -14,7 +14,7 @@ namespace BlitzPHP\Wolke\Exceptions;
 use RuntimeException;
 
 /**
- * CastException is thrown for invalid cast initialization and management.
+ * CastException est levée pour une initialisation et une gestion de cast invalides.
  */
 class CastException extends RuntimeException
 {
@@ -24,7 +24,7 @@ class CastException extends RuntimeException
     }
 
     /**
-     * Thrown when the cast class does not extends BaseCast.
+     * Levée lorsque la classe de cast n'étend pas BaseCast.
      *
      * @return static
      */
@@ -34,7 +34,7 @@ class CastException extends RuntimeException
     }
 
     /**
-     * Thrown when the Json format is invalid.
+     * Levée lorsque le format JSON est invalide.
      *
      * @return static
      */
@@ -62,7 +62,7 @@ class CastException extends RuntimeException
     }
 
     /**
-     * Thrown when the cast method is not `get` or `set`.
+     * Levée lorsque la méthode de cast n'est pas `get` ou `set`.
      *
      * @return static
      */
@@ -72,7 +72,7 @@ class CastException extends RuntimeException
     }
 
     /**
-     * Thrown when the casting timestamp is not correct timestamp.
+     * Levée lorsque l'horodatage de cast n'est pas un horodatage correct.
      *
      * @return static
      */

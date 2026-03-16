@@ -17,7 +17,7 @@ use Attribute;
 class Scope
 {
     /**
-     * Create a new attribute instance.
+     * Crée une nouvelle instance d'attribut.
      */
     public function __construct()
     {

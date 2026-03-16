@@ -34,21 +34,23 @@ use Closure;
  * @template TResult
  *
  * @extends Relation<TRelatedModel, TIntermediateModel, TResult>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough</a>
  */
 abstract class HasOneOrManyThrough extends Relation
 {
     use InteractsWithDictionary;
 
     /**
-     * Create a new has many through relationship instance.
+     * Crée une nouvelle instance de relation has many through.
      *
      * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $farParent The far parent model instance.
-     * @param  TIntermediateModel  $throughParent  The "through" parent model instance.
-     * @param string $firstKey       The near key on the relationship.
-     * @param string $secondKey      The far key on the relationship.
-     * @param string $localKey       The local key on the relationship.
-     * @param string $secondLocalKey The local key on the intermediary model.
+     * @param  TDeclaringModel  $farParent L'instance du modèle parent éloigné.
+     * @param  TIntermediateModel  $throughParent  L'instance du modèle parent "through".
+     * @param string $firstKey       La clé proche sur la relation.
+     * @param string $secondKey      La clé éloignée sur la relation.
+     * @param string $localKey       La clé locale sur la relation.
+     * @param string $secondLocalKey La clé locale sur le modèle intermédiaire.
      */
     public function __construct(Builder $query, protected Model $farParent, protected Model $throughParent, protected string $firstKey, protected string $secondKey, protected string $localKey, protected string $secondLocalKey)
     {
@@ -56,7 +58,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Set the base constraints on the relation query.
+     * Définit les contraintes de base sur la requête de relation.
      */
     public function addConstraints(): void
     {
@@ -72,7 +74,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Set the join clause on the query.
+     * Définit la clause de jointure sur la requête.
      *
      * @param Builder<TRelatedModel>|null  $query
      */
@@ -92,7 +94,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the fully-qualified parent key name.
+     * Obtient le nom de la clé parente complètement qualifié.
      */
     public function getQualifiedParentKeyName(): string
     {
@@ -100,7 +102,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Determine whether "through" parent of the relation uses Soft Deletes.
+     * Détermine si le parent "through" de la relation utilise Soft Deletes.
      */
     public function throughParentSoftDeletes(): bool
     {
@@ -108,7 +110,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Indicate that trashed "through" parents should be included in the query.
+     * Indique que les parents "through" supprimés doivent être inclus dans la requête.
      */
     public function withTrashedParents(): static
     {
@@ -133,7 +135,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Build model dictionary keyed by the relation's foreign key.
+     * Construit un dictionnaire de modèles indexé par la clé étrangère de la relation.
      *
      * @param  Collection<int, TRelatedModel>  $results
      * 
@@ -145,9 +147,9 @@ abstract class HasOneOrManyThrough extends Relation
 
         $isAssociative = Arr::isAssoc($results->all());
 
-        // First we will create a dictionary of models keyed by the foreign key of the
-        // relationship as this will allow us to quickly access all of the related
-        // models without having to do nested looping which will be quite slow.
+        // Nous allons d'abord créer un dictionnaire de modèles indexé par la clé étrangère de la
+        // relation car cela nous permettra d'accéder rapidement à tous les modèles liés
+        // sans avoir à faire des boucles imbriquées qui seraient assez lentes.
         foreach ($results as $key => $result) {
             if ($isAssociative) {
                 $dictionary[$result->blitz_through_key][$key] = $result;
@@ -160,7 +162,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the first related model record matching the attributes or instantiate it.
+     * Obtient le premier modèle lié correspondant aux attributs ou l'instancie.
      *
      * @return TRelatedModel
      */
@@ -174,7 +176,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the first record matching the attributes. If the record is not found, create it.
+     * Obtient le premier enregistrement correspondant aux attributs. Si l'enregistrement n'est pas trouvé, le crée.
      *
      * @param  (Closure(): array)|array  $values
      * 
@@ -190,7 +192,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     * Tente de créer l'enregistrement. Si une violation de contrainte unique se produit, tente de trouver l'enregistrement correspondant.
      *
      * @param  (Closure(): array)|array  $values
      * 
@@ -206,7 +208,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Create or update a related record matching the attributes, and fill it with values.
+     * Crée ou met à jour un enregistrement lié correspondant aux attributs, et le remplit avec des valeurs.
      *
      * @return TRelatedModel
      */
@@ -220,7 +222,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Add a basic where clause to the query, and return the first result.
+     * Ajoute une clause where de base à la requête, et retourne le premier résultat.
      *
      * @return TRelatedModel|null
      */
@@ -230,7 +232,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Execute the query and get the first related model.
+     * Exécute la requête et obtient le premier modèle lié.
      *
      * @return TRelatedModel|null
      */
@@ -242,7 +244,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Execute the query and get the first result or throw an exception.
+     * Exécute la requête et obtient le premier résultat ou lance une exception.
      *
      * @return TRelatedModel
      *
@@ -258,7 +260,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Execute the query and get the first result or call a callback.
+     * Exécute la requête et obtient le premier résultat ou appelle un rappel.
      *
      * @template TValue
      *
@@ -283,7 +285,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Find a related model by its primary key.
+     * Trouve un modèle lié par sa clé primaire.
      *
      * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel|null)
      */
@@ -301,7 +303,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Find a sole related model by its primary key.
+     * Trouve un seul modèle lié par sa clé primaire.
      *
      * @return TRelatedModel
      *
@@ -318,7 +320,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Find multiple related models by their primary keys.
+     * Trouve plusieurs modèles liés par leurs clés primaires.
      *
      * @return Collection<int, TRelatedModel>
      */
@@ -337,7 +339,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Find a related model by its primary key or throw an exception.
+     * Trouve un modèle lié par sa clé primaire ou lance une exception.
      *
      * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel)
      *
@@ -361,7 +363,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Find a related model by its primary key or call a callback.
+     * Trouve un modèle lié par sa clé primaire ou appelle un rappel.
      *
      * @template TValue
      *
@@ -405,9 +407,9 @@ abstract class HasOneOrManyThrough extends Relation
 
         $models = $builder->getModels();
 
-        // If we actually found models we will also eager load any relationships that
-        // have been specified as needing to be eager loaded. This will solve the
-        // n + 1 query problem for the developer and also increase performance.
+        // Si nous avons effectivement trouvé des modèles, nous chargerons également avec empressement toutes les relations qui
+        // ont été spécifiées comme devant être chargées avec empressement. Cela résoudra le
+        // problème de requête n + 1 pour le développeur et augmentera également les performances.
         if (count($models) > 0) {
             $models = $builder->eagerLoadRelations($models);
         }
@@ -418,7 +420,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get a paginator for the "select" statement.
+     * Obtient un paginateur pour l'instruction "select".
      */
     public function paginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null): LengthAwarePaginator
     {
@@ -428,7 +430,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Paginate the given query into a simple paginator.
+     * Pagine la requête donnée dans un paginateur simple.
      */
     public function simplePaginate(?int $perPage = null, array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator
     {
@@ -438,7 +440,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Paginate the given query into a cursor paginator.
+     * Pagine la requête donnée dans un paginateur à curseur.
      */
     public function cursorPaginate(?int $perPage = null, array $columns = ['*'], string $cursorName = 'cursor', ?string $cursor = null): CursorPaginator
     {
@@ -448,7 +450,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Set the select clause for the relation query.
+     * Définit la clause de sélection pour la requête de relation.
      */
     protected function shouldSelect(array $columns = ['*']): array
     {
@@ -460,7 +462,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Chunk the results of the query.
+     * Traite les résultats de la requête par lots.
      */
     public function chunk(int $count, callable $callback): bool
     {
@@ -468,7 +470,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Chunk the results of a query by comparing numeric IDs.
+     * Traite les résultats d'une requête par lots en comparant les ID numériques.
      */
     public function chunkById(int $count, callable $callback, ?string $column = null, ?string $alias = null): bool
     {
@@ -480,7 +482,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Chunk the results of a query by comparing IDs in descending order.
+     * Traite les résultats d'une requête par lots en comparant les ID dans l'ordre décroissant.
      */
     public function chunkByIdDesc(int $count, callable $callback, ?string $column = null, ?string $alias = null): bool
     {
@@ -492,7 +494,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Execute a callback over each item while chunking by ID.
+     * Exécute un rappel sur chaque élément tout en traitant par lots par ID.
      */
     public function eachById(callable $callback, int $count = 1000, ?string $column = null, ?string $alias = null): bool
     {
@@ -504,7 +506,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get a generator for the given query.
+     * Obtient un générateur pour la requête donnée.
      *
      * @return LazyCollection<int, TRelatedModel>
      */
@@ -514,7 +516,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Execute a callback over each item while chunking.
+     * Exécute un rappel sur chaque élément tout en traitant par lots.
      */
     public function each(callable $callback, int $count = 1000): bool
     {
@@ -530,7 +532,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Query lazily, by chunks of the given size.
+     * Interroge paresseusement, par lots de la taille donnée.
      *
      * @return LazyCollection<int, TRelatedModel>
      */
@@ -540,7 +542,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Query lazily, by chunking the results of a query by comparing IDs.
+     * Interroge paresseusement, en traitant les résultats d'une requête par lots en comparant les ID.
      *
      * @return LazyCollection<int, TRelatedModel>
      */
@@ -554,7 +556,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Query lazily, by chunking the results of a query by comparing IDs in descending order.
+     * Interroge paresseusement, en traitant les résultats d'une requête par lots en comparant les ID dans l'ordre décroissant.
      */
     public function lazyByIdDesc(int $chunkSize = 1000, ?string $column = null, ?string $alias = null): LazyCollection
     {
@@ -566,7 +568,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Prepare the query builder for query execution.
+     * Prépare le constructeur de requête pour l'exécution de la requête.
      *
      * @return Builder<TRelatedModel>
      */
@@ -600,7 +602,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Add the constraints for a relationship query on the same table.
+     * Ajoute les contraintes pour une requête de relation sur la même table.
      *
      * @param  Builder<TRelatedModel>  $query
      * @param  Builder<TDeclaringModel>  $parentQuery
@@ -624,7 +626,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Add the constraints for a relationship query on the same table as the through parent.
+     * Ajoute les contraintes pour une requête de relation sur la même table que le parent through.
      *
      * @param  Builder<TRelatedModel>  $query
      * @param  Builder<TDeclaringModel>  $parentQuery
@@ -648,7 +650,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the qualified foreign key on the related model. 
+     * Obtient la clé étrangère qualifiée sur le modèle lié. 
      */
     public function getQualifiedFarKeyName(): string
     {
@@ -656,7 +658,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the foreign key on the "through" model.
+     * Obtient la clé étrangère sur le modèle "through".
      */
     public function getFirstKeyName(): string
     {
@@ -664,7 +666,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the qualified foreign key on the "through" model.
+     * Obtient la clé étrangère qualifiée sur le modèle "through".
      */
     public function getQualifiedFirstKeyName()
     {
@@ -672,7 +674,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the foreign key on the related model.
+     * Obtient la clé étrangère sur le modèle lié.
      */
     public function getForeignKeyName(): string
     {
@@ -680,7 +682,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the qualified foreign key on the related model.
+     * Obtient la clé étrangère qualifiée sur le modèle lié.
      */
     public function getQualifiedForeignKeyName(): string
     {
@@ -688,7 +690,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the local key on the far parent model.
+     * Obtient la clé locale sur le modèle parent éloigné.
      */
     public function getQualifiedRelatedKeyName(): string
     {
@@ -701,7 +703,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the qualified local key on the far parent model.
+     * Obtient la clé locale qualifiée sur le modèle parent éloigné.
      */
     public function getQualifiedLocalKeyName(): string
     {
@@ -709,7 +711,7 @@ abstract class HasOneOrManyThrough extends Relation
     }
 
     /**
-     * Get the local key on the intermediary model.
+     * Obtient la clé locale sur le modèle intermédiaire.
      */
     public function getSecondLocalKeyName(): string
     {

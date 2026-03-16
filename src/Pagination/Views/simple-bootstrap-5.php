@@ -1,7 +1,7 @@
 <?php if ($paginator->hasPages()): ?>
     <nav role="navigation">
         <ul class="pagination">
-            <?php // Previous Page Link ?>
+            <?php // Lien de la page précédente ?>
             <?php if ($paginator->onFirstPage()): ?>
                 <li class="page-item disabled" aria-disabled="true">
                     <span class="page-link"><?= lang('Pagination.previous'); ?></span>
@@ -14,7 +14,7 @@
                 </li>
             <?php endif; ?>
 
-            <?php // Next Page Link ?>
+            <?php // Lien de la page suivante ?>
             <?php if ($paginator->hasMorePages()): ?>
                 <li class="page-item">
                     <a class="page-link" href="<?php echo $paginator->nextPageUrl(); ?>" rel="next"><?= lang('Pagination.next'); ?></a>

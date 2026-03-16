@@ -14,13 +14,15 @@ namespace BlitzPHP\Wolke\Contracts;
 use BlitzPHP\Wolke\Model;
 
 /**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Database\Eloquent\CastsAttributes</a>
+ * 
  * @template TGet
  * @template TSet
  */
 interface CastsAttributes
 {
     /**
-     * Transform the attribute from the underlying model values.
+     * Transforme l'attribut à partir des valeurs sous-jacentes du modèle.
      *
      * @param array<string, mixed> $attributes
      *
@@ -29,7 +31,7 @@ interface CastsAttributes
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed;
 
     /**
-     * Transform the attribute to its underlying model values.
+     * Transforme l'attribut vers ses valeurs sous-jacentes du modèle.
      *
      * @param TSet|null            $value
      * @param array<string, mixed> $attributes

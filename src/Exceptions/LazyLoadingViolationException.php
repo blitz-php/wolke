@@ -13,25 +13,28 @@ namespace BlitzPHP\Wolke\Exceptions;
 
 use RuntimeException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\LazyLoadingViolationException</a>
+ */
 class LazyLoadingViolationException extends RuntimeException
 {
     /**
-     * The name of the affected Eloquent model.
+     * Le nom du modèle Eloquent concerné.
      *
      * @var string
      */
     public $model;
 
     /**
-     * Create a new exception instance.
+     * Crée une nouvelle instance d'exception.
      *
-     * @param string $relation The name of the relation.
+     * @param string $relation Le nom de la relation.
      */
     public function __construct(object $model, public string $relation)
     {
         $class = get_class($model);
 
-        parent::__construct("Attempted to lazy load [{$relation}] on model [{$class}] but lazy loading is disabled.");
+        parent::__construct("Tentative de chargement paresseux de [{$relation}] sur le modèle [{$class}] mais le chargement paresseux est désactivé.");
 
         $this->model = $class;
     }

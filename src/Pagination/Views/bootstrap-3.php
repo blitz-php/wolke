@@ -1,7 +1,7 @@
 <?php if ($paginator->hasPages()): ?>
     <nav>
         <ul class="pagination">
-            <?php // Previous Page Link ?>
+            <?php // Lien de la page précédente ?>
             <?php if ($paginator->onFirstPage()): ?>
                 <li class="disabled" aria-disabled="true" aria-label="<?= lang('Pagination.previous') ?>">
                     <span aria-hidden="true">&lsaquo;</span>
@@ -12,14 +12,14 @@
                 </li>
             <?php endif; ?>
 
-            <?php // Pagination Elements ?>
+            <?php // Éléments de pagination ?>
             <?php foreach ($elements as $element): ?>
-                <?php // "Three Dots" Separator ?>
+                <?php // Séparateur "Trois points" ?>
                 <?php if (is_string($element)): ?>
                     <li class="disabled" aria-disabled="true"><span><?php echo $element; ?></span></li>
                 <?php endif; ?>
 
-                <?php // Array Of Links ?>
+                <?php // Tableau de liens ?>
                 <?php if (is_array($element)): ?>
                     <?php foreach ($element as $page => $url): ?>
                         <?php if ($page == $paginator->currentPage()): ?>
@@ -31,7 +31,7 @@
                 <?php endif; ?>
             <?php endforeach; ?>
 
-            <?php // Next Page Link ?>
+            <?php // Lien de la page suivante ?>
             <?php if ($paginator->hasMorePages()): ?>
                 <li>
                     <a href="<?php echo $paginator->nextPageUrl(); ?>" rel="next" aria-label="<?= lang('Pagination.next'); ?>">&rsaquo;</a>

@@ -15,21 +15,24 @@ use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Wolke\Contracts\Dispatcher as DispatcherContract;
 use Closure;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Events\NullDispatcher</a>
+ */
 class NullDispatcher implements DispatcherContract
 {
     use ForwardsCalls;
 
     /**
-     * Create a new event dispatcher instance that does not fire.
+     * Crée une nouvelle instance de répartiteur d'événements qui ne déclenche rien.
      *
-     * @param DispatcherContract $dispatcher The underlying event dispatcher instance.
+     * @param DispatcherContract $dispatcher L'instance de répartiteur d'événements sous-jacente.
      */
     public function __construct(protected DispatcherContract $dispatcher)
     {
     }
 
     /**
-     * Don't fire an event.
+     * Ne déclenche pas d'événement.
      *
      * @return null
      */
@@ -39,14 +42,14 @@ class NullDispatcher implements DispatcherContract
     }
 
     /**
-     * Don't register an event and payload to be fired later.
+     * N'enregistre pas un événement et sa charge utile pour être déclenchés plus tard.
      */
     public function push(string $event, array $payload = []): void
     {
     }
 
     /**
-     * Don't dispatch an event.
+     * Ne distribue pas d'événement.
      *
      * @return null
      */
@@ -56,7 +59,7 @@ class NullDispatcher implements DispatcherContract
     }
 
     /**
-     * Register an event listener with the dispatcher.
+     * Enregistre un écouteur d'événement avec le répartiteur.
      */
     public function listen(array|Closure|string $events, array|Closure|string|null $listener = null): void
     {
@@ -64,7 +67,7 @@ class NullDispatcher implements DispatcherContract
     }
 
     /**
-     * Determine if a given event has listeners.
+     * Détermine si un événement donné a des écouteurs.
      */
     public function hasListeners(string $eventName): bool
     {
@@ -72,7 +75,7 @@ class NullDispatcher implements DispatcherContract
     }
 
     /**
-     * Register an event subscriber with the dispatcher.
+     * Enregistre un abonné aux événements avec le répartiteur.
      */
     public function subscribe(object|string $subscriber): void
     {
@@ -80,7 +83,7 @@ class NullDispatcher implements DispatcherContract
     }
 
     /**
-     * Flush a set of pushed events.
+     * Vide un ensemble d'événements mis en attente.
      */
     public function flush(string $event): void
     {
@@ -88,7 +91,7 @@ class NullDispatcher implements DispatcherContract
     }
 
     /**
-     * Remove a set of listeners from the dispatcher.
+     * Supprime un ensemble d'écouteurs du répartiteur.
      */
     public function forget(string $event): void
     {
@@ -96,7 +99,7 @@ class NullDispatcher implements DispatcherContract
     }
 
     /**
-     * Forget all of the queued listeners.
+     * Oublie tous les écouteurs en file d'attente.
      */
     public function forgetPushed(): void
     {
@@ -104,7 +107,7 @@ class NullDispatcher implements DispatcherContract
     }
 
     /**
-     * Dynamically pass method calls to the underlying dispatcher.
+     * Passe dynamiquement les appels de méthode au répartiteur sous-jacent.
      */
     public function __call(string $method, array $parameters = []): mixed
     {

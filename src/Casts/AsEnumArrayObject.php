@@ -22,11 +22,11 @@ use BlitzPHP\Wolke\Model;
 class AsEnumArrayObject implements Castable
 {
     /**
-     * Get the caster class to use when casting from / to this cast target.
+     * Obtient la classe de cast à utiliser pour le casting depuis/vers cette cible de cast.
      *
      * @template TEnum of \UnitEnum
      *
-     * @param array{class-string<TEnum>} $arguments
+     * @param array{class-string<TEnum>} $arguments Les arguments du cast
      *
      * @return CastsAttributes<ArrayObject<array-key, TEnum>, iterable<TEnum>>
      */

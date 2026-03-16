@@ -15,20 +15,23 @@ use BlitzPHP\Wolke\Exceptions\ModelNotFoundException;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\Relation;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasUniqueStringIds</a>
+ */
 trait HasUniqueStringIds
 {
     /**
-     * Generate a new unique key for the model.
+     * Génère une nouvelle clé unique pour le modèle.
      */
     abstract public function newUniqueId(): mixed;
 
     /**
-     * Determine if given key is valid.
+     * Détermine si la clé donnée est valide.
      */
     abstract protected function isValidUniqueId(mixed $value): bool;
 
     /**
-     * Initialize the trait.
+     * Initialise le trait.
      */
     public function initializeHasUniqueStringIds(): void
     {
@@ -36,7 +39,7 @@ trait HasUniqueStringIds
     }
 
     /**
-     * Get the columns that should receive a unique identifier.
+     * Obtient les colonnes qui doivent recevoir un identifiant unique.
      */
     public function uniqueIds(): array
     {
@@ -44,7 +47,7 @@ trait HasUniqueStringIds
     }
 
     /**
-     * Retrieve the model for a bound value.
+     * Récupère le modèle pour une valeur liée.
      *
      * @throws ModelNotFoundException
      */
@@ -62,7 +65,7 @@ trait HasUniqueStringIds
     }
 
     /**
-     * Get the auto-incrementing key type.
+     * Obtient le type de clé auto-incrémentée.
      */
     public function getKeyType(): string
     {
@@ -74,7 +77,7 @@ trait HasUniqueStringIds
     }
 
     /**
-     * Get the value indicating whether the IDs are incrementing.
+     * Obtient la valeur indiquant si les ID sont incrémentés.
      */
     public function getIncrementing(): bool
     {
@@ -86,7 +89,7 @@ trait HasUniqueStringIds
     }
 
     /**
-     * Throw an exception for the given invalid unique ID.
+     * Lance une exception pour l'identifiant unique invalide donné.
      * 
      * @return never
      *

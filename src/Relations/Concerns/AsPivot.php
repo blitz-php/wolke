@@ -16,34 +16,37 @@ use BlitzPHP\Utilities\String\Text;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Concerns\AsPivot</a>
+ */
 trait AsPivot
 {
     /**
-     * The parent model of the relationship.
+     * Le modèle parent de la relation.
      *
      * @var Model
      */
     public $pivotParent;
 
     /**
-     * The related model of the relationship.
+     * Le modèle lié de la relation.
      *
      * @var Model
      */
     public $pivotRelated;
 
     /**
-     * The name of the foreign key column.
+     * Le nom de la colonne de clé étrangère.
      */
     protected string $foreignKey = '';
 
     /**
-     * The name of the "other key" column.
+     * Le nom de la colonne de "l'autre clé".
      */
     protected string $relatedKey = '';
 
     /**
-     * Create a new pivot model instance.
+     * Crée une nouvelle instance de modèle pivot.
      */
     public static function fromAttributes(Model $parent, array $attributes, string $table, bool $exists = false): static
     {
@@ -51,17 +54,17 @@ trait AsPivot
 
         $instance->timestamps = $instance->hasTimestampAttributes($attributes);
 
-        // The pivot model is a "dynamic" model since we will set the tables dynamically
-        // for the instance. This allows it work for any intermediate tables for the
-        // many to many relationship that are defined by this developer's classes.
+        // Le modèle pivot est un modèle "dynamique" car nous définirons les tables dynamiquement
+        // pour l'instance. Cela lui permet de fonctionner pour toutes les tables intermédiaires pour
+        // les relations many-to-many qui sont définies par les classes de ce développeur.
         $instance->setConnection($parent->getConnectionName())
             ->setTable($table)
             ->forceFill($attributes)
             ->syncOriginal();
 
-        // We store off the parent instance so we will access the timestamp column names
-        // for the model, since the pivot model timestamps aren't easily configurable
-        // from the developer's point of view. We can use the parents to get these.
+        // Nous stockons l'instance parent afin d'accéder aux noms des colonnes d'horodatage
+        // pour le modèle, car les horodatages du modèle pivot ne sont pas facilement configurables
+        // du point de vue du développeur. Nous pouvons utiliser les parents pour les obtenir.
         $instance->pivotParent = $parent;
 
         $instance->exists = $exists;
@@ -70,7 +73,7 @@ trait AsPivot
     }
 
     /**
-     * Create a new pivot model from raw values returned from a query.
+     * Crée un nouveau modèle pivot à partir des valeurs brutes retournées par une requête.
      */
     public static function fromRawAttributes(Model $parent, array $attributes, string $table, bool $exists = false): static
     {
@@ -87,7 +90,7 @@ trait AsPivot
     }
 
     /**
-     * Set the keys for a select query.
+     * Définit les clés pour une requête de sélection.
      *
      * @param  Builder<static>  $query
      * 
@@ -111,7 +114,7 @@ trait AsPivot
     }
 
     /**
-     * Set the keys for a save update query.
+     * Définit les clés pour une requête de sauvegarde de mise à jour.
      *
      * @param  Builder<static>  $query
      * 
@@ -123,7 +126,7 @@ trait AsPivot
     }
 
     /**
-     * Delete the pivot model record from the database.
+     * Supprime l'enregistrement du modèle pivot de la base de données.
      *
      * @return int|null
      */
@@ -147,7 +150,7 @@ trait AsPivot
     }
 
     /**
-     * Get the query builder for a delete operation on the pivot.
+     * Obtient le constructeur de requête pour une opération de suppression sur le pivot.
      *
      * @return Builder<static>
      */
@@ -160,7 +163,7 @@ trait AsPivot
     }
 
     /**
-     * Get the table associated with the model.
+     * Obtient la table associée au modèle.
      */
     public function getTable(): string
     {
@@ -176,7 +179,7 @@ trait AsPivot
     }
 
     /**
-     * Get the foreign key column name.
+     * Obtient le nom de la colonne de clé étrangère.
      */
     public function getForeignKey(): string
     {
@@ -184,7 +187,7 @@ trait AsPivot
     }
 
     /**
-     * Get the "related key" column name.
+     * Obtient le nom de la colonne de "clé liée".
      */
     public function getRelatedKey(): string
     {
@@ -192,7 +195,7 @@ trait AsPivot
     }
 
     /**
-     * Get the "related key" column name.
+     * Obtient le nom de la colonne de "l'autre clé".
      */
     public function getOtherKey(): string
     {
@@ -200,7 +203,7 @@ trait AsPivot
     }
 
     /**
-     * Set the key names for the pivot model instance.
+     * Définit les noms des clés pour l'instance de modèle pivot.
      */
     public function setPivotKeys(string $foreignKey, string $relatedKey): static
     {
@@ -212,7 +215,7 @@ trait AsPivot
     }
 
     /**
-     * Set the related model of the relationship.
+     * Définit le modèle lié de la relation.
      */
     public function setRelatedModel(?Model $related = null): static
     {
@@ -222,7 +225,7 @@ trait AsPivot
     }
 
     /**
-     * Determine if the pivot model or given attributes has timestamp attributes.
+     * Détermine si le modèle pivot ou les attributs donnés ont des attributs d'horodatage.
      */
     public function hasTimestampAttributes(?array $attributes = null): bool
     {
@@ -231,7 +234,7 @@ trait AsPivot
     }
 
     /**
-     * Get the name of the "created at" column.
+     * Obtient le nom de la colonne "created at".
      */
     public function getCreatedAtColumn(): string
     {
@@ -241,7 +244,7 @@ trait AsPivot
     }
 
     /**
-     * Get the name of the "updated at" column.
+     * Obtient le nom de la colonne "updated at".
      */
     public function getUpdatedAtColumn(): string
     {
@@ -251,7 +254,7 @@ trait AsPivot
     }
 
     /**
-     * Get the queueable identity for the entity.
+     * Obtient l'identité mise en file d'attente pour l'entité.
      */
     public function getQueueableId(): mixed
     {
@@ -269,7 +272,7 @@ trait AsPivot
     }
 
     /**
-     * Get a new query to restore one or more models by their queueable IDs.
+     * Obtient une nouvelle requête pour restaurer un ou plusieurs modèles par leurs IDs de file d'attente.
      *
      * @param list<int>|list<string>|string $ids
      * 
@@ -293,7 +296,7 @@ trait AsPivot
     }
 
     /**
-     * Get a new query to restore multiple models by their queueable IDs.
+     * Obtient une nouvelle requête pour restaurer plusieurs modèles par leurs IDs de file d'attente.
      *
      * @param list<int>|list<string> $ids
      */
@@ -318,7 +321,7 @@ trait AsPivot
     }
 
     /**
-     * Unset all the loaded relations for the instance.
+     * Supprime toutes les relations chargées pour l'instance.
      */
     public function unsetRelations(): static
     {

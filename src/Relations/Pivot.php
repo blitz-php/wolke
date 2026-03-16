@@ -14,17 +14,20 @@ namespace BlitzPHP\Wolke\Relations;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\Concerns\AsPivot;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Pivot</a>
+ */
 class Pivot extends Model
 {
     use AsPivot;
 
     /**
-     * Indicates if the IDs are auto-incrementing.
+     * Indique si les IDs sont auto-incrémentés.
      */
     public bool $incrementing = false;
 
     /**
-     * The attributes that aren't mass assignable.
+     * Les attributs qui ne sont pas assignables en masse.
      * 
      * @var list<string>
      */

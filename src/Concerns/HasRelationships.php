@@ -33,30 +33,33 @@ use BlitzPHP\Wolke\Relations\Pivot;
 use BlitzPHP\Wolke\Relations\Relation;
 use Closure;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasRelationships</a>
+ */
 trait HasRelationships
 {
     /**
-     * The loaded relationships for the model.
+     * Les relations chargées pour le modèle.
      */
     protected array $relations = [];
 
     /**
-     * The relationships that should be touched on save.
+     * Les relations qui doivent être touchées lors de la sauvegarde.
      */
     protected array $touches = [];
 
     /**
-     * The relationship autoloader callback.
+     * Le rappel d'autochargement des relations.
      */
     protected ?Closure $relationAutoloadCallback = null;
 
     /**
-     * The relationship autoloader callback context.
+     * Le contexte du rappel d'autochargement des relations.
      */
     protected mixed $relationAutoloadContext = null;
 
     /**
-     * The many to many relationship methods.
+     * Les méthodes de relation many-to-many.
      *
      * @var list<string>
      */
@@ -65,12 +68,12 @@ trait HasRelationships
     ];
 
     /**
-     * The relation resolver callbacks.
+     * Les rappels de résolution de relation.
      */
     protected static array $relationResolvers = [];
 
     /**
-     * Get the dynamic relation resolver if defined or inherited, or return null.
+     * Obtient le résolveur de relation dynamique s'il est défini ou hérité, ou retourne null.
      * 
      * @template TRelatedModel of Model
      *
@@ -90,7 +93,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a dynamic relation resolver.
+     * Définit un résolveur de relation dynamique.
      */
     public static function resolveRelationUsing(string $name, Closure $callback): void
     {
@@ -101,7 +104,7 @@ trait HasRelationships
     }
 
     /**
-     * Determine if a relationship autoloader callback has been defined.
+     * Détermine si un rappel d'autochargement de relation a été défini.
      */
     public function hasRelationAutoloadCallback(): bool
     {
@@ -109,11 +112,11 @@ trait HasRelationships
     }
 
     /**
-     * Define an automatic relationship autoloader callback for this model and its relations.
+     * Définit un rappel d'autochargement de relation automatique pour ce modèle et ses relations.
      */
     public function autoloadRelationsUsing(Closure $callback, mixed $context = null): static
     {
-        // Prevent circular relation autoloading...
+        // Empêche l'autochargement circulaire de relations...
         if ($context && $this->relationAutoloadContext === $context) {
             return $this;
         }
@@ -129,7 +132,7 @@ trait HasRelationships
     }
 
     /**
-     * Attempt to autoload the given relationship using the autoload callback.
+     * Tente d'autocharger la relation donnée en utilisant le rappel d'autochargement.
      */
     protected function attemptToAutoloadRelation(string $key): bool
     {
@@ -143,7 +146,7 @@ trait HasRelationships
     }
 
     /**
-     * Invoke the relationship autoloader callback for the given relationships.
+     * Invoque le rappel d'autochargement de relation pour les relations données.
      */
     protected function invokeRelationAutoloadCallbackFor(string $key, array $tuples): void
     {
@@ -153,7 +156,7 @@ trait HasRelationships
     }
 
     /**
-     * Propagate the relationship autoloader callback to the given related models.
+     * Propage le rappel d'autochargement de relation aux modèles liés donnés.
      */
     protected function propagateRelationAutoloadCallbackToRelation(string $key, mixed $models): void
     {
@@ -177,7 +180,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a one-to-one relationship.
+     * Définit une relation un-à-un.
      *
      * @template TRelatedModel of Model
      *
@@ -197,7 +200,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new HasOne relationship.
+     * Instancie une nouvelle relation HasOne.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -213,7 +216,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a has-one-through relationship.
+     * Définit une relation has-one-through.
      *
      * @template TRelatedModel of Model
      * @template TIntermediateModel of Model
@@ -243,7 +246,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new HasOneThrough relationship.
+     * Instancie une nouvelle relation HasOneThrough.
      *
      * @template TRelatedModel of Model
      * @template TIntermediateModel of Model
@@ -261,7 +264,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a polymorphic one-to-one relationship.
+     * Définit une relation polymorphe un-à-un.
      *
      * @template TRelatedModel of Model
      *
@@ -281,7 +284,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new MorphOne relationship.
+     * Instancie une nouvelle relation MorphOne.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -297,7 +300,7 @@ trait HasRelationships
     }
 
     /**
-     * Define an inverse one-to-one or many relationship.
+     * Définit une relation inverse un-à-un ou plusieurs.
      *
      * @template TRelatedModel of Model
      *
@@ -307,25 +310,25 @@ trait HasRelationships
      */
     public function belongsTo(string $related, ?string $foreignKey = null, ?string $ownerKey = null, ?string $relation = null): BelongsTo
     {
-        // If no relation name was given, we will use this debug backtrace to extract
-        // the calling method's name and use that as the relationship name as most
-        // of the time this will be what we desire to use for the relationships.
+        // Si aucun nom de relation n'a été donné, nous utiliserons cette trace de débogage pour extraire
+        // le nom de la méthode appelante et l'utiliser comme nom de relation car la plupart
+        // du temps, ce sera ce que nous souhaitons utiliser pour les relations.
         if (null === $relation) {
             $relation = $this->guessBelongsToRelation();
         }
 
         $instance = $this->newRelatedInstance($related);
 
-        // If no foreign key was supplied, we can use a backtrace to guess the proper
-        // foreign key name by using the name of the relationship function, which
-        // when combined with an "_id" should conventionally match the columns.
+        // Si aucune clé étrangère n'a été fournie, nous pouvons utiliser une trace pour deviner le bon
+        // nom de clé étrangère en utilisant le nom de la fonction de relation, qui
+        // lorsqu'il est combiné avec "_id" devrait conventionnellement correspondre aux colonnes.
         if (null === $foreignKey) {
             $foreignKey = Text::snake($relation) . '_' . $instance->getKeyName();
         }
 
-        // Once we have the foreign key names, we'll just create a new Eloquent query
-        // for the related models and returns the relationship instance which will
-        // actually be responsible for retrieving and hydrating every relations.
+        // Une fois que nous avons les noms des clés étrangères, nous allons simplement créer une nouvelle requête Eloquent
+        // pour les modèles liés et retourner l'instance de relation qui sera
+        // en fait responsable de la récupération et de l'hydratation de toutes les relations.
         $ownerKey = $ownerKey ?: $instance->getKeyName();
 
         return $this->newBelongsTo(
@@ -338,7 +341,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new BelongsTo relationship.
+     * Instancie une nouvelle relation BelongsTo.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -354,15 +357,15 @@ trait HasRelationships
     }
 
     /**
-     * Define a polymorphic, inverse one-to-one or many relationship.
+     * Définit une relation polymorphe inverse un-à-un ou plusieurs.
      * 
      * @return MorphTo<Model, $this>
      */
     public function morphTo(?string $name = null, ?string $type = null, ?string $id = null, ?string $ownerKey = null): MorphTo
     {
-        // If no name is provided, we will use the backtrace to get the function name
-        // since that is most likely the name of the polymorphic interface. We can
-        // use that to get both the class and foreign key that will be utilized.
+        // Si aucun nom n'est fourni, nous utiliserons la trace pour obtenir le nom de la fonction
+        // car c'est très probablement le nom de l'interface polymorphe. Nous pouvons
+        // l'utiliser pour obtenir à la fois la classe et la clé étrangère qui seront utilisées.
         $name = $name ?: $this->guessBelongsToRelation();
 
         [$type, $id] = $this->getMorphs(
@@ -371,16 +374,16 @@ trait HasRelationships
             $id
         );
 
-        // If the type value is null it is probably safe to assume we're eager loading
-        // the relationship. In this case we'll just pass in a dummy query where we
-        // need to remove any eager loads that may already be defined on a model.
+        // Si la valeur du type est nulle, il est probablement sûr de supposer que nous chargeons avec empressement
+        // la relation. Dans ce cas, nous passerons simplement une requête factice où nous
+        // devons supprimer tous les chargements empressés qui pourraient déjà être définis sur un modèle.
         return null === ($class = $this->getAttributeFromArray($type)) || $class === ''
                     ? $this->morphEagerTo($name, $type, $id, $ownerKey)
                     : $this->morphInstanceTo($class, $name, $type, $id, $ownerKey);
     }
 
     /**
-     * Define a polymorphic, inverse one-to-one or many relationship.
+     * Définit une relation polymorphe inverse un-à-un ou plusieurs avec chargement empressé.
      * 
      * @return MorphTo<Model, $this>
      */
@@ -397,7 +400,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a polymorphic, inverse one-to-one or many relationship.
+     * Définit une relation polymorphe inverse un-à-un ou plusieurs avec instance.
      * 
      * @return MorphTo<Model, $this>
      */
@@ -418,7 +421,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new MorphTo relationship.
+     * Instancie une nouvelle relation MorphTo.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -434,7 +437,7 @@ trait HasRelationships
     }
 
     /**
-     * Retrieve the actual class name for a given morph class.
+     * Récupère le nom de classe réel pour une classe morph donnée.
      */
     public static function getActualClassNameForMorph(string $class): string
     {
@@ -442,7 +445,7 @@ trait HasRelationships
     }
 
     /**
-     * Guess the "belongs to" relationship name.
+     * Devine le nom de la relation "belongs to".
      */
     protected function guessBelongsToRelation(): string
     {
@@ -452,15 +455,15 @@ trait HasRelationships
     }
 
     /**
-     * Create a pending has-many-through or has-one-through relationship.
+     * Crée une relation has-many-through ou has-one-through en attente.
      *
      * @template TIntermediateModel of Model
      *
      * @param  string|HasMany<TIntermediateModel, covariant $this>|HasOne<TIntermediateModel, covariant $this>  $relationship
-     * @return (
+     * @return ( 
      *     $relationship is string
      *     ? PendingHasThroughRelationship<Model, $this>
-     *     : (
+     *     : ( 
      *          $relationship is HasMany<TIntermediateModel, $this>
      *          ? PendingHasThroughRelationship<TIntermediateModel, $this, HasMany<TIntermediateModel, $this>>
      *          : PendingHasThroughRelationship<TIntermediateModel, $this, HasOne<TIntermediateModel, $this>>
@@ -477,7 +480,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a one-to-many relationship.
+     * Définit une relation un-à-plusieurs.
      *
      * @template TRelatedModel of Model
      *
@@ -502,7 +505,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new HasMany relationship.
+     * Instancie une nouvelle relation HasMany.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -518,7 +521,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a has-many-through relationship.
+     * Définit une relation has-many-through.
      *
      * @template TRelatedModel of Model
      * @template TIntermediateModel of Model
@@ -548,7 +551,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new HasManyThrough relationship.
+     * Instancie une nouvelle relation HasManyThrough.
      *
      * @template TRelatedModel of Model
      * @template TIntermediateModel of Model
@@ -566,7 +569,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a polymorphic one-to-many relationship.
+     * Définit une relation polymorphe un-à-plusieurs.
      *
      * @template TRelatedModel of Model
      *
@@ -578,9 +581,9 @@ trait HasRelationships
     {
         $instance = $this->newRelatedInstance($related);
 
-        // Here we will gather up the morph type and ID for the relationship so that we
-        // can properly query the intermediate table of a relation. Finally, we will
-        // get the table and create the relationship instances for the developers.
+        // Ici, nous allons rassembler le type morph et l'ID pour la relation afin que nous
+        // puissions interroger correctement la table intermédiaire d'une relation. Enfin, nous
+        // obtiendrons la table et créerons les instances de relation pour les développeurs.
         [$type, $id] = $this->getMorphs($name, $type, $id);
 
         $localKey = $localKey ?: $this->getKeyName();
@@ -595,7 +598,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new MorphMany relationship.
+     * Instancie une nouvelle relation MorphMany.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -611,7 +614,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a many-to-many relationship.
+     * Définit une relation many-to-many.
      *
      * @template TRelatedModel of Model
      *
@@ -629,25 +632,25 @@ trait HasRelationships
         ?string $relatedKey = null,
         ?string $relation = null
     ): BelongsToMany {
-        // If no relationship name was passed, we will pull backtraces to get the
-        // name of the calling function. We will use that function name as the
-        // title of this relation since that is a great convention to apply.
+        // Si aucun nom de relation n'a été passé, nous allons récupérer les traces pour obtenir le
+        // nom de la fonction appelante. Nous utiliserons ce nom de fonction comme
+        // titre de cette relation car c'est une excellente convention à appliquer.
         if (null === $relation) {
             $relation = $this->guessBelongsToManyRelation();
         }
 
-        // First, we'll need to determine the foreign key and "other key" for the
-        // relationship. Once we have determined the keys we'll make the query
-        // instances as well as the relationship instances we need for this.
+        // D'abord, nous devrons déterminer la clé étrangère et "l'autre clé" pour la
+        // relation. Une fois que nous avons déterminé les clés, nous ferons les instances de requête
+        // ainsi que les instances de relation dont nous avons besoin pour cela.
         $instance = $this->newRelatedInstance($related);
 
         $foreignPivotKey = $foreignPivotKey ?: $this->getForeignKey();
 
         $relatedPivotKey = $relatedPivotKey ?: $instance->getForeignKey();
 
-        // If no table name was provided, we can guess it by concatenating the two
-        // models using underscores in alphabetical order. The two model names
-        // are transformed to snake case from their default CamelCase also.
+        // Si aucun nom de table n'a été fourni, nous pouvons le deviner en concaténant les deux
+        // modèles en utilisant des traits de soulignement dans l'ordre alphabétique. Les deux noms de modèles
+        // sont transformés en snake case à partir de leur CamelCase par défaut également.
         if (null === $table) {
             $table = $this->joiningTable($related, $instance);
         }
@@ -665,7 +668,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new BelongsToMany relationship.
+     * Instancie une nouvelle relation BelongsToMany.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -690,7 +693,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a polymorphic many-to-many relationship.
+     * Définit une relation polymorphe many-to-many.
      *
      * @template TRelatedModel of Model
      *
@@ -711,18 +714,18 @@ trait HasRelationships
     ): MorphToMany {
         $relation = $relation ?: $this->guessBelongsToManyRelation();
 
-        // First, we will need to determine the foreign key and "other key" for the
-        // relationship. Once we have determined the keys we will make the query
-        // instances, as well as the relationship instances we need for these.
+        // D'abord, nous devrons déterminer la clé étrangère et "l'autre clé" pour la
+        // relation. Une fois que nous avons déterminé les clés, nous ferons les instances de requête,
+        // ainsi que les instances de relation dont nous avons besoin pour celles-ci.
         $instance = $this->newRelatedInstance($related);
 
         $foreignPivotKey = $foreignPivotKey ?: $name . '_id';
 
         $relatedPivotKey = $relatedPivotKey ?: $instance->getForeignKey();
 
-        // Now we're ready to create a new query builder for this related model and
-        // the relationship instances for this relation. This relations will set
-        // appropriate query constraints then entirely manages the hydrations.
+        // Maintenant, nous sommes prêts à créer un nouveau constructeur de requête pour ce modèle lié et
+        // les instances de relation pour cette relation. Cette relation définira
+        // des contraintes de requête appropriées puis gérera entièrement les hydratations.
         if (! $table) {
             $words = preg_split('/(_)/u', $name, -1, PREG_SPLIT_DELIM_CAPTURE);
 
@@ -746,7 +749,7 @@ trait HasRelationships
     }
 
     /**
-     * Instantiate a new MorphToMany relationship.
+     * Instancie une nouvelle relation MorphToMany.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -783,7 +786,7 @@ trait HasRelationships
     }
 
     /**
-     * Define a polymorphic, inverse many-to-many relationship.
+     * Définit une relation polymorphe inverse many-to-many.
      *
      * @template TRelatedModel of Model
      *
@@ -803,9 +806,9 @@ trait HasRelationships
     ): MorphToMany {
         $foreignPivotKey = $foreignPivotKey ?: $this->getForeignKey();
 
-        // For the inverse of the polymorphic many-to-many relations, we will change
-        // the way we determine the foreign and other keys, as it is the opposite
-        // of the morph-to-many method since we're figuring out these inverses.
+        // Pour l'inverse des relations polymorphes many-to-many, nous changerons
+        // la façon dont nous déterminons les clés étrangères et autres, car c'est l'opposé
+        // de la méthode morph-to-many puisque nous déterminons ces inverses.
         $relatedPivotKey = $relatedPivotKey ?: $name . '_id';
 
         return $this->morphToMany(
@@ -822,7 +825,7 @@ trait HasRelationships
     }
 
     /**
-     * Get the relationship name of the belongsToMany relationship.
+     * Obtient le nom de la relation de la méthode belongsToMany.
      */
     protected function guessBelongsToManyRelation(): ?string
     {
@@ -836,29 +839,29 @@ trait HasRelationships
     }
 
     /**
-     * Get the joining table name for a many-to-many relation.
+     * Obtient le nom de la table de jonction pour une relation many-to-many.
      */
     public function joiningTable(string $related, ?Model $instance = null): string
     {
-        // The joining table name, by convention, is simply the snake cased models
-        // sorted alphabetically and concatenated with an underscore, so we can
-        // just sort the models and join them together to get the table name.
+        // Le nom de la table de jonction, par convention, est simplement les noms des modèles en snake case
+        // triés alphabétiquement et concaténés avec un trait de soulignement, donc nous pouvons
+        // simplement trier les modèles et les joindre ensemble pour obtenir le nom de la table.
         $segments = [
             $instance ? $instance->joiningTableSegment()
                       : Text::snake(Helpers::classBasename($related)),
             $this->joiningTableSegment(),
         ];
 
-        // Now that we have the model names in an array we can just sort them and
-        // use the implode function to join them together with an underscores,
-        // which is typically used by convention within the database system.
+        // Maintenant que nous avons les noms des modèles dans un tableau, nous pouvons simplement les trier et
+        // utiliser la fonction implode pour les joindre avec un trait de soulignement,
+        // ce qui est typiquement utilisé par convention dans le système de base de données.
         sort($segments);
 
         return strtolower(implode('_', $segments));
     }
 
     /**
-     * Get this model's half of the intermediate table name for belongsToMany relationships.
+     * Obtient la moitié de ce modèle du nom de la table intermédiaire pour les relations belongsToMany.
      */
     public function joiningTableSegment(): string
     {
@@ -866,7 +869,7 @@ trait HasRelationships
     }
 
     /**
-     * Determine if the model touches a given relation.
+     * Détermine si le modèle touche une relation donnée.
      */
     public function touches(string $relation): bool
     {
@@ -874,7 +877,7 @@ trait HasRelationships
     }
 
     /**
-     * Touch the owning relations of the model.
+     * Touche les relations propriétaires du modèle.
      */
     public function touchOwners(): void
     {
@@ -894,7 +897,7 @@ trait HasRelationships
     }
 
     /**
-     * Get the polymorphic relationship columns.
+     * Obtient les colonnes de relation polymorphe.
      */
     protected function getMorphs(string $name, ?string $type = null, ?string $id = null): array
     {
@@ -902,7 +905,7 @@ trait HasRelationships
     }
 
     /**
-     * Get the class name for polymorphic relations.
+     * Obtient le nom de classe pour les relations polymorphes.
      */
     public function getMorphClass(): string
     {
@@ -924,7 +927,7 @@ trait HasRelationships
     }
 
     /**
-     * Create a new model instance for a related model.
+     * Crée une nouvelle instance de modèle pour un modèle lié.
      *
      * @template TRelatedModel of Model
      *
@@ -942,7 +945,7 @@ trait HasRelationships
     }
 
     /**
-     * Create a new model instance for a related "through" model.
+     * Crée une nouvelle instance de modèle pour un modèle "through" lié.
      *
      * @template TRelatedModel of Model
      *
@@ -956,7 +959,7 @@ trait HasRelationships
     }
 
     /**
-     * Get all the loaded relations for the instance.
+     * Obtient toutes les relations chargées pour l'instance.
      */
     public function getRelations(): array
     {
@@ -964,7 +967,7 @@ trait HasRelationships
     }
 
     /**
-     * Get a specified relationship.
+     * Obtient une relation spécifiée.
      */
     public function getRelation(string $relation): mixed
     {
@@ -972,7 +975,7 @@ trait HasRelationships
     }
 
     /**
-     * Determine if the given relation is loaded.
+     * Détermine si la relation donnée est chargée.
      */
     public function relationLoaded(string $key): bool
     {
@@ -980,7 +983,7 @@ trait HasRelationships
     }
 
     /**
-     * Set the given relationship on the model.
+     * Définit la relation donnée sur le modèle.
      */
     public function setRelation(string $relation, mixed $value): static
     {
@@ -992,7 +995,7 @@ trait HasRelationships
     }
 
     /**
-     * Unset a loaded relationship.
+     * Supprime une relation chargée.
      */
     public function unsetRelation(string $relation): static
     {
@@ -1002,7 +1005,7 @@ trait HasRelationships
     }
 
     /**
-     * Set the entire relations array on the model.
+     * Définit tout le tableau des relations sur le modèle.
      */
     public function setRelations(array $relations): static
     {
@@ -1012,7 +1015,7 @@ trait HasRelationships
     }
 
     /**
-     * Enable relationship autoloading for this model.
+     * Active l'autochargement des relations pour ce modèle.
      */
     public function withRelationshipAutoloading(): static
     {
@@ -1022,7 +1025,7 @@ trait HasRelationships
     }
 
     /**
-     * Duplicate the instance and unset all the loaded relations.
+     * Duplique l'instance et supprime toutes les relations chargées.
      */
     public function withoutRelations(): static
     {
@@ -1032,7 +1035,7 @@ trait HasRelationships
     }
 
     /**
-     * Unset all the loaded relations for the instance.
+     * Supprime toutes les relations chargées pour l'instance.
      */
     public function unsetRelations(): static
     {
@@ -1042,7 +1045,7 @@ trait HasRelationships
     }
 
     /**
-     * Get the relationships that are touched on save.
+     * Obtient les relations qui sont touchées lors de la sauvegarde.
      */
     public function getTouchedRelations(): array
     {
@@ -1050,7 +1053,7 @@ trait HasRelationships
     }
 
     /**
-     * Set the relationships that are touched on save.
+     * Définit les relations qui sont touchées lors de la sauvegarde.
      */
     public function setTouchedRelations(array $touches): static
     {

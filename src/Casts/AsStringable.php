@@ -19,7 +19,7 @@ use BlitzPHP\Wolke\Model;
 class AsStringable implements Castable
 {
     /**
-     * Get the caster class to use when casting from / to this cast target.
+     * Obtient la classe de cast à utiliser pour le casting depuis/vers cette cible de cast.
      */
     public static function castUsing(array $arguments): CastsAttributes
     {

@@ -24,52 +24,54 @@ use BlitzPHP\Wolke\Relations\Concerns\InteractsWithDictionary;
  * @template TDeclaringModel of Model
  *
  * @extends BelongsTo<TRelatedModel, TDeclaringModel>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphTo</a>
  */
 class MorphTo extends BelongsTo
 {
     use InteractsWithDictionary;
 
     /**
-     * The type of the polymorphic relation.
+     * Le type de la relation polymorphe.
      *
      * @var string
      */
     protected $morphType;
 
     /**
-     * The models whose relations are being eager loaded.
+     * Les modèles dont les relations sont chargées avec empressement.
      *
      * @var Collection<int, TDeclaringModel>
      */
     protected $models;
 
     /**
-     * All of the models keyed by ID.
+     * Tous les modèles indexés par ID.
      */
     protected array $dictionary = [];
 
     /**
-     * A buffer of dynamic calls to query macros.
+     * Un tampon d'appels dynamiques aux macros de requête.
      */
     protected array $macroBuffer = [];
 
     /**
-     * A map of relations to load for each individual morph type.
+     * Une carte des relations à charger pour chaque type morph individuel.
      */
     protected array $morphableEagerLoads = [];
 
     /**
-     * A map of relationship counts to load for each individual morph type.
+     * Une carte des compteurs de relations à charger pour chaque type morph individuel.
      */
     protected array $morphableEagerLoadCounts = [];
 
     /**
-     * A map of constraints to apply for each individual morph type.
+     * Une carte des contraintes à appliquer pour chaque type morph individuel.
      */
     protected array $morphableConstraints = [];
 
     /**
-     * Create a new morph to relationship instance.
+     * Crée une nouvelle instance de relation morph to.
      *
      * @param Builder<TRelatedModel>  $query
      * @param TDeclaringModel  $parent
@@ -90,7 +92,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Build a dictionary with the models.
+     * Construit un dictionnaire avec les modèles.
      * 
      * @param Collection<int, TRelatedModel>  $models
      */
@@ -113,9 +115,9 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Get the results of the relationship.
+     * Obtient les résultats de la relation.
      *
-     * Called via eager load method of Wolke query builder.
+     * Appelée via la méthode de chargement empressé du constructeur de requête Wolke.
      * 
      * @return Collection<int, TDeclaringModel>
      */
@@ -129,7 +131,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Get all of the relation results for a type.
+     * Obtient tous les résultats de relation pour un type.
      * 
      * @return Collection<int, TRelatedModel>
      */
@@ -162,7 +164,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Gather all of the foreign keys for a given type.
+     * Rassemble toutes les clés étrangères pour un type donné.
      */
     protected function gatherKeysByType(string $type, string $keyType): array
     {
@@ -172,7 +174,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Create a new model instance by type.
+     * Crée une nouvelle instance de modèle par type.
      * 
      * @return TRelatedModel
      */
@@ -196,7 +198,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Match the results for a given type to their parents.
+     * Fait correspondre les résultats pour un type donné à leurs parents.
      * 
      * @param Collection<int, TRelatedModel>  $results
      */
@@ -242,7 +244,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Dissociate previously associated model from the given parent.
+     * Dissocie le modèle précédemment associé du parent donné.
      *
      * @return TDeclaringModel
      */
@@ -274,7 +276,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Get the foreign key "type" name.
+     * Obtient le nom du "type" de clé étrangère.
      */
     public function getMorphType(): string
     {
@@ -282,7 +284,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Get the dictionary used by the relationship.
+     * Obtient le dictionnaire utilisé par la relation.
      */
     public function getDictionary(): array
     {
@@ -290,7 +292,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Specify which relations to load for a given morph type.
+     * Spécifie quelles relations charger pour un type morph donné.
      */
     public function morphWith(array $with): static
     {
@@ -303,7 +305,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Specify which relationship counts to load for a given morph type.
+     * Spécifie quels compteurs de relations charger pour un type morph donné.
      */
     public function morphWithCount(array $withCount): static
     {
@@ -316,7 +318,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Specify constraints on the query for a given morph type.
+     * Spécifie des contraintes sur la requête pour un type morph donné.
      */
     public function constrain(array $callbacks): static
     {
@@ -329,7 +331,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Indicate that soft deleted models should be included in the results.
+     * Indique que les modèles supprimés doivent être inclus dans les résultats.
      */
     public function withTrashed(): self
     {
@@ -344,7 +346,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Indicate that soft deleted models should not be included in the results.
+     * Indique que les modèles supprimés ne doivent pas être inclus dans les résultats.
      */
     public function withoutTrashed(): static
     {
@@ -359,7 +361,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Indicate that only soft deleted models should be included in the results.
+     * Indique que seuls les modèles supprimés doivent être inclus dans les résultats.
      */
     public function onlyTrashed(): static
     {
@@ -374,7 +376,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Replay stored macro calls on the actual related instance.
+     * Rejoue les appels de macro stockés sur l'instance liée réelle.
      * 
      * @param Builder<TRelatedModel>  $query
      * 
@@ -401,7 +403,7 @@ class MorphTo extends BelongsTo
     }
 
     /**
-     * Handle dynamic method calls to the relationship.
+     * Gère les appels de méthode dynamiques à la relation.
      */
     public function __call(string $method, array $parameters = []): mixed
     {
@@ -415,9 +417,9 @@ class MorphTo extends BelongsTo
             return $result;
         }
 
-        // If we tried to call a method that does not exist on the parent Builder instance,
-        // we'll assume that we want to call a query macro (e.g. withTrashed) that only
-        // exists on related models. We will just store the call and replay it later.
+        // Si nous avons essayé d'appeler une méthode qui n'existe pas sur l'instance parente Builder,
+        // nous supposerons que nous voulons appeler une macro de requête (par exemple withTrashed) qui
+        // n'existe que sur les modèles liés. Nous allons simplement stocker l'appel et le rejouer plus tard.
         catch (BadMethodCallException $e) {
             $this->macroBuffer[] = compact('method', 'parameters');
 

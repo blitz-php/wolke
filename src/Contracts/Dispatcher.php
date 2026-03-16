@@ -13,50 +13,53 @@ namespace BlitzPHP\Wolke\Contracts;
 
 use Closure;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Events\Dispatcher</a>
+ */
 interface Dispatcher
 {
     /**
-     * Register an event listener with the dispatcher.
+     * Enregistre un écouteur d'événement avec le répartiteur.
      */
     public function listen(array|Closure|string $events, array|Closure|string|null $listener = null): void;
 
     /**
-     * Determine if a given event has listeners.
+     * Détermine si un événement donné a des écouteurs.
      */
     public function hasListeners(string $eventName): bool;
 
     /**
-     * Register an event subscriber with the dispatcher.
+     * Enregistre un abonné aux événements avec le répartiteur.
      */
     public function subscribe(object|string $subscriber): void;
 
     /**
-     * Dispatch an event until the first non-null response is returned.
+     * Distribue un événement jusqu'à ce que la première réponse non nulle soit retournée.
      */
     public function until(object|string $event, mixed $payload = []): mixed;
 
     /**
-     * Dispatch an event and call the listeners.
+     * Distribue un événement et appelle les écouteurs.
      */
     public function dispatch(object|string $event, mixed $payload = [], bool $halt = false): ?array;
 
     /**
-     * Register an event and payload to be fired later.
+     * Enregistre un événement et sa charge utile pour être déclenchés plus tard.
      */
     public function push(string $event, array $payload = []): void;
 
     /**
-     * Flush a set of pushed events.
+     * Vide un ensemble d'événements mis en attente.
      */
     public function flush(string $event): void;
 
     /**
-     * Remove a set of listeners from the dispatcher.
+     * Supprime un ensemble d'écouteurs du répartiteur.
      */
     public function forget(string $event): void;
 
     /**
-     * Forget all of the queued listeners.
+     * Oublie tous les écouteurs en file d'attente.
      */
     public function forgetPushed(): void;
 }

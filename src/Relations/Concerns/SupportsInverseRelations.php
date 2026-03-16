@@ -18,17 +18,20 @@ use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Exceptions\RelationNotFoundException;
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Concerns\SupportsInverseRelations</a>
+ */
 trait SupportsInverseRelations
 {
     /**
-     * The name of the inverse relationship.
+     * Le nom de la relation inverse.
      */
     protected ?string $inverseRelationship = null;
 
     /**
-     * Instruct Wolke to link the related models back to the parent after the relationship query has run.
+     * Indique à Wolke de lier les modèles liés au parent après l'exécution de la requête de relation.
      *
-     * Alias of "chaperone".
+     * Alias de "chaperone".
      */
     public function inverse(?string $relation = null): static
     {
@@ -36,7 +39,7 @@ trait SupportsInverseRelations
     }
 
     /**
-     * Instruct Wolke to link the related models back to the parent after the relationship query has run.
+     * Indique à Wolke de lier les modèles liés au parent après l'exécution de la requête de relation.
      */
     public function chaperone(?string $relation = null): static
     {
@@ -60,7 +63,7 @@ trait SupportsInverseRelations
     }
 
     /**
-     * Guess the name of the inverse relationship.
+     * Devine le nom de la relation inverse.
      */
     protected function guessInverseRelation(): ?string
     {
@@ -71,7 +74,7 @@ trait SupportsInverseRelations
     }
 
     /**
-     * Get the possible inverse relations for the parent model.
+     * Obtient les relations inverses possibles pour le modèle parent.
      *
      * @return array<non-empty-string>
      */
@@ -87,7 +90,7 @@ trait SupportsInverseRelations
     }
 
     /**
-     * Set the inverse relation on all models in a collection.
+     * Définit la relation inverse sur tous les modèles d'une collection.
      */
     protected function applyInverseRelationToCollection(Collection $models, ?Model $parent = null): Collection
     {
@@ -101,7 +104,7 @@ trait SupportsInverseRelations
     }
 
     /**
-     * Set the inverse relation on a model.
+     * Définit la relation inverse sur un modèle.
      */
     protected function applyInverseRelationToModel(Model $model, ?Model $parent = null): Model
     {
@@ -115,7 +118,7 @@ trait SupportsInverseRelations
     }
 
     /**
-     * Get the name of the inverse relationship.
+     * Obtient le nom de la relation inverse.
      */
     public function getInverseRelationship(): ?string
     {
@@ -123,9 +126,9 @@ trait SupportsInverseRelations
     }
 
     /**
-     * Remove the chaperone / inverse relationship for this query.
+     * Supprime la relation chaperone / inverse pour cette requête.
      *
-     * Alias of "withoutChaperone".
+     * Alias de "withoutChaperone".
      */
     public function withoutInverse(): static
     {
@@ -133,7 +136,7 @@ trait SupportsInverseRelations
     }
 
     /**
-     * Remove the chaperone / inverse relationship for this query.
+     * Supprime la relation chaperone / inverse pour cette requête.
      */
     public function withoutChaperone(): static
     {

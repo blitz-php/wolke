@@ -17,7 +17,9 @@ use Attribute;
 class ObservedBy
 {
     /**
-     * Create a new attribute instance.
+     * Crée une nouvelle instance d'attribut.
+     *
+     * @param array|string $classes La ou les classes observatrices
      */
     public function __construct(array|string $classes)
     {

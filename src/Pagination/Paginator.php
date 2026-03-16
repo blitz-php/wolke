@@ -31,18 +31,20 @@ use JsonSerializable;
  * @implements ArrayAccess<TKey, TValue>
  * @implements IteratorAggregate<TKey, TValue>
  * @implements PaginatorContract<TKey, TValue>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\Paginator</a>
  */
 class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, PaginatorContract
 {
     /**
-     * Determine if there are more items in the data source.
+     * Détermine s'il y a plus d'éléments dans la source de données.
      *
      * @return bool
      */
     protected $hasMore;
 
     /**
-     * Create a new paginator instance.
+     * Crée une nouvelle instance de paginateur.
      * 
      * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>  $items
      * @param  array{path: string, query: array, fragment: ?string, pageName: string}  $options
@@ -63,7 +65,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Get the current page for the request.
+     * Obtient la page actuelle pour la requête.
      */
     protected function setCurrentPage(?int $currentPage): int
     {
@@ -73,7 +75,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Set the items for the paginator.
+     * Définit les éléments pour le paginateur.
      * 
      * @param Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null $items
      */
@@ -87,7 +89,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Get the URL for the next page.
+     * Obtient l'URL de la page suivante.
      */
     public function nextPageUrl(): ?string
     {
@@ -99,7 +101,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Render the paginator using the given view.
+     * Affiche le paginateur en utilisant la vue donnée.
      */
     public function links(?string $view = null, array $data = []): string
     {
@@ -107,7 +109,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Render the paginator using the given view.
+     * Affiche le paginateur en utilisant la vue donnée.
      */
     public function render(?string $view = null, array $data = []): string
     {
@@ -117,7 +119,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Manually indicate that the paginator does have more pages.
+     * Indique manuellement que le paginateur a plus de pages.
      */
     public function hasMorePagesWhen(bool $hasMore = true): static
     {
@@ -127,7 +129,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Determine if there are more items in the data source.
+     * Détermine s'il y a plus d'éléments dans la source de données.
      */
     public function hasMorePages(): bool
     {
@@ -135,7 +137,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Get the instance as an array.
+     * Obtient l'instance sous forme de tableau.
      */
     public function toArray(): array
     {
@@ -154,7 +156,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Convert the object into something JSON serializable.
+     * Convertit l'objet en quelque chose de sérialisable en JSON.
      */
     public function jsonSerialize(): array
     {
@@ -162,7 +164,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Convert the object to its JSON representation.
+     * Convertit l'objet en sa représentation JSON.
      */
     public function toJson(int $options = 0): string
     {
@@ -170,7 +172,7 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Convert the object to pretty print formatted JSON.
+     * Convertit l'objet en JSON formaté de façon jolie.
      */
     public function toPrettyJson(int $options = 0): string
     {

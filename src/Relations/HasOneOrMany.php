@@ -11,12 +11,9 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
-use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
 use BlitzPHP\Utilities\Helpers;
-use BlitzPHP\Utilities\Invade\Invader;
 use BlitzPHP\Utilities\Iterable\Arr;
-use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
 use BlitzPHP\Wolke\Model;
@@ -30,6 +27,8 @@ use Closure;
  * @template TResult
  *
  * @extends Relation<TRelatedModel, TDeclaringModel, TResult>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasOneOrMany</a>
  */
 abstract class HasOneOrMany extends Relation
 {
@@ -37,12 +36,12 @@ abstract class HasOneOrMany extends Relation
     use SupportsInverseRelations;
 
     /**
-     * Create a new has one or many relationship instance.
+     * Crée une nouvelle instance de relation has one ou many.
      *
      * @param Builder<TRelatedModel>  $query
      * @param TDeclaringModel  $parent
-     * @param string $foreignKey The foreign key of the parent model.
-     * @param string $localKey   The local key of the parent model.
+     * @param string $foreignKey La clé étrangère du modèle parent.
+     * @param string $localKey   La clé locale du modèle parent.
      */
     public function __construct(Builder $query, Model $parent, protected string $foreignKey, protected string $localKey)
     {
@@ -50,7 +49,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create and return an un-saved instance of the related model.
+     * Crée et retourne une instance non sauvegardée du modèle lié.
      * 
      * @return TRelatedModel
      */
@@ -63,7 +62,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create and return an un-saved instance of the related models.
+     * Crée et retourne des instances non sauvegardées des modèles liés.
      * 
      * @return Collection<int, TRelatedModel>
      */
@@ -79,7 +78,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Set the base constraints on the relation query.
+     * Définit les contraintes de base sur la requête de relation.
      */
     public function addConstraints(): void
     {
@@ -108,7 +107,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Match the eagerly loaded results to their single parents.
+     * Fait correspondre les résultats chargés avec empressement à leurs parents uniques.
      *
      * @param array<int, TDeclaringModel>  $models
      * @param Collection<int, TRelatedModel>  $results
@@ -121,7 +120,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Match the eagerly loaded results to their many parents.
+     * Fait correspondre les résultats chargés avec empressement à leurs parents multiples.
      *
      * @param array<int, TDeclaringModel>  $models
      * @param Collection<int, TRelatedModel>  $results
@@ -134,7 +133,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Match the eagerly loaded results to their many parents.
+     * Fait correspondre les résultats chargés avec empressement à leurs parents multiples.
      *
      * @param array<int, TDeclaringModel>  $models
      * @param Collection<int, TRelatedModel>  $results
@@ -145,9 +144,9 @@ abstract class HasOneOrMany extends Relation
     {
         $dictionary = $this->buildDictionary($results);
 
-        // Once we have the dictionary we can simply spin through the parent models to
-        // link them up with their children using the keyed dictionary to make the
-        // matching very convenient and easy work. Then we'll just return them.
+        // Une fois que nous avons le dictionnaire, nous pouvons simplement parcourir les modèles parents pour
+        // les lier à leurs enfants en utilisant le dictionnaire indexé par clé pour rendre la
+        // correspondance très pratique et facile à travailler. Ensuite, nous les retournerons.
         foreach ($models as $model) {
             $key = $this->getDictionaryKey($model->getAttribute($this->localKey));
 
@@ -156,7 +155,7 @@ abstract class HasOneOrMany extends Relation
 
                 $model->setRelation($relation, $related);
 
-                // Apply the inverse relation if we have one...
+                // Applique la relation inverse si nous en avons une...
                 $type === 'one'
                     ? $this->applyInverseRelationToModel($related, $model)
                     : $this->applyInverseRelationToCollection($related, $model);
@@ -167,7 +166,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Get the value of a relationship by one or many type.
+     * Obtient la valeur d'une relation par type one ou many.
      */
     protected function getRelationValue(array $dictionary, string $key, string $type): mixed
     {
@@ -177,7 +176,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Build model dictionary keyed by the relation's foreign key.
+     * Construit un dictionnaire de modèles indexé par la clé étrangère de la relation.
      * 
      * @param Collection<int, TRelatedModel>  $results
      * 
@@ -205,7 +204,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Find a model by its primary key or return a new instance of the related model.
+     * Trouve un modèle par sa clé primaire ou retourne une nouvelle instance du modèle lié.
      *
      * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel)
      */
@@ -221,7 +220,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Get the first related model record matching the attributes or instantiate it.
+     * Obtient le premier modèle lié correspondant aux attributs ou l'instancie.
      * 
      * @return TRelatedModel
      */
@@ -237,7 +236,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Get the first related record matching the attributes or create it.
+     * Obtient le premier enregistrement lié correspondant aux attributs ou le crée.
      * 
      * @param  (Closure(): array)|array  $values
      * 
@@ -253,7 +252,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
+     * Tente de créer l'enregistrement. Si une violation de contrainte unique se produit, tente de trouver l'enregistrement correspondant.
      * 
      * @param  (Closure(): array)|array  $values
      * 
@@ -269,7 +268,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create or update a related record matching the attributes, and fill it with values.
+     * Crée ou met à jour un enregistrement lié correspondant aux attributs, et le remplit avec des valeurs.
      * 
      * @return TRelatedModel
      */
@@ -283,7 +282,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Insert new records or update the existing ones.
+     * Insère de nouveaux enregistrements ou met à jour ceux existants.
      */
     public function upsert(array $values, array|string $uniqueBy, ?array $update = null): int
     {
@@ -299,7 +298,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Attach a model instance to the parent model.
+     * Attache une instance de modèle au modèle parent.
      *
      * @param  TRelatedModel  $model
      * 
@@ -313,7 +312,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Attach a model instance without raising any events to the parent model.
+     * Attache une instance de modèle au modèle parent sans déclencher d'événements.
      *
      * @param  TRelatedModel  $model
      * 
@@ -325,7 +324,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Attach a collection of models to the parent instance.
+     * Attache une collection de modèles à l'instance parente.
      *
      * @param  iterable<TRelatedModel>  $models
      * 
@@ -341,7 +340,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Attach a collection of models to the parent instance without raising any events to the parent model.
+     * Attache une collection de modèles à l'instance parente sans déclencher d'événements.
      *
      * @param  iterable<TRelatedModel>  $models
      * 
@@ -353,7 +352,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create a new instance of the related model.
+     * Crée une nouvelle instance du modèle lié.
      */
     public function create(array $attributes = []): Model
     {
@@ -367,7 +366,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create a new instance of the related model without raising any events to the parent model.
+     * Crée une nouvelle instance du modèle lié sans déclencher d'événements.
      */
     public function createQuietly(array $attributes = []): Model
     {
@@ -375,7 +374,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create a new instance of the related model. Allow mass-assignment.
+     * Crée une nouvelle instance du modèle lié. Permet l'assignation en masse.
      * 
      * @return TRelatedModel
      */
@@ -387,7 +386,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create a new instance of the related model with mass assignment without raising model events.
+     * Crée une nouvelle instance du modèle lié avec assignation en masse sans déclencher d'événements.
      * 
      * @return TRelatedModel
      */
@@ -397,7 +396,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create a Collection of new instances of the related model.
+     * Crée une Collection de nouvelles instances du modèle lié.
      * 
      * @return Collection<int, TRelatedModel>
      */
@@ -413,7 +412,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create a Collection of new instances of the related model without raising any events to the parent model.
+     * Crée une Collection de nouvelles instances du modèle lié sans déclencher d'événements.
      * 
      * @return Collection<int, TRelatedModel>
      */
@@ -423,7 +422,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create a Collection of new instances of the related model, allowing mass-assignment.
+     * Crée une Collection de nouvelles instances du modèle lié, permettant l'assignation en masse.
      *
      * @param  iterable  $records
      * 
@@ -441,7 +440,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Create a Collection of new instances of the related model, allowing mass-assignment and without raising any events to the parent model.
+     * Crée une Collection de nouvelles instances du modèle lié, permettant l'assignation en masse et sans déclencher d'événements.
      *
      * @return Collection<int, TRelatedModel>
      */
@@ -451,7 +450,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Set the foreign ID for creating a related model.
+     * Définit l'ID étranger pour la création d'un modèle lié.
      * 
      * @param  TRelatedModel  $model
      */
@@ -483,12 +482,12 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Add the constraints for a relationship query on the same table.
+     * Ajoute les contraintes pour une requête de relation sur la même table.
      *
      * @param Builder<TRelatedModel>  $query
      * @param Builder<TDeclaringModel>  $parentQuery
      * 
-     * @returnBuilder<TRelatedModel>
+     * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQueryForSelfRelation(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
@@ -504,7 +503,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Get the key for comparing against the parent key in "has" query.
+     * Obtient la clé pour la comparaison avec la clé parente dans la requête "has".
      */
     public function getExistenceCompareKey(): string
     {
@@ -512,7 +511,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Get the key value of the parent's local key.
+     * Obtient la valeur de la clé de la clé locale du parent.
      */
     public function getParentKey(): mixed
     {
@@ -528,7 +527,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Get the plain foreign key.
+     * Obtient la clé étrangère simple.
      */
     public function getForeignKeyName(): string
     {
@@ -538,7 +537,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Get the foreign key for the relationship.
+     * Obtient la clé étrangère pour la relation.
      */
     public function getQualifiedForeignKeyName(): string
     {
@@ -546,7 +545,7 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
-     * Get the local key for the relationship.
+     * Obtient la clé locale pour la relation.
      */
     public function getLocalKeyName(): string
     {

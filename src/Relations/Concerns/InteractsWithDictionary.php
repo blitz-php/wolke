@@ -15,10 +15,13 @@ use BlitzPHP\Utilities\Helpers;
 use InvalidArgumentException;
 use UnitEnum;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Concerns\InteractsWithDictionary</a>
+ */
 trait InteractsWithDictionary
 {
     /**
-     * Get a dictionary key attribute - casting it to a string if necessary.
+     * Obtient une clé de dictionnaire - en la convertissant en chaîne si nécessaire.
      *
      * @throws InvalidArgumentException
      */
@@ -33,7 +36,7 @@ trait InteractsWithDictionary
                 return Helpers::enumValue($attribute);
             }
 
-            throw new InvalidArgumentException('Model attribute value is an object but does not have a __toString method.');
+            throw new InvalidArgumentException('La valeur de l\'attribut du modèle est un objet mais n\'a pas de méthode __toString.');
         }
 
         return $attribute;

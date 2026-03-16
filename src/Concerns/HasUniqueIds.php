@@ -11,15 +11,18 @@
 
 namespace BlitzPHP\Wolke\Concerns;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasUniqueIds</a>
+ */
 trait HasUniqueIds
 {
     /**
-     * Indicates if the model uses unique ids.
+     * Indique si le modèle utilise des identifiants uniques.
      */
     public bool $usesUniqueIds = false;
 
     /**
-     * Determine if the model uses unique ids.
+     * Détermine si le modèle utilise des identifiants uniques.
      */
     public function usesUniqueIds(): bool
     {
@@ -27,7 +30,7 @@ trait HasUniqueIds
     }
 
     /**
-     * Generate unique keys for the model.
+     * Génère des clés uniques pour le modèle.
      */
     public function setUniqueIds(): void
     {
@@ -39,7 +42,7 @@ trait HasUniqueIds
     }
 
     /**
-     * Generate a new key for the model.
+     * Génère une nouvelle clé pour le modèle.
      */
     public function newUniqueId(): ?string
     {
@@ -47,7 +50,7 @@ trait HasUniqueIds
     }
 
     /**
-     * Get the columns that should receive a unique identifier.
+     * Obtient les colonnes qui doivent recevoir un identifiant unique.
      */
     public function uniqueIds(): array
     {

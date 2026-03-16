@@ -17,31 +17,31 @@ namespace BlitzPHP\Wolke\Casts;
 class Attribute
 {
     /**
-     * The attribute accessor.
+     * L'accesseur d'attribut.
      *
      * @var callable
      */
     public $get;
 
     /**
-     * The attribute mutator.
+     * Le mutateur d'attribut.
      *
      * @var callable
      */
     public $set;
 
     /**
-     * Indicates if caching is enabled for this attribute.
+     * Indique si la mise en cache est activée pour cet attribut.
      */
     public bool $withCaching = false;
 
     /**
-     * Indicates if caching of objects is enabled for this attribute.
+     * Indique si la mise en cache des objets est activée pour cet attribut.
      */
     public bool $withObjectCaching = true;
 
     /**
-     * Create a new attribute accessor / mutator.
+     * Crée un nouvel accesseur/mutateur d'attribut.
      */
     public function __construct(?callable $get = null, ?callable $set = null)
     {
@@ -50,7 +50,7 @@ class Attribute
     }
 
     /**
-     * Create a new attribute accessor / mutator.
+     * Crée un nouvel accesseur/mutateur d'attribut.
      */
     public static function make(?callable $get = null, ?callable $set = null): static
     {
@@ -58,7 +58,7 @@ class Attribute
     }
 
     /**
-     * Create a new attribute accessor.
+     * Crée un nouvel accesseur d'attribut.
      */
     public static function get(callable $get): static
     {
@@ -66,7 +66,7 @@ class Attribute
     }
 
     /**
-     * Create a new attribute mutator.
+     * Crée un nouveau mutateur d'attribut.
      */
     public static function set(callable $set): static
     {
@@ -74,7 +74,7 @@ class Attribute
     }
 
     /**
-     * Disable object caching for the attribute.
+     * Désactive la mise en cache des objets pour l'attribut.
      */
     public function withoutObjectCaching(): self
     {
@@ -84,7 +84,7 @@ class Attribute
     }
 
     /**
-     * Enable caching for the attribute.
+     * Active la mise en cache pour l'attribut.
      */
     public function shouldCache(): self
     {

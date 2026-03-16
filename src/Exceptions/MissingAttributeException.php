@@ -14,15 +14,18 @@ namespace BlitzPHP\Wolke\Exceptions;
 use BlitzPHP\Wolke\Model;
 use OutOfBoundsException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\MissingAttributeException</a>
+ */
 class MissingAttributeException extends OutOfBoundsException
 {
     /**
-     * Create a new missing attribute exception instance.
+     * Crée une nouvelle instance d'exception d'attribut manquant.
      */
     public function __construct(Model $model, string $key)
     {
         parent::__construct(sprintf(
-            'The attribute [%s] either does not exist or was not retrieved for model [%s].',
+            'L\'attribut [%s] n\'existe pas ou n\'a pas été récupéré pour le modèle [%s].',
             $key,
             get_class($model)
         ));

@@ -17,9 +17,9 @@ use Attribute;
 class CollectedBy
 {
     /**
-     * Create a new attribute instance.
+     * Crée une nouvelle instance d'attribut.
      *
-     * @param  class-string<\BlitzPHP\Wolke\Collection<*, *>>  $collectionClass
+     * @param class-string<\BlitzPHP\Wolke\Collection<*, *>> $collectionClass La classe de collection à utiliser
      */
     public function __construct(public string $collectionClass)
     {

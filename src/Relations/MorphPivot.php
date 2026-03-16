@@ -14,28 +14,31 @@ namespace BlitzPHP\Wolke\Relations;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Wolke\Builder;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphPivot</a>
+ */
 class MorphPivot extends Pivot
 {
     /**
-     * The type of the polymorphic relation.
+     * Le type de la relation polymorphe.
      *
-     * Explicitly define this so it's not included in saved attributes.
+     * Défini explicitement pour ne pas être inclus dans les attributs sauvegardés.
      *
      * @var string
      */
     protected $morphType;
 
     /**
-     * The value of the polymorphic relation.
+     * La valeur de la relation polymorphe.
      *
-     * Explicitly define this so it's not included in saved attributes.
+     * Défini explicitement pour ne pas être inclus dans les attributs sauvegardés.
      *
      * @var string
      */
     protected $morphClass;
 
     /**
-     * Set the keys for a save update query.
+     * Définit les clés pour une requête de sauvegarde de mise à jour.
      *
      * @param  Builder<static>  $query
      * @return Builder<static>
@@ -48,7 +51,7 @@ class MorphPivot extends Pivot
     }
 
     /**
-     * Set the keys for a select query.
+     * Définit les clés pour une requête de sélection.
      *
      * @param  Builder<static>  $query
      * @return Builder<static>
@@ -61,7 +64,7 @@ class MorphPivot extends Pivot
     }
 
     /**
-     * Delete the pivot model record from the database.
+     * Supprime l'enregistrement du modèle pivot de la base de données.
      *
      * @return int
      */
@@ -87,7 +90,7 @@ class MorphPivot extends Pivot
     }
 
     /**
-     * Get the morph type for the pivot.
+     * Obtient le type morph pour le pivot.
      */
     public function getMorphType(): string
     {
@@ -95,7 +98,7 @@ class MorphPivot extends Pivot
     }
 
     /**
-     * Set the morph type for the pivot.
+     * Définit le type morph pour le pivot.
      */
     public function setMorphType(string $morphType): static
     {
@@ -105,7 +108,7 @@ class MorphPivot extends Pivot
     }
 
     /**
-     * Set the morph class for the pivot.
+     * Définit la classe morph pour le pivot.
      * 
      * @param  class-string  $morphClass
      */
@@ -117,7 +120,7 @@ class MorphPivot extends Pivot
     }
 
     /**
-     * Get the queueable identity for the entity.
+     * Obtient l'identité mise en file d'attente pour l'entité.
      */
     public function getQueueableId(): mixed
     {
@@ -137,7 +140,7 @@ class MorphPivot extends Pivot
     }
 
     /**
-     * Get a new query to restore one or more models by their queueable IDs.
+     * Obtient une nouvelle requête pour restaurer un ou plusieurs modèles par leurs IDs de file d'attente.
      *
      * @param list<int>|list<string>|string $ids
      * 
@@ -162,7 +165,7 @@ class MorphPivot extends Pivot
     }
 
     /**
-     * Get a new query to restore multiple models by their queueable IDs.
+     * Obtient une nouvelle requête pour restaurer plusieurs modèles par leurs IDs de file d'attente.
      *
      * @return Builder<static>
      */

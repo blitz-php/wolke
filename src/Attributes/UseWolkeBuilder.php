@@ -17,9 +17,9 @@ use Attribute;
 class UseWolkeBuilder
 {
     /**
-     * Create a new attribute instance.
+     * Crée une nouvelle instance d'attribut.
      *
-     * @param  class-string<\BlitzPHP\Wolke\Builder>  $builderClass
+     * @param class-string<\BlitzPHP\Wolke\Builder> $builderClass Le query builder à utiliser
      */
     public function __construct(public string $builderClass)
     {

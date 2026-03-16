@@ -14,17 +14,20 @@ namespace BlitzPHP\Wolke;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Wolke\Contracts\Scope;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\SoftDeletingScope</a>
+ */
 class SoftDeletingScope implements Scope
 {
     /**
-     * All of the extensions to be added to the builder.
+     * Toutes les extensions à ajouter au constructeur de requête.
      *
      * @var list<string>
      */
     protected array $extensions = ['Restore', 'RestoreOrCreate', 'CreateOrRestore', 'WithTrashed', 'WithoutTrashed', 'OnlyTrashed'];
 
     /**
-     * Apply the scope to a given Eloquent query builder.
+     * Applique la portée à un constructeur de requête Eloquent donné.
      *
      * @template TModel of Model
      *
@@ -37,7 +40,7 @@ class SoftDeletingScope implements Scope
     }
 
     /**
-     * Extend the query builder with the needed functions.
+     * Étend le constructeur de requête avec les fonctions nécessaires.
      * 
      * @param Builder<*> $builder
      */
@@ -57,7 +60,7 @@ class SoftDeletingScope implements Scope
     }
 
     /**
-     * Get the "deleted at" column for the builder.
+     * Obtient la colonne "deleted at" pour le constructeur.
      * 
      * @param Builder<*> $builder
      */
@@ -71,7 +74,7 @@ class SoftDeletingScope implements Scope
     }
 
     /**
-     * Add the restore extension to the builder.
+     * Ajoute l'extension restore au constructeur.
      * 
      * @param Builder<*> $builder
      */
@@ -85,7 +88,7 @@ class SoftDeletingScope implements Scope
     }
 
     /**
-     * Add the restore-or-create extension to the builder.
+     * Ajoute l'extension restore-or-create au constructeur.
      * 
      * @param Builder<*> $builder
      */
@@ -101,7 +104,7 @@ class SoftDeletingScope implements Scope
     }
 
     /**
-     * Add the create-or-restore extension to the builder.
+     * Ajoute l'extension create-or-restore au constructeur.
      * 
      * @param Builder<*> $builder
      */
@@ -117,7 +120,7 @@ class SoftDeletingScope implements Scope
     }
 
     /**
-     * Add the with-trashed extension to the builder.
+     * Ajoute l'extension with-trashed au constructeur.
      * 
      * @param Builder<*> $builder
      */
@@ -133,7 +136,7 @@ class SoftDeletingScope implements Scope
     }
 
     /**
-     * Add the without-trashed extension to the builder.
+     * Ajoute l'extension without-trashed au constructeur.
      * 
      * @param Builder<*> $builder
      */
@@ -151,7 +154,7 @@ class SoftDeletingScope implements Scope
     }
 
     /**
-     * Add the only-trashed extension to the builder.
+     * Ajoute l'extension only-trashed au constructeur.
      * 
      * @param Builder<*> $builder
      */

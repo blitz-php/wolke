@@ -24,6 +24,8 @@ use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
  * @template TDeclaringModel of Model
  *
  * @extends Relation<TRelatedModel, TDeclaringModel, ?TRelatedModel>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\BelongsTo</a>
  */
 class BelongsTo extends Relation
 {
@@ -32,26 +34,26 @@ class BelongsTo extends Relation
     use SupportsDefaultModels;
 
     /**
-     * The child model instance of the relation.
+     * L'instance du modèle enfant de la relation.
      *
      * @var TDeclaringModel
      */
     protected Model $child;
 
     /**
-     * Create a new belongs to relationship instance.
+     * Crée une nouvelle instance de relation belongs to.
      *
      * @param Builder<TRelatedModel>  $query
      * @param TDeclaringModel  $child
-     * @param string $foreignKey    The foreign key of the parent model.
-     * @param ?string $ownerKey     The associated key on the parent model.
-     * @param string $relationName  The name of the relationship.
+     * @param string $foreignKey    La clé étrangère du modèle parent.
+     * @param ?string $ownerKey      La clé associée sur le modèle parent.
+     * @param string $relationName   Le nom de la relation.
      */
     public function __construct(Builder $query, Model $child, protected string $foreignKey, protected ?string $ownerKey, protected string $relationName)
     {
-        // In the underlying base relationship class, this variable is referred to as
-        // the "parent" since most relationships are not inversed. But, since this
-        // one is we will create a "child" variable for much better readability.
+        // Dans la classe de relation de base sous-jacente, cette variable est appelée
+        // "parent" car la plupart des relations ne sont pas inversées. Mais comme celle-ci
+        // l'est, nous créerons une variable "enfant" pour une bien meilleure lisibilité.
         $this->child = $child;
 
         parent::__construct($query, $child);
@@ -75,9 +77,9 @@ class BelongsTo extends Relation
     public function addConstraints(): void
     {
         if (static::$constraints) {
-            // For belongs to relationships, which are essentially the inverse of has one
-            // or has many relationships, we need to actually query on the primary key
-            // of the related models matching on the foreign key that's on a parent.
+            // Pour les relations belongs to, qui sont essentiellement l'inverse des relations has one
+            // ou has many, nous devons en fait interroger sur la clé primaire
+            // des modèles liés correspondant à la clé étrangère qui se trouve sur un parent.
             $key = $this->getQualifiedOwnerKeyName();
 
             $this->query->where($key, '=', $this->getForeignKeyFrom($this->child));
@@ -89,9 +91,9 @@ class BelongsTo extends Relation
      */
     public function addEagerConstraints(array $models): void
     {
-        // We'll grab the primary key name of the related models since it could be set to
-        // a non-standard name and not "id". We will then construct the constraint for
-        // our eagerly loading query so it returns the proper models from execution.
+        // Nous allons récupérer le nom de la clé primaire des modèles liés car il pourrait être défini sur
+        // un nom non standard et pas "id". Nous allons ensuite construire la contrainte pour
+        // notre requête de chargement empressé afin qu'elle renvoie les bons modèles lors de l'exécution.
         $key = $this->getQualifiedOwnerKeyName();
 
         $whereIn = $this->whereInMethod($this->related, $this->ownerKey);
@@ -100,7 +102,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Gather the keys from an array of related models.
+     * Rassemble les clés d'un tableau de modèles liés.
      *
      * @param  array<int, TDeclaringModel>  $models
      */
@@ -108,9 +110,9 @@ class BelongsTo extends Relation
     {
         $keys = [];
 
-        // First we need to gather all of the keys from the parent models so we know what
-        // to query for via the eager loading query. We will add them to an array then
-        // execute a "where in" statement to gather up all of those related records.
+        // Nous devons d'abord rassembler toutes les clés des modèles parents afin de savoir
+        // quoi interroger via la requête de chargement empressé. Nous les ajouterons à un tableau
+        // puis exécuterons une déclaration "where in" pour rassembler tous ces enregistrements liés.
         foreach ($models as $model) {
             if (null !== ($value = $this->getForeignKeyFrom($model))) {
                 $keys[] = $value;
@@ -135,13 +137,13 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Match the eagerly loaded results to their parents.
+     * Fait correspondre les résultats chargés avec empressement à leurs parents.
      */
     public function match(array $models, Collection $results, string $relation): array
     {
-        // First we will get to build a dictionary of the child models by their primary
-        // key of the relationship, then we can easily match the children back onto
-        // the parents using that dictionary and the primary key of the children.
+        // Nous allons d'abord construire un dictionnaire des modèles enfants par leur clé primaire
+        // de la relation, puis nous pourrons facilement faire correspondre les enfants sur
+        // les parents en utilisant ce dictionnaire et la clé primaire des enfants.
         $dictionary = [];
 
         foreach ($results as $result) {
@@ -150,9 +152,9 @@ class BelongsTo extends Relation
             $dictionary[$attribute] = $result;
         }
 
-        // Once we have the dictionary constructed, we can loop through all the parents
-        // and match back onto their children using these keys of the dictionary and
-        // the primary key of the children to map them onto the correct instances.
+        // Une fois que nous avons construit le dictionnaire, nous pouvons parcourir tous les parents
+        // et faire correspondre leurs enfants en utilisant ces clés du dictionnaire et
+        // la clé primaire des enfants pour les mapper sur les bonnes instances.
         foreach ($models as $model) {
             $attribute = $this->getDictionaryKey($this->getForeignKeyFrom($model));
 
@@ -165,7 +167,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Associate the model instance to the given parent.
+     * Associe l'instance de modèle au parent donné.
      *
      * @param  TRelatedModel|int|string|null  $model
      * @return TDeclaringModel
@@ -186,7 +188,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Dissociate previously associated model from the given parent.
+     * Dissocie le modèle précédemment associé du parent donné.
      *
      * @return TDeclaringModel
      */
@@ -198,7 +200,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Alias of "dissociate" method.
+     * Alias de la méthode "dissociate".
      *
      * @return TDeclaringModel
      */
@@ -208,7 +210,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Touch all of the related models for the relationship.
+     * Touche tous les modèles liés pour la relation.
      */
     public function touch(): void
     {
@@ -234,7 +236,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Add the constraints for a relationship query on the same table.
+     * Ajoute les contraintes pour une requête de relation sur la même table.
      *
      * @param Builder<TRelatedModel> $query
      * @param Builder<TDeclaringModel> $parentQuery
@@ -257,7 +259,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Determine if the related model has an auto-incrementing ID.
+     * Détermine si le modèle lié a un ID auto-incrémenté.
      */
     protected function relationHasIncrementingId(): bool
     {
@@ -266,7 +268,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Make a new related instance for the given model.
+     * Crée une nouvelle instance liée pour le modèle donné.
      *
      * @param  TDeclaringModel  $parent
      * 
@@ -278,7 +280,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the child of the relationship.
+     * Obtient l'enfant de la relation.
      *
      * @return TDeclaringModel
      */
@@ -288,7 +290,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the foreign key of the relationship.
+     * Obtient le nom de la clé étrangère de la relation.
      */
     public function getForeignKeyName(): string
     {
@@ -296,7 +298,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the fully qualified foreign key of the relationship.
+     * Obtient la clé étrangère complètement qualifiée de la relation.
      */
     public function getQualifiedForeignKeyName(): string
     {
@@ -304,7 +306,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the key value of the child's foreign key.
+     * Obtient la valeur de la clé de la clé étrangère de l'enfant.
      */
     public function getParentKey(): mixed
     {
@@ -312,7 +314,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the associated key of the relationship.
+     * Obtient le nom de la clé associée de la relation.
      */
     public function getOwnerKeyName(): string
     {
@@ -320,7 +322,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the fully qualified associated key of the relationship.
+     * Obtient la clé associée complètement qualifiée de la relation.
      */
     public function getQualifiedOwnerKeyName(): string
     {
@@ -328,7 +330,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the value of the model's associated key.
+     * Obtient la valeur de la clé associée du modèle.
      *
      * @param  TRelatedModel  $model
      * 
@@ -340,7 +342,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the value of the model's foreign key.
+     * Obtient la valeur de la clé étrangère du modèle.
      *
      * @param TDeclaringModel $model
      */
@@ -352,7 +354,7 @@ class BelongsTo extends Relation
     }
 
     /**
-     * Get the name of the relationship.
+     * Obtient le nom de la relation.
      */
     public function getRelationName(): string
     {

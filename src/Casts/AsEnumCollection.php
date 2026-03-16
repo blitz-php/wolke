@@ -22,11 +22,11 @@ use BlitzPHP\Wolke\Model;
 class AsEnumCollection implements Castable
 {
     /**
-     * Get the caster class to use when casting from / to this cast target.
+     * Obtient la classe de cast à utiliser pour le casting depuis/vers cette cible de cast.
      *
      * @template TEnum of \UnitEnum
      *
-     * @param array{class-string<TEnum>} $arguments
+     * @param array{class-string<TEnum>} $arguments Les arguments du cast
      *
      * @return CastsAttributes<Collection<array-key, TEnum>, iterable<TEnum>>
      */
@@ -82,9 +82,9 @@ class AsEnumCollection implements Castable
     }
 
     /**
-     * Specify the Enum for the cast.
+     * Spécifie l'Enum pour le cast.
      *
-     * @param  class-string  $class
+     * @param class-string $class La classe Enum à utiliser
      */
     public static function of(string $class): string
     {

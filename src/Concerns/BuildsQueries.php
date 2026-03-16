@@ -30,13 +30,15 @@ use InvalidArgumentException;
  * @template TValue of Model|object|static
  * 
  * @mixin \BlitzPHP\Wolke\Builder
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\BuildsQueries</a>
  */
 trait BuildsQueries
 {
     use BaseBuildsQueries;
 
     /**
-     * All of the available clause operators.
+     * Tous les opérateurs de clause disponibles.
      *
      * @var list<string>
      */
@@ -50,7 +52,7 @@ trait BuildsQueries
     ];
 
     /**
-     * Merge an array of where clauses and bindings.
+     * Fusionne un tableau de clauses where et de liaisons.
      */
     public function mergeWheres(array $wheres, array $bindings): static
     {
@@ -73,7 +75,7 @@ trait BuildsQueries
     }
 
     /**
-     * Add an exists clause to the query.
+     * Ajoute une clause exists à la requête.
      */
     public function addWhereExistsQuery(BaseBuilder $query, string $boolean = 'and', bool $not = false): static
     {
@@ -87,7 +89,7 @@ trait BuildsQueries
     }
 
     /**
-     * Get a lazy collection for the given query.
+     * Obtient une collection paresseuse pour la requête donnée.
      */
     public function cursor(): LazyCollection
     {
@@ -97,7 +99,7 @@ trait BuildsQueries
     }
 
     /**
-     * Prepare the value and operator for a where clause.
+     * Prépare la valeur et l'opérateur pour une clause where.
      *
      * @throws InvalidArgumentException
      */
@@ -107,16 +109,16 @@ trait BuildsQueries
             return [$operator, '='];
         }
         if ($this->invalidOperatorAndValue($operator, $value)) {
-            throw new InvalidArgumentException('Illegal operator and value combination.');
+            throw new InvalidArgumentException('Combinaison opérateur et valeur illégale.');
         }
 
         return [$value, $operator];
     }
 
     /**
-     * Determine if the given operator and value combination is legal.
+     * Détermine si la combinaison opérateur et valeur donnée est légale.
      *
-     * Prevents using Null values with invalid operators.
+     * Empêche l'utilisation de valeurs Null avec des opérateurs invalides.
      */
     protected function invalidOperatorAndValue(?string $operator, mixed $value): bool
     {
@@ -125,7 +127,7 @@ trait BuildsQueries
     }
 
     /**
-     * Chunk the results of a query by comparing IDs in a given order.
+     * Traite les résultats d'une requête par lots en comparant les ID dans un ordre donné.
      */
     public function orderedChunkById(int $count, callable $callback, ?string $column = null, ?string $alias = null, bool $descending = false): bool
     {
@@ -135,7 +137,7 @@ trait BuildsQueries
     }
 
     /**
-     * Query lazily, by chunking the results of a query by comparing IDs in a given order.
+     * Interroge paresseusement, en traitant les résultats d'une requête par lots en comparant les ID dans un ordre donné.
      *
      * @throws InvalidArgumentException
      */
@@ -147,7 +149,7 @@ trait BuildsQueries
     }
 
     /**
-     * Execute the query and get the first result.
+     * Exécute la requête et obtient le premier résultat.
      *
      * @return TValue|null
      */
@@ -157,7 +159,7 @@ trait BuildsQueries
     }
 
     /**
-     * Paginate the given query using a cursor paginator.
+     * Pagine la requête donnée en utilisant un curseur.
      */
     protected function paginateUsingCursor(int $perPage, array|string $columns = ['*'], string $cursorName = 'cursor', Cursor|string|null $cursor = null): CursorPaginator
     {
@@ -170,7 +172,7 @@ trait BuildsQueries
         $orders = $this->ensureOrderForCursorPagination(null !== $cursor && $cursor->pointsToPreviousItems());
 
         if (null !== $cursor) {
-            // Reset the union bindings so we can add the cursor where in the correct position...
+            // Réinitialise les liaisons union pour pouvoir ajouter le curseur where à la bonne position...
             // Invader::make($this->query)->unions = [];    
 
             $addCursorConditions = function (self $builder, $previousColumn, $originalColumn, $i) use (&$addCursorConditions, $cursor, $orders) {
@@ -251,7 +253,7 @@ trait BuildsQueries
     }
 
     /**
-     * Get the original column name of the given column, without any aliasing.
+     * Obtient le nom de colonne original de la colonne donnée, sans alias.
      */
     protected function getOriginalColumnNameForCursorPagination(BaseBuilder|Builder $builder, string $parameter): string
     {
@@ -275,7 +277,7 @@ trait BuildsQueries
     }
 
     /**
-     * Create a new length-aware paginator instance.
+     * Crée une nouvelle instance de paginateur aware de la longueur.
      */
     protected function paginator(Collection $items, int $total, int $perPage, int $currentPage, array $options): LengthAwarePaginator
     {
@@ -283,7 +285,7 @@ trait BuildsQueries
     }
 
     /**
-     * Create a new simple paginator instance.
+     * Crée une nouvelle instance de paginateur simple.
      */
     protected function simplePaginator(Collection $items, int $perPage, int $currentPage, array $options): Paginator
     {
@@ -291,7 +293,7 @@ trait BuildsQueries
     }
 
     /**
-     * Create a new cursor paginator instance.
+     * Crée une nouvelle instance de paginateur à curseur.
      */
     protected function cursorPaginator(Collection $items, int $perPage, Cursor $cursor, array $options): CursorPaginator
     {

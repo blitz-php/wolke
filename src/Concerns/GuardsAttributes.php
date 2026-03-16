@@ -11,36 +11,39 @@
 
 namespace BlitzPHP\Wolke\Concerns;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\GuardsAttributes</a>
+ */
 trait GuardsAttributes
 {
     /**
-     * The attributes that are mass assignable.
+     * Les attributs qui sont assignables en masse.
      *
      * @var list<string>
      */
     protected array $fillable = [];
 
     /**
-     * The attributes that aren't mass assignable.
+     * Les attributs qui ne sont pas assignables en masse.
      *
      * @var list<string>
      */
     protected array $guarded = ['*'];
 
     /**
-     * Indicates if all mass assignment is enabled.
+     * Indique si toutes les assignations en masse sont activées.
      */
     protected static bool $unguarded = false;
 
     /**
-     * The actual columns that exist on the database and can be guarded.
+     * Les colonnes réelles qui existent dans la base de données et qui peuvent être protégées.
      * 
      * @var array<class-string,list<string>>
      */
     protected static array $guardableColumns = [];
 
     /**
-     * Get the fillable attributes for the model.
+     * Obtient les attributs fillable pour le modèle.
      */
     public function getFillable(): array
     {
@@ -48,7 +51,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Set the fillable attributes for the model.
+     * Définit les attributs fillable pour le modèle.
      */
     public function fillable(array $fillable): self
     {
@@ -58,7 +61,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Merge new fillable attributes with existing fillable attributes on the model.
+     * Fusionne de nouveaux attributs fillable avec les attributs fillable existants sur le modèle.
      */
     public function mergeFillable(array $fillable): self
     {
@@ -68,7 +71,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Get the guarded attributes for the model.
+     * Obtient les attributs guarded pour le modèle.
      *
      * @return list<string>
      */
@@ -80,7 +83,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Set the guarded attributes for the model.
+     * Définit les attributs guarded pour le modèle.
      *
      * @param list<string> $guarded
      */
@@ -92,7 +95,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Merge new guarded attributes with existing guarded attributes on the model.
+     * Fusionne de nouveaux attributs guarded avec les attributs guarded existants sur le modèle.
      *
      * @param list<string> $guarded
      */
@@ -104,7 +107,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Disable all mass assignable restrictions.
+     * Désactive toutes les restrictions d'assignation en masse.
      */
     public static function unguard(bool $state = true)
     {
@@ -112,7 +115,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Enable the mass assignment restrictions.
+     * Active les restrictions d'assignation en masse.
      */
     public static function reguard()
     {
@@ -120,7 +123,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Determine if the current state is "unguarded".
+     * Détermine si l'état actuel est "unguarded".
      */
     public static function isUnguarded(): bool
     {
@@ -128,7 +131,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Run the given callable while being unguarded.
+     * Exécute le callable donné tout en étant non protégé.
      */
     public static function unguarded(callable $callback): mixed
     {
@@ -146,7 +149,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Determine if the given attribute may be mass assigned.
+     * Détermine si l'attribut donné peut être assigné en masse.
      */
     public function isFillable(string $key): bool
     {
@@ -154,16 +157,16 @@ trait GuardsAttributes
             return true;
         }
 
-        // If the key is in the "fillable" array, we can of course assume that it's
-        // a fillable attribute. Otherwise, we will check the guarded array when
-        // we need to determine if the attribute is black-listed on the model.
+        // Si la clé est dans le tableau "fillable", nous pouvons bien sûr supposer qu'il s'agit
+        // d'un attribut fillable. Sinon, nous vérifierons le tableau guarded quand
+        // nous aurons besoin de déterminer si l'attribut est sur la liste noire du modèle.
         if (in_array($key, $this->getFillable(), true)) {
             return true;
         }
 
-        // If the attribute is explicitly listed in the "guarded" array then we can
-        // return false immediately. This means this attribute is definitely not
-        // fillable and there is no point in going any further in this method.
+        // Si l'attribut est explicitement listé dans le tableau "guarded", nous pouvons
+        // retourner false immédiatement. Cela signifie que cet attribut n'est définitivement pas
+        // fillable et il n'y a aucun intérêt à aller plus loin dans cette méthode.
         if ($this->isGuarded($key)) {
             return false;
         }
@@ -174,7 +177,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Determine if the given key is guarded.
+     * Détermine si la clé donnée est gardée.
      */
     public function isGuarded(string $key): bool
     {
@@ -188,7 +191,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Determine if the given column is a valid, guardable column.
+     * Détermine si la colonne donnée est une colonne valide et protégeable.
      */
     protected function isGuardableColumn(string $key): bool
     {
@@ -212,7 +215,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Determine if the model is totally guarded.
+     * Détermine si le modèle est totalement gardé.
      */
     public function totallyGuarded(): bool
     {
@@ -220,7 +223,7 @@ trait GuardsAttributes
     }
 
     /**
-     * Get the fillable attributes of a given array.
+     * Obtient les attributs fillable d'un tableau donné.
      *
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>

@@ -17,7 +17,9 @@ use Attribute;
 class ScopedBy
 {
     /**
-     * Create a new attribute instance.
+     * Crée une nouvelle instance d'attribut.
+     *
+     * @param array|string $classes La ou les classes de scope
      */
     public function __construct(array|string $classes)
     {

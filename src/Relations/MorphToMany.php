@@ -12,7 +12,6 @@
 namespace BlitzPHP\Wolke\Relations;
 
 use BlitzPHP\Database\Builder\BaseBuilder;
-use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
 use BlitzPHP\Wolke\Builder;
@@ -25,26 +24,28 @@ use BlitzPHP\Wolke\Model;
  * @template TAccessor of string = 'pivot'
  *
  * @extends BelongsToMany<TRelatedModel, TDeclaringModel, TPivotModel, TAccessor>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphToMany</a>
  */
 class MorphToMany extends BelongsToMany
 {
     /**
-     * The type of the polymorphic relation.
+     * Le type de la relation polymorphe.
      */
     protected string $morphType;
 
     /**
-     * The class name of the morph type constraint.
+     * Le nom de classe de la contrainte de type morph.
      */
     protected string $morphClass;
 
     /**
-     * Create a new morph to many relationship instance.
+     * Crée une nouvelle instance de relation morph to many.
      *
      * @param Builder<TRelatedModel>  $query
      * @param TDeclaringModel  $parent
-     * @param bool $inverse Indicates if we are connecting the inverse of the relation.
-     *                      This primarily affects the morphClass constraint.
+     * @param bool $inverse Indique si nous connectons l'inverse de la relation.
+     *                      Cela affecte principalement la contrainte morphClass.
      *
      * @return void
      */
@@ -76,7 +77,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Set the where clause for the relation query.
+     * Définit la clause where pour la requête de relation.
      */
     protected function addWhereConstraints(): static
     {
@@ -98,7 +99,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Create a new pivot attachment record.
+     * Crée un nouvel enregistrement d'attachement pivot.
      */
     protected function baseAttachRecord(int|string $id, bool $timed): array
     {
@@ -123,7 +124,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Get the pivot models that are currently attached, filtered by related model keys.
+     * Obtient les modèles pivot actuellement attachés, filtrés par les clés du modèle lié.
      *
      * @return IterableCollection<int, TPivotModel>
      */
@@ -138,7 +139,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Create a new query builder for the pivot table.
+     * Crée un nouveau constructeur de requête pour la table pivot.
      */
     public function newPivotQuery(): BaseBuilder
     {
@@ -146,7 +147,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Create a new pivot model instance.
+     * Crée une nouvelle instance de modèle pivot.
      * 
      * @return TPivotModel
      */
@@ -168,9 +169,9 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Get the pivot columns for the relation.
+     * Obtient les colonnes pivot pour la relation.
      *
-     * "pivot_" is prefixed at each column for easy removal later.
+     * "pivot_" est préfixé à chaque colonne pour une suppression facile plus tard.
      */
     protected function aliasedPivotColumns(): array
     {
@@ -186,7 +187,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Get the foreign key "type" name.
+     * Obtient le nom du "type" de clé étrangère.
      */
     public function getMorphType(): string
     {
@@ -194,7 +195,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Get the fully qualified morph type for the relation.
+     * Obtient le type morph complètement qualifié pour la relation.
      */
     public function getQualifiedMorphTypeName(): string
     {
@@ -202,7 +203,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Get the class name of the parent model.
+     * Obtient le nom de classe du modèle parent.
      *
      * @return class-string<TRelatedModel>
      */
@@ -212,7 +213,7 @@ class MorphToMany extends BelongsToMany
     }
 
     /**
-     * Get the indicator for a reverse relationship.
+     * Obtient l'indicateur pour une relation inverse.
      */
     public function getInverse(): bool
     {

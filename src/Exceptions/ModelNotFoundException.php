@@ -15,26 +15,28 @@ use BlitzPHP\Database\Exceptions\RecordsNotFoundException;
 use BlitzPHP\Utilities\Iterable\Arr;
 
 /**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\ModelNotFoundException</a>
+ * 
  * @template TModel of \BlitzPHP\Wolke\Model
  */
 class ModelNotFoundException extends RecordsNotFoundException
 {
     /**
-     * Name of the affected Eloquent model.
+     * Nom du modèle Eloquent concerné.
      *
      * @var class-string<TModel>
      */
     protected $model;
 
     /**
-     * The affected model IDs.
+     * Les IDs du modèle concerné.
      *
      * @var list<int|string>
      */
     protected $ids;
 
     /**
-     * Set the affected Eloquent model and instance ids.
+     * Définit le modèle Eloquent concerné et les IDs d'instance.
      *
      * @param  class-string<TModel>  $model
      * @param  list<int|string>|int|string  $ids
@@ -44,7 +46,7 @@ class ModelNotFoundException extends RecordsNotFoundException
         $this->model = $model;
         $this->ids   = Arr::wrap($ids);
 
-        $this->message = "No query results for model [{$model}]";
+        $this->message = "Aucun résultat de requête pour le modèle [{$model}]";
 
         if (count($this->ids) > 0) {
             $this->message .= ' ' . implode(', ', $this->ids);
@@ -56,7 +58,7 @@ class ModelNotFoundException extends RecordsNotFoundException
     }
 
     /**
-     * Get the affected Wolke model.
+     * Obtient le modèle Wolke concerné.
      *
      * @return class-string<TModel>
      */
@@ -66,7 +68,7 @@ class ModelNotFoundException extends RecordsNotFoundException
     }
 
     /**
-     * Get the affected Wolke model IDs.
+     * Obtient les IDs du modèle Wolke concerné.
      *
      * @return list<int|string>
      */

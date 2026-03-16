@@ -20,16 +20,18 @@ use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
  * @method static Builder<static> withoutTrashed()
  * @method static static restoreOrCreate(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
  * @method static static createOrRestore(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\SoftDeletes</a>
  */
 trait SoftDeletes
 {
     /**
-     * Indicates if the model is currently force deleting.
+     * Indique si le modèle est actuellement en cours de suppression forcée.
      */
     protected bool $forceDeleting = false;
 
     /**
-     * Boot the soft deleting trait for a model.
+     * Initialise le trait de suppression douce pour un modèle.
      */
     public static function bootSoftDeletes(): void
     {
@@ -37,7 +39,7 @@ trait SoftDeletes
     }
 
     /**
-     * Initialize the soft deleting trait for an instance.
+     * Initialise le trait de suppression douce pour une instance.
      */
     public function initializeSoftDeletes(): void
     {
@@ -47,7 +49,7 @@ trait SoftDeletes
     }
 
     /**
-     * Force a hard delete on a soft deleted model.
+     * Effectue une suppression dure sur un modèle supprimé de façon douce.
      */
     public function forceDelete(): ?bool
     {
@@ -67,7 +69,7 @@ trait SoftDeletes
     }
 
     /**
-     * Force a hard delete on a soft deleted model without raising any events.
+     * Effectue une suppression dure sur un modèle supprimé de façon douce sans déclencher d'événements.
      */
     public function forceDeleteQuietly(): ?bool
     {
@@ -75,7 +77,7 @@ trait SoftDeletes
     }
 
     /**
-     * Destroy the models for the given IDs.
+     * Détruit les modèles pour les IDs donnés.
      *
      * @param  IterableCollection|array|int|string  $ids
      */
@@ -95,9 +97,9 @@ trait SoftDeletes
             return 0;
         }
 
-        // We will actually pull the models from the database table and call delete on
-        // each of them individually so that their events get fired properly with a
-        // correct set of attributes in case the developers wants to check these.
+        // Nous allons en fait récupérer les modèles de la table de base de données et appeler delete sur
+        // chacun d'eux individuellement afin que leurs événements soient déclenchés correctement avec
+        // un ensemble correct d'attributs au cas où les développeurs voudraient vérifier cela.
         $key = ($instance = new static)->getKeyName();
 
         $count = 0;
@@ -112,7 +114,7 @@ trait SoftDeletes
     }
 
     /**
-     * Perform the actual delete query on this model instance.
+     * Effectue la requête de suppression réelle sur cette instance de modèle.
      *
      * @return mixed
      */
@@ -128,7 +130,7 @@ trait SoftDeletes
     }
 
     /**
-     * Perform the actual delete query on this model instance.
+     * Effectue la requête de suppression réelle sur cette instance de modèle.
      */
     protected function runSoftDelete(): void
     {
@@ -154,22 +156,22 @@ trait SoftDeletes
     }
 
     /**
-     * Restore a soft-deleted model instance.
+     * Restaure une instance de modèle supprimée de façon douce.
      */
     public function restore(): bool
     {
-        // If the restoring event does not return false, we will proceed with this
-        // restore operation. Otherwise, we bail out so the developer will stop
-        // the restore totally. We will clear the deleted timestamp and save.
+        // Si l'événement restoring ne retourne pas false, nous procéderons à cette
+        // opération de restauration. Sinon, nous abandonnons pour que le développeur arrête
+        // complètement la restauration. Nous effacerons l'horodatage supprimé et sauvegarderons.
         if ($this->fireModelEvent('restoring') === false) {
             return false;
         }
 
         $this->{$this->getDeletedAtColumn()} = null;
 
-        // Once we have saved the model, we will fire the "restored" event so this
-        // developer will do anything they need to after a restore operation is
-        // totally finished. Then we will return the result of the save call.
+        // Une fois que nous avons sauvegardé le modèle, nous déclencherons l'événement "restored" pour que ce
+        // développeur fasse tout ce qu'il doit après qu'une opération de restauration soit
+        // totalement terminée. Ensuite, nous retournerons le résultat de l'appel de sauvegarde.
         $this->exists = true;
 
         $result = $this->save();
@@ -180,7 +182,7 @@ trait SoftDeletes
     }
 
     /**
-     * Restore a soft-deleted model instance without raising any events.
+     * Restaure une instance de modèle supprimée de façon douce sans déclencher d'événements.
      */
     public function restoreQuietly(): bool
     {
@@ -188,7 +190,7 @@ trait SoftDeletes
     }
 
     /**
-     * Determine if the model instance has been soft-deleted.
+     * Détermine si l'instance de modèle a été supprimée de façon douce.
      */
     public function trashed(): bool
     {
@@ -196,7 +198,7 @@ trait SoftDeletes
     }
 
     /**
-     * Register a "softDeleted" model event callback with the dispatcher.
+     * Enregistre un rappel d'événement de modèle "softDeleted" avec le répartiteur.
      * 
      * @param callable|class-string  $callback
      */
@@ -206,7 +208,7 @@ trait SoftDeletes
     }
 
     /**
-     * Register a "restoring" model event callback with the dispatcher.
+     * Enregistre un rappel d'événement de modèle "restoring" avec le répartiteur.
      * 
      * @param callable|class-string  $callback
      */
@@ -216,7 +218,7 @@ trait SoftDeletes
     }
 
     /**
-     * Register a "restored" model event callback with the dispatcher.
+     * Enregistre un rappel d'événement de modèle "restored" avec le répartiteur.
      * 
      * @param callable|class-string  $callback
      */
@@ -226,7 +228,7 @@ trait SoftDeletes
     }
 
     /**
-     * Register a "forceDeleting" model event callback with the dispatcher.
+     * Enregistre un rappel d'événement de modèle "forceDeleting" avec le répartiteur.
      * 
      * @param callable|class-string  $callback
      */
@@ -236,7 +238,7 @@ trait SoftDeletes
     }
 
     /**
-     * Register a "forceDeleted" model event callback with the dispatcher.
+     * Enregistre un rappel d'événement de modèle "forceDeleted" avec le répartiteur.
      * 
      * @param callable|class-string  $callback
      */
@@ -246,7 +248,7 @@ trait SoftDeletes
     }
 
     /**
-     * Determine if the model is currently force deleting.
+     * Détermine si le modèle est actuellement en cours de suppression forcée.
      */
     public function isForceDeleting(): bool
     {
@@ -254,7 +256,7 @@ trait SoftDeletes
     }
 
     /**
-     * Get the name of the "deleted at" column.
+     * Obtient le nom de la colonne "deleted at".
      */
     public function getDeletedAtColumn(): string
     {
@@ -262,7 +264,7 @@ trait SoftDeletes
     }
 
     /**
-     * Get the fully qualified "deleted at" column.
+     * Obtient la colonne "deleted at" complètement qualifiée.
      */
     public function getQualifiedDeletedAtColumn(): string
     {

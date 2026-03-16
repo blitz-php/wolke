@@ -29,13 +29,15 @@ use BlitzPHP\Wolke\Relations\Relation;
 use Closure;
 use InvalidArgumentException;
 
-/** 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\QueriesRelationships</a>
+ * 
  * @mixin Builder 
  */
 trait QueriesRelationships
 {
     /**
-     * Add a relationship count / exists condition to the query.
+     * Ajoute une condition de comptage/existence de relation à la requête.
      *
      * @template TRelatedModel of Model
      *
@@ -58,9 +60,9 @@ trait QueriesRelationships
             return $this->hasMorph($relation, ['*'], $operator, $count, $boolean, $callback);
         }
 
-        // If we only need to check for the existence of the relation, then we can optimize
-        // the subquery to only run a "where exists" clause instead of this full "count"
-        // clause. This will make these queries run much faster compared with a count.
+        // Si nous avons seulement besoin de vérifier l'existence de la relation, nous pouvons optimiser
+        // la sous-requête pour n'exécuter qu'une clause "where exists" au lieu de cette clause complète "count".
+        // Cela fera fonctionner ces requêtes beaucoup plus rapidement qu'avec un comptage.
         $method = $this->canUseExistsForExistenceCheck($operator, $count)
                         ? 'getRelationExistenceQuery'
                         : 'getRelationExistenceCountQuery';
@@ -70,9 +72,9 @@ trait QueriesRelationships
             $this
         );
 
-        // Next we will call any given callback as an "anonymous" scope so they can get the
-        // proper logical grouping of the where clauses if needed by this Eloquent query
-        // builder. Then, we will be ready to finalize and return this query instance.
+        // Ensuite, nous appellerons tout rappel donné comme une portée "anonyme" afin qu'ils puissent obtenir
+        // le bon regroupement logique des clauses where si nécessaire pour ce constructeur de requête Eloquent.
+        // Ensuite, nous serons prêts à finaliser et à retourner cette instance de requête.
         if ($callback) {
             $hasQuery->callScope($callback);
         }
@@ -87,9 +89,9 @@ trait QueriesRelationships
     }
 
     /**
-     * Add nested relationship count / exists conditions to the query.
+     * Ajoute des conditions de comptage/existence de relation imbriquées à la requête.
      *
-     * Sets up recursive call to whereHas until we finish the nested relation.
+     * Configure un appel récursif à whereHas jusqu'à ce que nous terminions la relation imbriquée.
      *
      * @param  (Closure(Builder<*>): mixed)|null  $callback
      */
@@ -107,16 +109,16 @@ trait QueriesRelationships
         }
 
         $closure = static function ($q) use (&$closure, &$relations, $operator, $count, $callback, $initialRelations) {
-            // If the same closure is called multiple times, reset the relation array to loop through them again...
+            // Si la même fermeture est appelée plusieurs fois, réinitialisez le tableau de relations pour les parcourir à nouveau...
             if ($count === 1 && empty($relations)) {
                 $relations = [...$initialRelations];
 
                 array_shift($relations);
             }
 
-            // In order to nest "has", we need to add count relation constraints on the
-            // callback Closure. We'll do this by simply passing the Closure its own
-            // reference to itself so it calls itself recursively on each segment.
+            // Afin d'imbriquer "has", nous devons ajouter des contraintes de relation de comptage sur la
+            // fermeture de rappel. Nous ferons cela en passant simplement à la fermeture sa propre
+            // référence à elle-même afin qu'elle s'appelle récursivement sur chaque segment.
             count($relations) > 1
                 ? $q->whereHas(array_shift($relations), $closure)
                 : $q->has(array_shift($relations), $operator, $count, 'and', $callback);
@@ -126,7 +128,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a relationship count / exists condition to the query with an "or".
+     * Ajoute une condition de comptage/existence de relation à la requête avec un "ou".
      * 
      * @param Relation<*, *, *>|string  $relation
      */
@@ -136,7 +138,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a relationship count / exists condition to the query.
+     * Ajoute une condition de comptage/existence de relation à la requête.
      *
      * @template TRelatedModel of Model
      *
@@ -149,7 +151,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a relationship count / exists condition to the query with an "or".
+     * Ajoute une condition de comptage/existence de relation à la requête avec un "ou".
      * 
      * @param  Relation<*, *, *>|string  $relation
      */
@@ -159,7 +161,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a relationship count / exists condition to the query with where clauses.
+     * Ajoute une condition de comptage/existence de relation à la requête avec des clauses where.
      *
      * @template TRelatedModel of Model
      *
@@ -172,9 +174,9 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a relationship count / exists condition to the query with where clauses.
+     * Ajoute une condition de comptage/existence de relation à la requête avec des clauses where.
      *
-     * Also load the relationship with same condition.
+     * Charge également la relation avec la même condition.
      *
      * @param  (Closure(Builder<*>|Relation<*, *, *>): mixed)|null  $callback
      */
@@ -185,7 +187,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a relationship count / exists condition to the query with where clauses and an "or".
+     * Ajoute une condition de comptage/existence de relation à la requête avec des clauses where et un "ou".
      *
      * @template TRelatedModel of Model
      *
@@ -198,7 +200,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a relationship count / exists condition to the query with where clauses.
+     * Ajoute une condition de comptage/existence de relation à la requête avec des clauses where.
      *
      * @template TRelatedModel of Model
      *
@@ -211,7 +213,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a relationship count / exists condition to the query with where clauses and an "or".
+     * Ajoute une condition de comptage/existence de relation à la requête avec des clauses where et un "ou".
      *
      * @template TRelatedModel of Model
      *
@@ -224,7 +226,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship count / exists condition to the query.
+     * Ajoute une condition de comptage/existence de relation polymorphe à la requête.
      *
      * @template TRelatedModel of Model
      *
@@ -280,7 +282,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Get the BelongsTo relationship for a single polymorphic type.
+     * Obtient la relation BelongsTo pour un seul type polymorphe.
      *
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
@@ -304,7 +306,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship count / exists condition to the query with an "or".
+     * Ajoute une condition de comptage/existence de relation polymorphe à la requête avec un "ou".
      *
      * @param MorphTo<*, *>|string  $relation
      * @param string|array<int, string>  $types
@@ -315,7 +317,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship count / exists condition to the query.
+     * Ajoute une condition de comptage/existence de relation polymorphe à la requête.
      *
      * @template TRelatedModel of Model
      *
@@ -329,7 +331,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship count / exists condition to the query with an "or".
+     * Ajoute une condition de comptage/existence de relation polymorphe à la requête avec un "ou".
      *
      * @param MorphTo<*, *>|string  $relation
      * @param string|array<int, string>  $types
@@ -340,7 +342,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship count / exists condition to the query with where clauses.
+     * Ajoute une condition de comptage/existence de relation polymorphe à la requête avec des clauses where.
      *
      * @template TRelatedModel of Model
      *
@@ -354,7 +356,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship count / exists condition to the query with where clauses and an "or".
+     * Ajoute une condition de comptage/existence de relation polymorphe à la requête avec des clauses where et un "ou".
      *
      * @template TRelatedModel of Model
      *
@@ -368,7 +370,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship count / exists condition to the query with where clauses.
+     * Ajoute une condition de comptage/existence de relation polymorphe à la requête avec des clauses where.
      *
      * @template TRelatedModel of Model
      *
@@ -382,7 +384,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship count / exists condition to the query with where clauses and an "or".
+     * Ajoute une condition de comptage/existence de relation polymorphe à la requête avec des clauses where et un "ou".
      *
      * @template TRelatedModel of Model
      *
@@ -396,7 +398,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a basic where clause to a relationship query.
+     * Ajoute une clause where de base à une requête de relation.
      *
      * @template TRelatedModel of Model
      *
@@ -415,7 +417,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a basic where clause to a relationship query and eager-load the relationship with the same conditions.
+     * Ajoute une clause where de base à une requête de relation et charge la relation avec les mêmes conditions.
      *
      * @param Relation<*, *, *>|string  $relation
      * @param  Closure|string|array|Expression  $column
@@ -431,7 +433,7 @@ trait QueriesRelationships
     }
     
     /**
-     * Add an "or where" clause to a relationship query.
+     * Ajoute une clause "ou where" à une requête de relation.
      *
      * @template TRelatedModel of Model
      *
@@ -450,7 +452,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a basic count / exists condition to a relationship query.
+     * Ajoute une condition de comptage/existence de base à une requête de relation.
      *
      * @template TRelatedModel of Model
      *
@@ -469,7 +471,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add an "or where" clause to a relationship query.
+     * Ajoute une clause "ou where" à une requête de relation.
      *
      * @template TRelatedModel of Model
      *
@@ -488,7 +490,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship condition to the query with a where clause.
+     * Ajoute une condition de relation polymorphe à la requête avec une clause where.
      *
      * @template TRelatedModel of Model
      *
@@ -504,7 +506,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship condition to the query with an "or where" clause.
+     * Ajoute une condition de relation polymorphe à la requête avec une clause "ou where".
      *
      * @template TRelatedModel of Model
      *
@@ -520,7 +522,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship condition to the query with a doesn't have clause.
+     * Ajoute une condition de relation polymorphe à la requête avec une clause doesn't have.
      *
      * @template TRelatedModel of Model
      *
@@ -536,7 +538,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a polymorphic relationship condition to the query with an "or doesn't have" clause.
+     * Ajoute une condition de relation polymorphe à la requête avec une clause "ou doesn't have".
      *
      * @template TRelatedModel of Model
      *
@@ -552,7 +554,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a morph-to relationship condition to the query.
+     * Ajoute une condition de relation morph-to à la requête.
      *
      * @param MorphTo<*, *>|string  $relation
      * @param Model|iterable<int, Model>|string|null  $model
@@ -582,7 +584,7 @@ trait QueriesRelationships
         $models = BaseCollection::wrap($model);
 
         if ($models->isEmpty()) {
-            throw new InvalidArgumentException('Collection given to whereMorphedTo method may not be empty.');
+            throw new InvalidArgumentException('La collection donnée à la méthode whereMorphedTo ne peut pas être vide.');
         }
         
         return $this->where(function ($query) use ($relation, $models) {
@@ -596,7 +598,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a not morph-to relationship condition to the query.
+     * Ajoute une condition de relation morph-to négative à la requête.
      *
      * @param MorphTo<*, *>|string  $relation
      * @param Model|iterable<int, Model>|string  $model
@@ -624,7 +626,7 @@ trait QueriesRelationships
         $models = BaseCollection::wrap($model);
 
         if ($models->isEmpty()) {
-            throw new InvalidArgumentException('Collection given to whereNotMorphedTo method may not be empty.');
+            throw new InvalidArgumentException('La collection donnée à la méthode whereNotMorphedTo ne peut pas être vide.');
         }
 
         return $this->whereNot(function ($query) use ($relation, $models) {
@@ -638,7 +640,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a morph-to relationship condition to the query with an "or where" clause.
+     * Ajoute une condition de relation morph-to à la requête avec une clause "ou where".
      *
      * @param MorphTo<*, *>|string  $relation
      * @param Model|iterable<int, Model>|string|null  $model
@@ -649,7 +651,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a not morph-to relationship condition to the query with an "or where" clause.
+     * Ajoute une condition de relation morph-to négative à la requête avec une clause "ou where".
      *
      * @param MorphTo<*, *>|string  $relation
      * @param Model|iterable<int, Model>|string  $model
@@ -660,7 +662,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a "belongs to" relationship where clause to the query.
+     * Ajoute une clause where de relation "belongs to" à la requête.
      *
      * @param Collection<int, Model>|Model $related
      *
@@ -677,7 +679,7 @@ trait QueriesRelationships
         }
 
         if ($relatedCollection->isEmpty()) {
-            throw new InvalidArgumentException('Collection given to whereBelongsTo method may not be empty.');
+            throw new InvalidArgumentException('La collection donnée à la méthode whereBelongsTo ne peut pas être vide.');
         }
 
         if ($relationshipName === null) {
@@ -704,7 +706,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add an "BelongsTo" relationship with an "or where" clause to the query.
+     * Ajoute une clause where de relation "BelongsTo" avec un "ou" à la requête.
      *
      * @throws \RuntimeException
      */
@@ -714,7 +716,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a "belongs to many" relationship where clause to the query.
+     * Ajoute une clause where de relation "belongs to many" à la requête.
      *
      * @param Collection<int, Model>|Model $related
      *
@@ -727,7 +729,7 @@ trait QueriesRelationships
         $related = $relatedCollection->first();
 
         if ($relatedCollection->isEmpty()) {
-            throw new InvalidArgumentException('Collection given to whereAttachedTo method may not be empty.');
+            throw new InvalidArgumentException('La collection donnée à la méthode whereAttachedTo ne peut pas être vide.');
         }
 
         if ($relationshipName === null) {
@@ -754,7 +756,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a "belongs to many" relationship with an "or where" clause to the query.
+     * Ajoute une clause where de relation "belongs to many" avec un "ou" à la requête.
      *
      * @param Collection<int, Model>|Model $related
      *
@@ -766,7 +768,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add subselect queries to include an aggregate value for a relationship.
+     * Ajoute des sous-requêtes pour inclure une valeur agrégée pour une relation.
      */
     public function withAggregate(mixed $relations, Expression|string $column, ?string $function = null): static
     {
@@ -781,9 +783,9 @@ trait QueriesRelationships
         $relations = is_array($relations) ? $relations : [$relations];
 
         foreach ($this->parseWithRelations($relations) as $name => $constraints) {
-            // First we will determine if the name has been aliased using an "as" clause on the name
-            // and if it has we will extract the actual relationship name and the desired name of
-            // the resulting column. This allows multiple aggregates on the same relationships.
+            // Nous déterminerons d'abord si le nom a été aliasé en utilisant une clause "as" sur le nom
+            // et si c'est le cas, nous extrairons le nom de relation réel et le nom souhaité de
+            // la colonne résultante. Cela permet plusieurs agrégats sur les mêmes relations.
             $segments = explode(' ', $name);
 
             unset($alias);
@@ -808,9 +810,9 @@ trait QueriesRelationships
                 $expression = (string) $column;
             }
 
-            // Here, we will grab the relationship sub-query and prepare to add it to the main query
-            // as a sub-select. First, we'll get the "has" query and use that to get the relation
-            // sub-query. We'll format this relationship name and append this column if needed.
+            // Ici, nous allons saisir la sous-requête de relation et préparer à l'ajouter à la requête principale
+            // comme une sous-sélection. D'abord, nous obtiendrons la requête "has" et l'utiliserons pour obtenir la sous-requête
+            // de relation. Nous formaterons ce nom de relation et ajouterons cette colonne si nécessaire.
             $query = $relation->getRelationExistenceQuery(
                 $relation->getRelated()->newQuery(),
                 $this,
@@ -821,9 +823,9 @@ trait QueriesRelationships
 
             $query = $query->mergeConstraintsFrom($relation->getQuery())->toBase();
 
-            // If the query contains certain elements like orderings / more than one column selected
-            // then we will remove those elements from the query so that it will execute properly
-            // when given to the database. Otherwise, we may receive SQL errors or poor syntax.
+            // Si la requête contient certains éléments comme des tris / plus d'une colonne sélectionnée,
+            // alors nous supprimerons ces éléments de la requête afin qu'elle s'exécute correctement
+            // lorsqu'elle est donnée à la base de données. Sinon, nous pouvons recevoir des erreurs SQL ou une syntaxe incorrecte.
             Invader::make($query)->orders = [];
             // $query->setBindings([], 'order');
 
@@ -836,9 +838,9 @@ trait QueriesRelationships
                 // $query->bindings['select'] = [];
             }
 
-            // Finally, we will make the proper column alias to the query and run this sub-select on
-            // the query builder. Then, we will return the builder instance back to the developer
-            // for further constraint chaining that needs to take place on the query as needed.
+            // Enfin, nous ferons l'alias de colonne approprié à la requête et exécuterons cette sous-sélection sur
+            // le constructeur de requête. Ensuite, nous retournerons l'instance du constructeur au développeur
+            // pour un enchaînement de contraintes supplémentaire qui doit avoir lieu sur la requête si nécessaire.
             $alias ??= Text::snake(
                 preg_replace(
                     '/[^[:alnum:][:space:]_]/u',
@@ -864,7 +866,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Get the relation hashed column name for the given column and relation.
+     * Obtient le nom de colonne haché de relation pour la colonne et la relation données.
      *
      * @param Relation<*, *, *> $relation
      */
@@ -880,7 +882,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add subselect queries to count the relations.
+     * Ajoute des sous-requêtes pour compter les relations.
      */
     public function withCount(mixed $relations): static
     {
@@ -888,7 +890,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add subselect queries to include the max of the relation's column.
+     * Ajoute des sous-requêtes pour inclure le maximum de la colonne de relation.
      */
     public function withMax(array|string $relation, Expression|string $column): static
     {
@@ -896,7 +898,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add subselect queries to include the min of the relation's column.
+     * Ajoute des sous-requêtes pour inclure le minimum de la colonne de relation.
      */
     public function withMin(array|string $relation, Expression|string $column): static
     {
@@ -904,7 +906,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add subselect queries to include the sum of the relation's column.
+     * Ajoute des sous-requêtes pour inclure la somme de la colonne de relation.
      */
     public function withSum(array|string $relation, Expression|string $column): static
     {
@@ -912,7 +914,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add subselect queries to include the average of the relation's column.
+     * Ajoute des sous-requêtes pour inclure la moyenne de la colonne de relation.
      */
     public function withAvg(array|string $relation, Expression|string $column): static
     {
@@ -920,7 +922,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add subselect queries to include the existence of related models.
+     * Ajoute des sous-requêtes pour inclure l'existence de modèles liés.
      */
     public function withExists(array|string $relation): static
     {
@@ -928,7 +930,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add the "has" condition where clause to the query.
+     * Ajoute la condition "has" where clause à la requête.
      *
      * @param Builder<*>  $hasQuery
      * @param Relation<*, *, *>  $relation
@@ -943,7 +945,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Merge the where constraints from another query to the current query.
+     * Fusionne les contraintes where d'une autre requête dans la requête actuelle.
      */
     public function mergeConstraintsFrom(Builder $from)
     {
@@ -956,9 +958,9 @@ trait QueriesRelationships
                 $this->getModel()->getTable()
             ) : $from->getQuery()->wheres;
 
-        // Here we have some other query that we want to merge the where constraints from. We will
-        // copy over any where constraints on the query as well as remove any global scopes the
-        // query might have removed. Then we will return ourselves with the finished merging.
+        // Ici, nous avons une autre requête dont nous voulons fusionner les contraintes where. Nous copierons
+        // toutes les contraintes where de la requête ainsi que supprimerons toutes les portées globales que la
+        // requête pourrait avoir supprimées. Ensuite, nous nous retournerons nous-mêmes avec la fusion terminée.
         return $this->withoutGlobalScopes(
             $from->removedScopes()
         )->mergeWheres(
@@ -968,7 +970,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Updates the table name for any columns with a new qualified name.
+     * Met à jour le nom de la table pour toutes les colonnes avec un nouveau nom qualifié.
      */
     protected function requalifyWhereTables(array $wheres, string $from, string $to): array
     {
@@ -982,7 +984,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Add a sub-query count clause to this query.
+     * Ajoute une clause de sous-requête de comptage à cette requête.
      */
     protected function addWhereCountQuery(BaseBuilder $query, string $operator = '>=', Expression|int $count = 1, string $boolean = 'and'): static
     {
@@ -997,7 +999,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Get the "has relation" base query instance.
+     * Obtient l'instance de requête de base "has relation".
      * 
      * @return Relation<*, *, *>
      */
@@ -1007,7 +1009,7 @@ trait QueriesRelationships
     }
 
     /**
-     * Check if we can run an "exists" query to optimize performance.
+     * Vérifie si nous pouvons exécuter une requête "exists" pour optimiser les performances.
      */
     protected function canUseExistsForExistenceCheck(string $operator, Expression|int $count): bool
     {

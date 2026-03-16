@@ -16,11 +16,13 @@ use BlitzPHP\Wolke\Contracts\Scope;
 
 /**
  * @template TBuilder of Builder
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasBuilder</a>
  */
 trait HasBuilder
 {
     /**
-     * Begin querying the model.
+     * Commence une requête sur le modèle.
      *
      * @return TBuilder
      */
@@ -30,7 +32,7 @@ trait HasBuilder
     }
 
     /**
-     * Create a new Wolke query builder for the model.
+     * Crée un nouveau constructeur de requête Wolke pour le modèle.
      *
      * @return TBuilder
      */
@@ -40,7 +42,7 @@ trait HasBuilder
     }
 
     /**
-     * Get a new query builder for the model's table.
+     * Obtient un nouveau constructeur de requête pour la table du modèle.
      *
      * @return TBuilder
      */
@@ -50,7 +52,7 @@ trait HasBuilder
     }
 
     /**
-     * Get a new query builder that doesn't have any global scopes or eager loading.
+     * Obtient un nouveau constructeur de requête qui n'a pas de portées globales ni de chargements empressés.
      *
      * @return TBuilder
      */
@@ -60,7 +62,7 @@ trait HasBuilder
     }
 
     /**
-     * Get a new query builder with no relationships loaded.
+     * Obtient un nouveau constructeur de requête sans relations chargées.
      *
      * @return TBuilder
      */
@@ -70,7 +72,7 @@ trait HasBuilder
     }
 
     /**
-     * Get a new query builder that doesn't have any global scopes.
+     * Obtient un nouveau constructeur de requête qui n'a pas de portées globales.
      *
      * @return TBuilder
      */
@@ -80,7 +82,7 @@ trait HasBuilder
     }
 
     /**
-     * Get a new query instance without a given scope.
+     * Obtient une nouvelle instance de requête sans une portée donnée.
      *
      * @return TBuilder
      */
@@ -90,7 +92,7 @@ trait HasBuilder
     }
 
     /**
-     * Get a new query to restore one or more models by their queueable IDs.
+     * Obtient une nouvelle requête pour restaurer un ou plusieurs modèles par leurs IDs de file d'attente.
      *
      * @return TBuilder
      */
@@ -100,7 +102,7 @@ trait HasBuilder
     }
 
     /**
-     * Begin querying the model on a given connection.
+     * Commence une requête sur le modèle sur une connexion donnée.
      *
      * @return TBuilder
      */
@@ -110,7 +112,7 @@ trait HasBuilder
     }
 
     /**
-     * Begin querying the model on the write connection.
+     * Commence une requête sur le modèle sur la connexion d'écriture.
      *
      * @return TBuilder
      */
@@ -120,7 +122,7 @@ trait HasBuilder
     }
 
     /**
-     * Begin querying a model with eager loading.
+     * Commence une requête sur un modèle avec chargement empressé.
      *
      * @return TBuilder
      */

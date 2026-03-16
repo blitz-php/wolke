@@ -20,10 +20,13 @@ use Closure;
 use InvalidArgumentException;
 use ReflectionClass;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasGlobalScopes</a>
+ */
 trait HasGlobalScopes
 {
     /**
-     * Boot the has global scopes trait for a model.
+     * Initialise le trait des portées globales pour un modèle.
      */
     public static function bootHasGlobalScopes(): void
     {
@@ -31,7 +34,7 @@ trait HasGlobalScopes
     }
 
     /**
-     * Resolve the global scope class names from the attributes.
+     * Résout les noms de classe de portée globale à partir des attributs.
      */
     public static function resolveGlobalScopeAttributes(): array
     {
@@ -49,7 +52,7 @@ trait HasGlobalScopes
     }
 
     /**
-     * Register a new global scope on the model.
+     * Enregistre une nouvelle portée globale sur le modèle.
      *
      * @param Scope|(Closure(Builder<static>): mixed)|string  $scope
      * @param Scope|(Closure(Builder<static>): mixed)|null  $implementation
@@ -71,11 +74,11 @@ trait HasGlobalScopes
             return static::$globalScopes[static::class][$scope] = new $scope();
         }
 
-        throw new InvalidArgumentException('Global scope must be an instance of Closure or Scope or be a class name of a class extending ' . Scope::class);
+        throw new InvalidArgumentException('La portée globale doit être une instance de Closure ou Scope ou un nom de classe d\'une classe étendant ' . Scope::class);
     }
 
     /**
-     * Register multiple global scopes on the model.
+     * Enregistre plusieurs portées globales sur le modèle.
      */
     public static function addGlobalScopes(array $scopes): void
     {
@@ -89,7 +92,7 @@ trait HasGlobalScopes
     }
 
     /**
-     * Determine if a model has a global scope.
+     * Détermine si un modèle a une portée globale.
      */
     public static function hasGlobalScope(Scope|string $scope): bool
     {
@@ -97,7 +100,7 @@ trait HasGlobalScopes
     }
 
     /**
-     * Get a global scope registered with the model.
+     * Obtient une portée globale enregistrée avec le modèle.
      *
      * @return Scope|(Closure(Builder<static>): mixed)|null
      */
@@ -114,7 +117,7 @@ trait HasGlobalScopes
     }
 
     /**
-     * Get all of the global scopes that are currently registered.
+     * Obtient toutes les portées globales actuellement enregistrées.
      */
     public static function getAllGlobalScopes(): array
     {
@@ -122,7 +125,7 @@ trait HasGlobalScopes
     }
 
     /**
-     * Set the current global scopes.
+     * Définit les portées globales actuelles.
      */
     public static function setAllGlobalScopes(array $scopes): void
     {
@@ -130,7 +133,7 @@ trait HasGlobalScopes
     }
 
     /**
-     * Get the global scopes for this class instance.
+     * Obtient les portées globales pour cette instance de classe.
      */
     public function getGlobalScopes(): array
     {

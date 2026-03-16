@@ -13,6 +13,9 @@ namespace BlitzPHP\Wolke\Exceptions;
 
 use RuntimeException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\MassAssignmentException</a>
+ */
 class MassAssignmentException extends RuntimeException
 {
 }

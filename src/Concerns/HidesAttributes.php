@@ -14,24 +14,27 @@ namespace BlitzPHP\Wolke\Concerns;
 use BlitzPHP\Utilities\Helpers;
 use Closure;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HidesAttributes</a>
+ */
 trait HidesAttributes
 {
     /**
-     * The attributes that should be hidden for serialization.
+     * Les attributs qui doivent être cachés pour la sérialisation.
      * 
      * @var list<string>
      */
     protected array $hidden = [];
 
     /**
-     * The attributes that should be visible in serialization.
+     * Les attributs qui doivent être visibles dans la sérialisation.
      * 
      * @var list<string>
      */
     protected array $visible = [];
 
     /**
-     * Get the hidden attributes for the model.
+     * Obtient les attributs cachés pour le modèle.
      * 
      * @return list<string>
      */
@@ -41,7 +44,7 @@ trait HidesAttributes
     }
 
     /**
-     * Set the hidden attributes for the model.
+     * Définit les attributs cachés pour le modèle.
      * 
      * @param list<string> $hidden
      */
@@ -53,7 +56,7 @@ trait HidesAttributes
     }
 
     /**
-     * Merge new hidden attributes with existing hidden attributes on the model.
+     * Fusionne de nouveaux attributs cachés avec les attributs cachés existants sur le modèle.
      *
      * @param  list<string>  $hidden
      */
@@ -65,7 +68,7 @@ trait HidesAttributes
     }
 
     /**
-     * Get the visible attributes for the model.
+     * Obtient les attributs visibles pour le modèle.
      * 
      * @return list<string>
      */
@@ -75,7 +78,7 @@ trait HidesAttributes
     }
 
     /**
-     * Set the visible attributes for the model.
+     * Définit les attributs visibles pour le modèle.
      * 
      * @param list<string> $visible
      */
@@ -87,7 +90,7 @@ trait HidesAttributes
     }
 
     /**
-     * Merge new visible attributes with existing visible attributes on the model.
+     * Fusionne de nouveaux attributs visibles avec les attributs visibles existants sur le modèle.
      *
      * @param  list<string>  $visible
      */
@@ -99,7 +102,7 @@ trait HidesAttributes
     }
 
     /**
-     * Make the given, typically hidden, attributes visible.
+     * Rend les attributs donnés, typiquement cachés, visibles.
      *
      * @param  list<string>|string|null  $attributes
      */
@@ -117,7 +120,7 @@ trait HidesAttributes
     }
 
     /**
-     * Make the given, typically hidden, attributes visible if the given truth test passes.
+     * Rend les attributs donnés, typiquement cachés, visibles si le test de vérité donné réussit.
      *
      * @param  list<string>|string|null  $attributes
      */
@@ -127,7 +130,7 @@ trait HidesAttributes
     }
 
     /**
-     * Make the given, typically visible, attributes hidden.
+     * Rend les attributs donnés, typiquement visibles, cachés.
      *
      * @param  list<string>|string|null  $attributes
      */
@@ -142,7 +145,7 @@ trait HidesAttributes
     }
 
     /**
-     * Make the given, typically visible, attributes hidden if the given truth test passes.
+     * Rend les attributs donnés, typiquement visibles, cachés si le test de vérité donné réussit.
      *
      * @param  list<string>|string|null  $attributes
      */

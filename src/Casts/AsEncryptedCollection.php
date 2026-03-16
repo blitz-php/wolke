@@ -22,7 +22,7 @@ use InvalidArgumentException;
 class AsEncryptedCollection implements Castable
 {
     /**
-     * Get the caster class to use when casting from / to this cast target.
+     * Obtient la classe de cast à utiliser pour le casting depuis/vers cette cible de cast.
      */
     public static function castUsing(array $arguments): CastsAttributes
     {
@@ -71,9 +71,9 @@ class AsEncryptedCollection implements Castable
     }
 
     /**
-     * Specify the type of object each item in the collection should be mapped to.
+     * Spécifie le type d'objet vers lequel chaque élément de la collection doit être mappé.
      *
-     * @param  array{class-string, string}|class-string  $map
+     * @param array{class-string, string}|class-string $map Le mappage à appliquer
      */
     public static function of(array|string $map): string
     {
@@ -81,10 +81,10 @@ class AsEncryptedCollection implements Castable
     }
 
     /**
-     * Specify the collection for the cast.
+     * Spécifie la collection pour le cast.
      *
-     * @param  class-string  $class
-     * @param  array{class-string, string}|class-string|null  $map
+     * @param class-string $class La classe de collection à utiliser
+     * @param array{class-string, string}|class-string|null $map Le mappage à appliquer
      */
     public static function using(string $class, array|string|null $map = null): string
     {

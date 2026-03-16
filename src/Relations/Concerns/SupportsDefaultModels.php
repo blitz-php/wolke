@@ -14,24 +14,27 @@ namespace BlitzPHP\Wolke\Relations\Concerns;
 use BlitzPHP\Wolke\Model;
 use Closure;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Concerns\SupportsDefaultModels</a>
+ */
 trait SupportsDefaultModels
 {
     /**
-     * Indicates if a default model instance should be used.
+     * Indique si une instance de modèle par défaut doit être utilisée.
      *
-     * Alternatively, may be a Closure or array.
+     * Alternativement, peut être une Closure ou un tableau.
      *
      * @var array|bool|Closure
      */
     protected $withDefault;
 
     /**
-     * Make a new related instance for the given model.
+     * Crée une nouvelle instance liée pour le modèle donné.
      */
     abstract protected function newRelatedInstanceFor(Model $parent): Model;
 
     /**
-     * Return a new model instance in case the relationship does not exist.
+     * Retourne une nouvelle instance de modèle dans le cas où la relation n'existe pas.
      */
     public function withDefault(array|bool|Closure $callback = true): static
     {
@@ -41,7 +44,7 @@ trait SupportsDefaultModels
     }
 
     /**
-     * Get the default value for this relation.
+     * Obtient la valeur par défaut pour cette relation.
      */
     protected function getDefaultFor(Model $parent): ?Model
     {

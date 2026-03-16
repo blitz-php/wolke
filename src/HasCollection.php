@@ -16,18 +16,20 @@ use ReflectionClass;
 
 /**
  * @template TCollection of Collection
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasCollection</a>
  */
 trait HasCollection
 {
     /**
-     * The resolved collection class names by model.
+     * Les noms de classe de collection résolus par modèle.
      *
      * @var array<class-string<static>, class-string<TCollection>>
      */
     protected static array $resolvedCollectionClasses = [];
 
     /**
-     * Create a new Eloquent Collection instance.
+     * Crée une nouvelle instance de Collection Eloquent.
      *
      * @param  array<array-key, Model>  $models
      * 
@@ -47,7 +49,7 @@ trait HasCollection
     }
 
     /**
-     * Resolve the collection class name from the CollectedBy attribute.
+     * Résout le nom de classe de collection à partir de l'attribut CollectedBy.
      *
      * @return class-string<TCollection>|null
      */

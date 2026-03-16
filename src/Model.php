@@ -51,6 +51,9 @@ use ReflectionMethod;
 use Stringable;
 use Throwable;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Model</a>
+ */
 class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, QueueableEntity, Stringable
 {
     use ForwardsCalls;
@@ -66,180 +69,180 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     use PreventsCircularRecursion;
 
     /**
-     * The name of the "created at" column.
+     * Le nom de la colonne "created at".
      *
      * @var string|null
      */
     public const CREATED_AT = 'created_at';
 
     /**
-     * The name of the "updated at" column.
+     * Le nom de la colonne "updated at".
      *
      * @var string|null
      */
     public const UPDATED_AT = 'updated_at';
 
     /**
-     * The connection name for the model.
+     * Le nom de la connexion pour le modèle.
      */
     protected ?string $connection = null;
 
     /**
-     * The table associated with the model.
+     * La table associée au modèle.
      */
     protected string $table = '';
 
     /**
-     * The primary key for the model.
+     * La clé primaire pour le modèle.
      */
     protected string $primaryKey = 'id';
 
     /**
-     * The "type" of the primary key ID.
+     * Le "type" de l'ID de clé primaire.
      */
     protected string $keyType = 'int';
 
     /**
-     * Indicates if the IDs are auto-incrementing.
+     * Indique si les IDs sont auto-incrémentés.
      */
     public bool $incrementing = true;
 
     /**
-     * The relations to eager load on every query.
+     * Les relations à charger avec empressement sur chaque requête.
      */
     protected array $with = [];
 
     /**
-     * The relationship counts that should be eager loaded on every query.
+     * Les compteurs de relations qui doivent être chargés avec empressement sur chaque requête.
      */
     protected array $withCount = [];
 
     /**
-     * Indicates whether lazy loading will be prevented on this model.
+     * Indique si le chargement paresseux sera empêché sur ce modèle.
      */
     public bool $preventsLazyLoading = false;
 
     /**
-     * The number of models to return for pagination.
+     * Le nombre de modèles à retourner pour la pagination.
      */
     protected int $perPage = 15;
 
     /**
-     * Indicates if the model exists.
+     * Indique si le modèle existe.
      */
     public bool $exists = false;
 
     /**
-     * Indicates if the model was inserted during the current request lifecycle.
+     * Indique si le modèle a été inséré pendant le cycle de vie de la requête actuelle.
      */
     public bool $wasRecentlyCreated = false;
 
     /**
-     * Indicates that the object's string representation should be escaped when __toString is invoked.
+     * Indique que la représentation sous forme de chaîne de l'objet doit être échappée lorsque __toString est invoqué.
      */
     protected bool $escapeWhenCastingToString = false;
 
     /**
-     * The connection resolver instance.
+     * L'instance de résolveur de connexion.
      *
      * @var ConnectionResolverInterface
      */
     protected static $resolver;
 
     /**
-     * The event dispatcher instance.
+     * L'instance de répartiteur d'événements.
      */
     protected static ?Dispatcher $dispatcher = null;
 
     /**
-     * The array of booted models.
+     * Le tableau des modèles démarrés.
      */
     protected static array $booted = [];
 
     /**
-     * The callbacks that should be executed after the model has booted.
+     * Les rappels qui doivent être exécutés après le démarrage du modèle.
      */
     protected static array $bootedCallbacks = [];
 
     /**
-     * The array of trait initializers that will be called on each new instance.
+     * Le tableau des initialiseurs de traits qui seront appelés sur chaque nouvelle instance.
      */
     protected static array $traitInitializers = [];
 
     /**
-     * The array of global scopes on the model.
+     * Le tableau des portées globales sur le modèle.
      */
     protected static array $globalScopes = [];
 
     /**
-     * The list of models classes that should not be affected with touch.
+     * La liste des classes de modèles qui ne doivent pas être affectées par le touch.
      */
     protected static array $ignoreOnTouch = [];
 
     /**
-     * Indicates whether lazy loading should be restricted on all models.
+     * Indique si le chargement paresseux doit être restreint sur tous les modèles.
      */
     protected static bool $modelsShouldPreventLazyLoading = false;
 
     /**
-     * Indicates whether relations should be automatically loaded on all models when they are accessed.
+     * Indique si les relations doivent être automatiquement chargées sur tous les modèles lorsqu'elles sont accédées.
      */
     protected static bool $modelsShouldAutomaticallyEagerLoadRelationships = false;
 
     /**
-     * The callback that is responsible for handling lazy loading violations.
+     * Le callback responsable de la gestion des violations de chargement paresseux.
      *
      * @var (callable(self, string))|null
      */
     protected static $lazyLoadingViolationCallback;
 
     /**
-     * Indicates if an exception should be thrown instead of silently discarding non-fillable attributes.
+     * Indique si une exception doit être levée au lieu de supprimer silencieusement les attributs non remplissables.
      */
     protected static bool $modelsShouldPreventSilentlyDiscardingAttributes = false;
 
     /**
-     * The callback that is responsible for handling discarded attribute violations.
+     * Le callback responsable de la gestion des violations d'attributs supprimés.
      *
      * @var (callable(self, array))|null
      */
     protected static $discardedAttributeViolationCallback;
 
     /**
-     * Indicates if an exception should be thrown when trying to access a missing attribute on a retrieved model.
+     * Indique si une exception doit être levée lors de la tentative d'accès à un attribut manquant sur un modèle récupéré.
      */
     protected static bool $modelsShouldPreventAccessingMissingAttributes = false;
 
     /**
-     * The callback that is responsible for handling missing attribute violations.
+     * Le callback responsable de la gestion des violations d'attributs manquants.
      *
      * @var (callable(self, array))|null
      */
     protected static $missingAttributeViolationCallback;
 
     /**
-     * The Wolke query builder class to use for the model.
+     * La classe de constructeur de requête Wolke à utiliser pour le modèle.
      *
      * @var class-string<Builder<*>>
      */
     protected static string $builder = Builder::class;
 
     /**
-     * The Wolke collection class to use for the model.
+     * La classe de collection Wolke à utiliser pour le modèle.
      *
      * @var class-string<Collection<*, *>>
      */
     protected static string $collectionClass = Collection::class;
 
     /**
-     * Cache of soft deletable models.
+     * Cache des modèles soft deletable.
      *
      * @var array<class-string<self>, bool>
      */
     protected static array $isSoftDeletable = [];
     
     /**
-     * Create a new Wolke model instance.
+     * Crée une nouvelle instance de modèle Wolke.
      *
      * @param  array<string, mixed>  $attributes
      */
@@ -255,7 +258,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Check if the model needs to be booted and if so, do it.
+     * Vérifie si le modèle doit être démarré et si oui, le fait.
      */
     protected function bootIfNotBooted(): void
     {
@@ -279,14 +282,14 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Perform any actions required before the model boots.
+     * Effectue toutes les actions nécessaires avant le démarrage du modèle.
      */
     protected static function booting(): void
     {
     }
 
     /**
-     * Bootstrap the model and its traits.
+     * Démarre le modèle et ses traits.
      */
     protected static function boot(): void
     {
@@ -294,7 +297,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Boot all of the bootable traits on the model.
+     * Démarre tous les traits démarrables sur le modèle.
      */
     protected static function bootTraits(): void
     {
@@ -326,7 +329,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Initialize any initializable traits on the model.
+     * Initialise tous les traits initialisables sur le modèle.
      */
     protected function initializeTraits(): void
     {
@@ -336,14 +339,14 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Perform any actions required after the model boots.
+     * Effectue toutes les actions nécessaires après le démarrage du modèle.
      */
     protected static function booted(): void
     {
     }
 
     /**
-     * Register a closure to be executed after the model has booted.
+     * Enregistre une fermeture à exécuter après le démarrage du modèle.
      */
     protected static function whenBooted(Closure $callback)
     {
@@ -353,7 +356,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Clear the list of booted models so they will be re-booted.
+     * Efface la liste des modèles démarrés afin qu'ils soient redémarrés.
      */
     public static function clearBootedModels(): void
     {
@@ -364,7 +367,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Disables relationship model touching for the current class during given callback scope.
+     * Désactive le touch des modèles de relation pour la classe actuelle pendant la portée de rappel donnée.
      */
     public static function withoutTouching(callable $callback): void
     {
@@ -372,7 +375,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Disables relationship model touching for the given model classes during given callback scope.
+     * Désactive le touch des modèles de relation pour les classes de modèle données pendant la portée de rappel donnée.
      */
     public static function withoutTouchingOn(array $models, callable $callback): void
     {
@@ -386,7 +389,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if the given model is ignoring touches.
+     * Détermine si le modèle donné ignore les touches.
      */
     public static function isIgnoringTouch(?string $class = null): bool
     {
@@ -406,7 +409,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Indicate that models should prevent lazy loading, silently discarding attributes, and accessing missing attributes.
+     * Indique que les modèles doivent empêcher le chargement paresseux, la suppression silencieuse d'attributs et l'accès aux attributs manquants.
      */
     public static function shouldBeStrict(bool $shouldBeStrict = true): void
     {
@@ -416,7 +419,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Prevent model relationships from being lazy loaded.
+     * Empêche les relations de modèle d'être chargées paresseusement.
      */
     public static function preventLazyLoading(bool $value = true): void
     {
@@ -424,7 +427,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if model relationships should be automatically eager loaded when accessed.
+     * Détermine si les relations de modèle doivent être automatiquement chargées avec empressement lorsqu'elles sont accédées.
      */
     public static function automaticallyEagerLoadRelationships(bool $value = true): void
     {
@@ -432,7 +435,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Register a callback that is responsible for handling lazy loading violations.
+     * Enregistre un rappel responsable de la gestion des violations de chargement paresseux.
      * 
      * @param  (callable(self, string))|null  $callback
      */
@@ -442,7 +445,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Prevent non-fillable attributes from being silently discarded.
+     * Empêche les attributs non remplissables d'être supprimés silencieusement.
      */
     public static function preventSilentlyDiscardingAttributes(bool $value = true): void
     {
@@ -450,7 +453,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Register a callback that is responsible for handling discarded attribute violations.
+     * Enregistre un rappel responsable de la gestion des violations d'attributs supprimés.
      * 
      * @param  (callable(self, array))|null  $callback
      */
@@ -460,7 +463,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Prevent accessing missing attributes on retrieved models.
+     * Empêche l'accès aux attributs manquants sur les modèles récupérés.
      */
     public static function preventAccessingMissingAttributes(bool $value = true): void
     {
@@ -468,7 +471,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Register a callback that is responsible for handling missing attribute violations.
+     * Enregistre un rappel responsable de la gestion des violations d'attributs manquants.
      * 
      * @param  (callable(self, string))|null  $callback
      */
@@ -478,7 +481,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Fill the model with an array of attributes.
+     * Remplit le modèle avec un tableau d'attributs.
      *
      * @throws MassAssignmentException
      */
@@ -488,9 +491,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
         $fillable       = $this->fillableFromArray($attributes);
 
         foreach ($fillable as $key => $value) {
-            // The developers may choose to place some attributes in the "fillable" array
-            // which means only those attributes may be set through mass assignment to
-            // the model, and all others will just get ignored for security reasons.
+            // Les développeurs peuvent choisir de placer certains attributs dans le tableau "fillable",
+            // ce qui signifie que seuls ces attributs peuvent être définis par assignation en masse sur
+            // le modèle, et tous les autres seront simplement ignorés pour des raisons de sécurité.
             if ($this->isFillable($key)) {
                 $this->setAttribute($key, $value);
             } elseif ($totallyGuarded || static::preventsSilentlyDiscardingAttributes()) {
@@ -525,7 +528,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Fill the model with an array of attributes. Force mass assignment.
+     * Remplit le modèle avec un tableau d'attributs. Force l'assignation en masse.
      */
     public function forceFill(array $attributes): static
     {
@@ -533,7 +536,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Qualify the given column name by the model's table.
+     * Qualifie le nom de colonne donné par la table du modèle.
      */
     public function qualifyColumn(string $column): string
     {
@@ -545,7 +548,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Qualify the given columns with the model's table.
+     * Qualifie les colonnes données avec la table du modèle.
      */
     public function qualifyColumns(array $columns): array
     {
@@ -555,15 +558,15 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Create a new instance of the given model.
+     * Crée une nouvelle instance du modèle donné.
      *
      * @param  array<string, mixed>  $attributes
      */
     public function newInstance(array $attributes = [], bool $exists = false): static
     {
-        // This method just provides a convenient way for us to generate fresh model
-        // instances of this current model. It is particularly useful during the
-        // hydration of new objects via the Eloquent query builder instances.
+        // Cette méthode fournit simplement un moyen pratique pour nous de générer de nouvelles instances
+        // de modèle de ce modèle actuel. Elle est particulièrement utile lors de
+        // l'hydratation de nouveaux objets via les instances de constructeur de requête Eloquent.
         $model = new static();
 
         $model->exists = $exists;
@@ -582,7 +585,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Create a new model instance that is existing.
+     * Crée une nouvelle instance de modèle existante.
      */
     public function newFromBuilder(array $attributes = [], ?string $connection = null): static
     {
@@ -598,20 +601,20 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Begin querying the model on a given connection.
+     * Commence une requête sur le modèle sur une connexion donnée.
      * 
      * @return Builder<static>
      */
     public static function on(?string $connection = null): Builder
     {
-        // First we will just create a fresh instance of this model, and then we can set the
-        // connection on the model so that it is used for the queries we execute, as well
-        // as being set on every relation we retrieve without a custom connection name.
+        // Nous allons d'abord créer une nouvelle instance de ce modèle, puis nous pouvons définir la
+        // connexion sur le modèle afin qu'elle soit utilisée pour les requêtes que nous exécutons, ainsi
+        // qu'être définie sur chaque relation que nous récupérons sans nom de connexion personnalisé.
         return (new static())->setConnection($connection)->newQuery();
     }
 
     /**
-     * Begin querying the model on the write connection.
+     * Commence une requête sur le modèle sur la connexion d'écriture.
      * 
      * @return Builder<static>
      */
@@ -621,7 +624,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get all of the models from the database.
+     * Obtient tous les modèles de la base de données.
      *
      * @param  array|string  $columns
      *
@@ -635,7 +638,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Begin querying a model with eager loading.
+     * Commence une requête sur un modèle avec chargement empressé.
      * 
      * @return Builder<static>
      */
@@ -647,7 +650,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relations on the model.
+     * Charge avec empressement des relations sur le modèle.
      */
     public function load(array|string $relations): static
     {
@@ -661,7 +664,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relationships on the polymorphic relation of a model.
+     * Charge avec empressement des relations sur la relation polymorphe d'un modèle.
      */
     public function loadMorph(string $relation, array $relations): static
     {
@@ -677,7 +680,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relations on the model if they are not already eager loaded.
+     * Charge avec empressement des relations sur le modèle si elles ne sont pas déjà chargées avec empressement.
      */
     public function loadMissing(array|string $relations): static
     {
@@ -689,7 +692,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relation's column aggregations on the model.
+     * Charge avec empressement les agrégations de colonnes de relation sur le modèle.
      */
     public function loadAggregate(array|string $relations, string $column, ?string $function = null): self
     {
@@ -699,7 +702,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relation counts on the model.
+     * Charge avec empressement les compteurs de relations sur le modèle.
      */
     public function loadCount(array|string $relations): static
     {
@@ -709,7 +712,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relation max column values on the model.
+     * Charge avec empressement les valeurs maximales de colonne de relation sur le modèle.
      */
     public function loadMax(array|string $relations, string $column): static
     {
@@ -717,7 +720,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relation min column values on the model.
+     * Charge avec empressement les valeurs minimales de colonne de relation sur le modèle.
      */
     public function loadMin(array|string $relations, string $column): static
     {
@@ -725,7 +728,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relation's column summations on the model.
+     * Charge avec empressement les sommes de colonne de relation sur le modèle.
      */
     public function loadSum(array|string $relations, string $column): static
     {
@@ -733,7 +736,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relation average column values on the model.
+     * Charge avec empressement les valeurs moyennes de colonne de relation sur le modèle.
      */
     public function loadAvg(array|string $relations, string $column): static
     {
@@ -741,7 +744,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load related model existence values on the model.
+     * Charge avec empressement les valeurs d'existence de modèle lié sur le modèle.
      */
     public function loadExists(array|string $relations): static
     {
@@ -749,7 +752,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relationship column aggregation on the polymorphic relation of a model.
+     * Charge avec empressement l'agrégation de colonne de relation sur la relation polymorphe d'un modèle.
      */
     public function loadMorphAggregate(string $relation, array $relations, string $column, ?string $function = null): static
     {
@@ -765,7 +768,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relationship counts on the polymorphic relation of a model.
+     * Charge avec empressement les compteurs de relations sur la relation polymorphe d'un modèle.
      */
     public function loadMorphCount(string $relation, array $relations): static
     {
@@ -773,7 +776,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relationship max column values on the polymorphic relation of a model.
+     * Charge avec empressement les valeurs maximales de colonne de relation sur la relation polymorphe d'un modèle.
      */
     public function loadMorphMax(string $relation, array $relations, string $column): static
     {
@@ -781,7 +784,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relationship min column values on the polymorphic relation of a model.
+     * Charge avec empressement les valeurs minimales de colonne de relation sur la relation polymorphe d'un modèle.
      */
     public function loadMorphMin(string $relation, array $relations, string $column): static
     {
@@ -789,7 +792,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relationship column summations on the polymorphic relation of a model.
+     * Charge avec empressement les sommes de colonne de relation sur la relation polymorphe d'un modèle.
      */
     public function loadMorphSum(string $relation, array $relations, string $column): static
     {
@@ -797,7 +800,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Eager load relationship average column values on the polymorphic relation of a model.
+     * Charge avec empressement les valeurs moyennes de colonne de relation sur la relation polymorphe d'un modèle.
      */
     public function loadMorphAvg(string $relation, array $relations, string $column): static
     {
@@ -805,7 +808,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Increment a column's value by a given amount.
+     * Incrémente la valeur d'une colonne d'un montant donné.
      *
      * @return false|float|int
      */
@@ -815,7 +818,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Decrement a column's value by a given amount.
+     * Décrémente la valeur d'une colonne d'un montant donné.
      *
      * @return false|float|int
      */
@@ -825,7 +828,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Run the increment or decrement method on the model.
+     * Exécute la méthode d'incrémentation ou de décrémentation sur le modèle.
      *
      * @return false|float|int
      */
@@ -859,7 +862,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Update the model in the database.
+     * Met à jour le modèle dans la base de données.
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<string, mixed>  $options
@@ -874,7 +877,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Update the model in the database within a transaction.
+     * Met à jour le modèle dans la base de données dans une transaction.
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<string, mixed>  $options
@@ -891,7 +894,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Update the model in the database without raising any events.
+     * Met à jour le modèle dans la base de données sans déclencher d'événements.
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<string, mixed>  $options
@@ -906,7 +909,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Increment a column's value by a given amount without raising any events.
+     * Incrémente la valeur d'une colonne d'un montant donné sans déclencher d'événements.
      * 
      * @return false|float|int
      */
@@ -916,7 +919,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Decrement a column's value by a given amount without raising any events.
+     * Décrémente la valeur d'une colonne d'un montant donné sans déclencher d'événements.
      * 
      * @return false|float|int
      */
@@ -926,7 +929,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Save the model and all of its relationships.
+     * Sauvegarde le modèle et toutes ses relations.
      */
     public function push(): bool
     {
@@ -935,9 +938,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
                 return false;
             }
 
-            // To sync all of the relationships to the database, we will simply spin through
-            // the relationships and save each model via this "push" method, which allows
-            // us to recurse into all of these nested relations for the model instance.
+            // Pour synchroniser toutes les relations avec la base de données, nous allons simplement parcourir
+            // les relations et sauvegarder chaque modèle via cette méthode "push", qui nous permet
+            // de récurser dans toutes ces relations imbriquées pour l'instance de modèle.
             foreach ($this->relations as $models) {
                 $models = $models instanceof Collection
                     ? $models->all()
@@ -955,7 +958,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Save the model and all of its relationships without raising any events to the parent model.
+     * Sauvegarde le modèle et toutes ses relations sans déclencher d'événements.
      */
     public function pushQuietly(): bool
     {
@@ -963,7 +966,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Save the model to the database without raising any events.
+     * Sauvegarde le modèle dans la base de données sans déclencher d'événements.
      */
     public function saveQuietly(array $options = []): bool
     {
@@ -971,7 +974,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Save the model to the database.
+     * Sauvegarde le modèle dans la base de données.
      */
     public function save(array $options = []): bool
     {
@@ -979,24 +982,24 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
         $query = $this->newModelQuery();
 
-        // If the "saving" event returns false we'll bail out of the save and return
-        // false, indicating that the save failed. This provides a chance for any
-        // listeners to cancel save operations if validations fail or whatever.
+        // Si l'événement "saving" retourne false, nous abandonnerons la sauvegarde et retournerons
+        // false, indiquant que la sauvegarde a échoué. Cela donne une chance à tous les
+        // écouteurs d'annuler les opérations de sauvegarde si les validations échouent ou autre.
         if ($this->fireModelEvent('saving') === false) {
             return false;
         }
 
-        // If the model already exists in the database we can just update our record
-        // that is already in this database using the current IDs in this "where"
-        // clause to only update this model. Otherwise, we'll just insert them.
+        // Si le modèle existe déjà dans la base de données, nous pouvons simplement mettre à jour notre enregistrement
+        // qui est déjà dans cette base de données en utilisant les IDs actuels dans cette clause "where"
+        // pour ne mettre à jour que ce modèle. Sinon, nous allons simplement les insérer.
         if ($this->exists) {
             $saved = $this->isDirty() ?
                         $this->performUpdate($query) : true;
         }
 
-        // If the model is brand new, we'll insert it into our database and set the
-        // ID attribute on the model to the value of the newly inserted row's ID
-        // which is typically an auto-increment value managed by the database.
+        // Si le modèle est tout nouveau, nous l'insérerons dans notre base de données et définirons
+        // l'attribut ID sur le modèle à la valeur de l'ID de la ligne nouvellement insérée
+        // qui est généralement une valeur auto-incrémentée gérée par la base de données.
         else {
             $saved = $this->performInsert($query);
 
@@ -1005,9 +1008,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             }
         }
 
-        // If the model is successfully saved, we need to do a few more things once
-        // that is done. We will call the "saved" method here to run any actions
-        // we need to happen after a model gets successfully saved right here.
+        // Si le modèle est sauvegardé avec succès, nous devons faire quelques choses supplémentaires une fois
+        // que c'est fait. Nous appellerons la méthode "saved" ici pour exécuter toutes les actions
+        // que nous devons faire après qu'un modèle soit sauvegardé avec succès.
         if ($saved) {
             $this->finishSave($options);
         }
@@ -1016,7 +1019,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Save the model to the database using transaction.
+     * Sauvegarde le modèle dans la base de données en utilisant une transaction.
      *
      * @throws DatabaseException
      */
@@ -1026,7 +1029,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Perform any actions that are necessary after the model is saved.
+     * Effectue toutes les actions nécessaires après la sauvegarde du modèle.
      */
     protected function finishSave(array $options): void
     {
@@ -1040,29 +1043,29 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Perform a model update operation.
+     * Effectue une opération de mise à jour du modèle.
      *
      * @param Builder<static>
      */
     protected function performUpdate(Builder $query): bool
     {
-        // If the updating event returns false, we will cancel the update operation so
-        // developers can hook Validation systems into their models and cancel this
-        // operation if the model does not pass validation. Otherwise, we update.
+        // Si l'événement updating retourne false, nous annulerons l'opération de mise à jour afin que les
+        // développeurs puissent intégrer des systèmes de validation dans leurs modèles et annuler cette
+        // opération si le modèle ne passe pas la validation. Sinon, nous mettons à jour.
         if ($this->fireModelEvent('updating') === false) {
             return false;
         }
 
-        // First we need to create a fresh query instance and touch the creation and
-        // update timestamp on the model which are maintained by us for developer
-        // convenience. Then we will just continue saving the model instances.
+        // Nous devons d'abord créer une nouvelle instance de requête et toucher les horodatages de création et
+        // de mise à jour sur le modèle, qui sont maintenus par nous pour la commodité du développeur.
+        // Ensuite, nous continuerons simplement à sauvegarder les instances du modèle.
         if ($this->usesTimestamps()) {
             $this->updateTimestamps();
         }
 
-        // Once we have run the update operation, we will fire the "updated" event for
-        // this model instance. This will allow developers to hook into these after
-        // models are updated, giving them a chance to do any special processing.
+        // Une fois que nous avons exécuté l'opération de mise à jour, nous déclencherons l'événement "updated" pour
+        // cette instance de modèle. Cela permettra aux développeurs de s'intégrer après que les
+        // modèles soient mis à jour, leur donnant une chance de faire tout traitement spécial.
         $dirty = $this->getDirtyForUpdate();
 
         if (method_exists($this, 'beforeUpdate')) {
@@ -1081,7 +1084,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Set the keys for a select query.
+     * Définit les clés pour une requête de sélection.
      *
      * @param  Builder<static>  $query
      * 
@@ -1095,7 +1098,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the primary key value for a select query.
+     * Obtient la valeur de la clé primaire pour une requête de sélection.
      */
     protected function getKeyForSelectQuery(): mixed
     {
@@ -1103,7 +1106,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Set the keys for a save update query.
+     * Définit les clés pour une requête de sauvegarde de mise à jour.
      *
      * @param  Builder<static>  $query
      * 
@@ -1117,7 +1120,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the primary key value for a save query.
+     * Obtient la valeur de la clé primaire pour une requête de sauvegarde.
      */
     protected function getKeyForSaveQuery(): mixed
     {
@@ -1125,7 +1128,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Perform a model insert operation.
+     * Effectue une opération d'insertion de modèle.
      *
      * @param Builder<static> $query
      */
@@ -1139,16 +1142,16 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             return false;
         }
 
-        // First we'll need to create a fresh query instance and touch the creation and
-        // update timestamps on this model, which are maintained by us for developer
-        // convenience. After, we will just continue saving these model instances.
+        // Nous devons d'abord créer une nouvelle instance de requête et toucher les horodatages de création et
+        // de mise à jour sur ce modèle, qui sont maintenus par nous pour la commodité du développeur.
+        // Après cela, nous continuerons simplement à sauvegarder ces instances de modèle.
         if ($this->usesTimestamps()) {
             $this->updateTimestamps();
         }
 
-        // If the model has an incrementing key, we can use the "insertGetId" method on
-        // the query builder, which will give us back the final inserted ID for this
-        // table from the database. Not all tables have to be incrementing though.
+        // Si le modèle a une clé incrémentale, nous pouvons utiliser la méthode "insertGetId" sur
+        // le constructeur de requête, qui nous redonnera l'ID final inséré pour cette
+        // table de la base de données. Cependant, toutes les tables ne doivent pas être incrémentales.
         $attributes = $this->getAttributesForInsert();
 
         if (method_exists($this, 'beforeCreate')) {
@@ -1159,9 +1162,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             $this->insertAndSetId($query, $attributes);
         }
 
-        // If the table isn't incrementing we'll simply insert these attributes as they
-        // are. These attribute arrays must contain an "id" column previously placed
-        // there by the developer as the manually determined key for these models.
+        // Si la table n'est pas incrémentale, nous allons simplement insérer ces attributs tels qu'ils
+        // sont. Ces tableaux d'attributs doivent contenir une colonne "id" précédemment placée
+        // là par le développeur comme clé déterminée manuellement pour ces modèles.
         else {
             if (empty($attributes)) {
                 return true;
@@ -1170,9 +1173,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             $query->insert($attributes);
         }
 
-        // We will go ahead and set the exists property to true, so that it is set when
-        // the created event is fired, just in case the developer tries to update it
-        // during the event. This will allow them to do so and run an update here.
+        // Nous allons définir la propriété exists sur true, afin qu'elle soit définie lorsque
+        // l'événement created est déclenché, juste au cas où le développeur essaierait de le mettre à jour
+        // pendant l'événement. Cela lui permettra de le faire et d'exécuter une mise à jour ici.
         $this->exists = true;
 
         $this->wasRecentlyCreated = true;
@@ -1183,7 +1186,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Insert the given attributes and set the ID on the model.
+     * Insère les attributs donnés et définit l'ID sur le modèle.
      *
      * @param Builder<static>  $query
      * @param array<string, mixed>  $attributes
@@ -1196,7 +1199,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Destroy the models for the given IDs.
+     * Détruit les modèles pour les IDs donnés.
      *
      * @param array|IterableCollection|int|string $ids
      */
@@ -1216,9 +1219,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             return 0;
         }
 
-        // We will actually pull the models from the database table and call delete on
-        // each of them individually so that their events get fired properly with a
-        // correct set of attributes in case the developers wants to check these.
+        // Nous allons en fait récupérer les modèles de la table de base de données et appeler delete sur
+        // chacun d'eux individuellement afin que leurs événements soient déclenchés correctement avec
+        // un ensemble correct d'attributs au cas où les développeurs voudraient vérifier cela.
         $key = ($instance = new static())->getKeyName();
 
         $count = 0;
@@ -1233,21 +1236,23 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Delete the model from the database.
+     * Supprime le modèle de la base de données.
      *
+     * @return bool|null
+     * 
      * @throws LogicException
      */
-    public function delete(): ?bool
+    public function delete()
     {
         $this->mergeAttributesFromCachedCasts();
 
         if (null === $this->getKeyName()) {
-            throw new LogicException('No primary key defined on model.');
+            throw new LogicException('Aucune clé primaire définie sur le modèle.');
         }
 
-        // If the model doesn't exist, there is nothing to delete so we'll just return
-        // immediately and not do anything else. Otherwise, we will continue with a
-        // deletion process on the model, firing the proper events, and so forth.
+        // Si le modèle n'existe pas, il n'y a rien à supprimer, donc nous allons simplement retourner
+        // immédiatement et ne rien faire d'autre. Sinon, nous continuerons avec un
+        // processus de suppression sur le modèle, en déclenchant les événements appropriés, etc.
         if (! $this->exists) {
             return null;
         }
@@ -1256,23 +1261,23 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
             return false;
         }
 
-        // Here, we'll touch the owning models, verifying these timestamps get updated
-        // for the models. This will allow any caching to get broken on the parents
-        // by the timestamp. Then we will go ahead and delete the model instance.
+        // Ici, nous allons toucher les modèles propriétaires, en vérifiant que ces horodatages soient mis à jour
+        // pour les modèles. Cela permettra de briser tout cache sur les parents
+        // par l'horodatage. Ensuite, nous procéderons à la suppression de l'instance du modèle.
         $this->touchOwners();
 
         $this->performDeleteOnModel();
 
-        // Once the model has been deleted, we will fire off the deleted event so that
-        // the developers may hook into post-delete operations. We will then return
-        // a boolean true as the delete is presumably successful on the database.
+        // Une fois que le modèle a été supprimé, nous déclencherons l'événement deleted afin que
+        // les développeurs puissent s'intégrer aux opérations post-suppression. Nous retournerons ensuite
+        // un booléen true car la suppression est vraisemblablement réussie sur la base de données.
         $this->fireModelEvent('deleted', false);
 
         return true;
     }
 
     /**
-     * Delete the model from the database without raising any events.
+     * Supprime le modèle de la base de données sans déclencher d'événements.
      */
     public function deleteQuietly(): ?bool
     {
@@ -1280,7 +1285,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Delete the model from the database within a transaction.
+     * Supprime le modèle de la base de données dans une transaction.
      *
      * @throws Throwable
      */
@@ -1294,9 +1299,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Force a hard delete on a soft deleted model.
+     * Effectue une suppression dure sur un modèle supprimé de façon douce.
      *
-     * This method protects developers from running forceDelete when the trait is missing.
+     * Cette méthode protège les développeurs de l'exécution de forceDelete lorsque le trait est manquant.
      */
     public function forceDelete(): ?bool
     {
@@ -1304,9 +1309,9 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Force a hard destroy on a soft deleted model.
+     * Effectue une destruction dure sur un modèle supprimé de façon douce.
      *
-     * This method protects developers from running forceDestroy when the trait is missing.
+     * Cette méthode protège les développeurs de l'exécution de forceDestroy lorsque le trait est manquant.
      *
      * @param IterableCollection|array|int|string  $ids
      */
@@ -1316,7 +1321,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Perform the actual delete query on this model instance.
+     * Effectue la requête de suppression réelle sur cette instance de modèle.
      *
      * @return void
      */
@@ -1328,7 +1333,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Begin querying the model.
+     * Commence une requête sur le modèle.
      *
      * @return Builder<static>
      */
@@ -1338,7 +1343,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get a new query builder for the model's table.
+     * Obtient un nouveau constructeur de requête pour la table du modèle.
      *
      * @return Builder<static>
      */
@@ -1348,7 +1353,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get a new query builder that doesn't have any global scopes or eager loading.
+     * Obtient un nouveau constructeur de requête qui n'a pas de portées globales ni de chargements empressés.
      *
      * @return Builder<static>
      */
@@ -1358,7 +1363,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get a new query builder with no relationships loaded.
+     * Obtient un nouveau constructeur de requête sans relations chargées.
      *
      * @return Builder<static>
      */
@@ -1368,7 +1373,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Register the global scopes for this builder instance.
+     * Enregistre les portées globales pour cette instance de constructeur.
      *
      * @param Builder<static> $builder
      *
@@ -1384,7 +1389,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get a new query builder that doesn't have any global scopes.
+     * Obtient un nouveau constructeur de requête qui n'a pas de portées globales.
      *
      * @return Builder<static>
      */
@@ -1396,7 +1401,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get a new query instance without a given scope.
+     * Obtient une nouvelle instance de requête sans une portée donnée.
      *
      * @return Builder<static>
      */
@@ -1406,7 +1411,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get a new query to restore one or more models by their queueable IDs.
+     * Obtient une nouvelle requête pour restaurer un ou plusieurs modèles par leurs IDs de file d'attente.
      *
      * @return Builder<static>
      */
@@ -1416,7 +1421,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Create a new Wolke query builder for the model.
+     * Crée un nouveau constructeur de requête Wolke pour le modèle.
      * 
      * @return Builder<*>
      */
@@ -1432,7 +1437,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Resolve the custom Eloquent builder class from the model attributes.
+     * Résout la classe de constructeur Eloquent personnalisée à partir des attributs du modèle.
      *
      * @return class-string<Builder>|false
      */
@@ -1446,7 +1451,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get a new query builder instance for the connection.
+     * Obtient une nouvelle instance de constructeur de requête pour la connexion.
      */
     protected function newBaseQueryBuilder(): BaseBuilder
     {
@@ -1454,7 +1459,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Create a new pivot model instance.
+     * Crée une nouvelle instance de modèle pivot.
      * 
      * @param  array<string, mixed>  $attributes
      */
@@ -1465,7 +1470,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if the model has a given scope.
+     * Détermine si le modèle a une portée donnée.
      */
     public function hasNamedScope(string $scope): bool
     {
@@ -1474,7 +1479,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Apply the given named scope if possible.
+     * Applique la portée nommée donnée si possible.
      */
     public function callNamedScope(string $scope, array $parameters = []): mixed
     {
@@ -1486,7 +1491,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if the given method has a scope attribute.
+     * Détermine si la méthode donnée a un attribut de portée.
      */
     protected static function isScopeMethodWithAttribute(string $method): bool
     {
@@ -1496,7 +1501,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Convert the model instance to an array.
+     * Convertit l'instance de modèle en un tableau.
      */
     public function toArray(): array
     {
@@ -1507,7 +1512,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Convert the model instance to JSON.
+     * Convertit l'instance de modèle en JSON.
      *
      * @throws JsonEncodingException
      */
@@ -1523,7 +1528,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Convert the model instance to pretty print formatted JSON.
+     * Convertit l'instance de modèle en JSON formaté de façon jolie.
      *
      * @throws JsonEncodingException
      */
@@ -1533,7 +1538,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Convert the object into something JSON serializable.
+     * Convertit l'objet en quelque chose de sérialisable en JSON.
      */
     public function jsonSerialize(): mixed
     {
@@ -1541,7 +1546,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Reload a fresh model instance from the database.
+     * Recharge une nouvelle instance de modèle fraîche depuis la base de données.
      */
     public function fresh(array|string $with = []): ?static
     {
@@ -1555,7 +1560,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Reload the current model instance with fresh attributes from the database.
+     * Recharge l'instance de modèle actuelle avec des attributs frais de la base de données.
      */
     public function refresh(): static
     {
@@ -1580,7 +1585,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Clone the model into a new, non-existing instance.
+     * Clone le modèle dans une nouvelle instance non existante.
      */
     public function replicate(?array $except = null): static
     {
@@ -1607,7 +1612,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Clone the model into a new, non-existing instance without raising any events.
+     * Clone le modèle dans une nouvelle instance non existante sans déclencher d'événements.
      */
     public function replicateQuietly(?array $except = null): static
     {
@@ -1615,7 +1620,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if two models have the same ID and belong to the same table.
+     * Détermine si deux modèles ont le même ID et appartiennent à la même table.
      */
     public function is(?self $model): bool
     {
@@ -1626,7 +1631,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if two models are not the same.
+     * Détermine si deux modèles ne sont pas les mêmes.
      */
     public function isNot(?self $model): bool
     {
@@ -1634,7 +1639,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the database connection for the model.
+     * Obtient la connexion à la base de données pour le modèle.
      */
     public function getConnection(): BaseConnection
     {
@@ -1642,7 +1647,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the current connection name for the model.
+     * Obtient le nom de la connexion actuelle pour le modèle.
      */
     public function getConnectionName(): ?string
     {
@@ -1650,7 +1655,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Définissez la connexion associée au modèle.
+     * Définit la connexion associée au modèle.
      */
     public function setConnection(?string $name): static
     {
@@ -1660,7 +1665,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Résoudre une instance de connexion.
+     * Résout une instance de connexion.
      */
     public static function resolveConnection(?string $connection = null): BaseConnection
     {
@@ -1668,7 +1673,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the connection resolver instance.
+     * Obtient l'instance de résolveur de connexion.
      */
     public static function getConnectionResolver(): ConnectionResolverInterface
     {
@@ -1676,7 +1681,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Set the connection resolver instance.
+     * Définit l'instance de résolveur de connexion.
      */
     public static function setConnectionResolver(ConnectionResolverInterface $resolver): void
     {
@@ -1684,7 +1689,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Unset the connection resolver for models.
+     * Supprime le résolveur de connexion pour les modèles.
      */
     public static function unsetConnectionResolver(): void
     {
@@ -1692,7 +1697,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Obtenir la table associée au modèle.
+     * Obtient la table associée au modèle.
      */
     public function getTable(): string
     {
@@ -1700,7 +1705,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Définir la table associée au modèle.
+     * Définit la table associée au modèle.
      */
     public function setTable(string $table): self
     {
@@ -1710,7 +1715,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Obtenir la clé primaire pour le modèle.
+     * Obtient la clé primaire pour le modèle.
      */
     public function getKeyName(): string
     {
@@ -1718,7 +1723,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Définissez la clé primaire du modèle.
+     * Définit la clé primaire du modèle.
      */
     public function setKeyName(string $key): self
     {
@@ -1728,7 +1733,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the table qualified key name.
+     * Obtient le nom de la clé qualifiée par la table.
      */
     public function getQualifiedKeyName(): string
     {
@@ -1736,7 +1741,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the auto-incrementing key type.
+     * Obtient le type de clé auto-incrémentée.
      */
     public function getKeyType(): string
     {
@@ -1744,7 +1749,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Set the data type for the primary key.
+     * Définit le type de données pour la clé primaire.
      */
     public function setKeyType(string $type): self
     {
@@ -1754,7 +1759,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the value indicating whether the IDs are incrementing.
+     * Obtient la valeur indiquant si les ID sont incrémentés.
      */
     public function getIncrementing(): bool
     {
@@ -1762,7 +1767,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Set whether IDs are incrementing.
+     * Définit si les ID sont incrémentés.
      */
     public function setIncrementing(bool $value): self
     {
@@ -1772,7 +1777,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the value of the model's primary key.
+     * Obtient la valeur de la clé primaire du modèle.
      */
     public function getKey(): mixed
     {
@@ -1780,7 +1785,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the queueable identity for the entity.
+     * Obtient l'identité de file d'attente pour l'entité.
      */
     public function getQueueableId(): mixed
     {
@@ -1788,7 +1793,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the queueable relationships for the entity.
+     * Obtient les relations de file d'attente pour l'entité.
      */
     public function getQueueableRelations(): array
     {
@@ -1820,7 +1825,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the queueable connection for the entity.
+     * Obtient la connexion de file d'attente pour l'entité.
      */
     public function getQueueableConnection(): ?string
     {
@@ -1828,7 +1833,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the default foreign key name for the model.
+     * Obtient le nom de clé étrangère par défaut pour le modèle.
      */
     public function getForeignKey(): string
     {
@@ -1836,7 +1841,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the number of models to return per page.
+     * Obtient le nombre de modèles à retourner par page.
      */
     public function getPerPage(): int
     {
@@ -1844,7 +1849,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Set the number of models to return per page.
+     * Définit le nombre de modèles à retourner par page.
      */
     public function setPerPage(int $perPage): self
     {
@@ -1854,7 +1859,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if the model is soft deletable.
+     * Détermine si le modèle est soft deletable.
      */
     public static function isSoftDeletable(): bool
     {
@@ -1862,7 +1867,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if lazy loading is disabled.
+     * Détermine si le chargement paresseux est désactivé.
      */
     public static function preventsLazyLoading(): bool
     {
@@ -1870,7 +1875,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if relationships are being automatically eager loaded when accessed.
+     * Détermine si les relations sont automatiquement chargées avec empressement lorsqu'elles sont accédées.
      */
     public static function isAutomaticallyEagerLoadingRelationships(): bool
     {
@@ -1878,7 +1883,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if discarding guarded attribute fills is disabled.
+     * Détermine si la suppression silencieuse des attributs fillable est désactivée.
      */
     public static function preventsSilentlyDiscardingAttributes(): bool
     {
@@ -1886,7 +1891,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if accessing missing attributes is disabled.
+     * Détermine si l'accès aux attributs manquants est désactivé.
      */
     public static function preventsAccessingMissingAttributes(): bool
     {
@@ -1894,7 +1899,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Dynamically retrieve attributes on the model.
+     * Récupère dynamiquement les attributs sur le modèle.
      */
     public function __get(string $key): mixed
     {
@@ -1902,7 +1907,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Dynamically set attributes on the model.
+     * Définit dynamiquement les attributs sur le modèle.
      */
     public function __set(string $key, mixed $value): void
     {
@@ -1910,7 +1915,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if the given attribute exists.
+     * Détermine si l'attribut donné existe.
      */
     public function offsetExists(mixed $offset): bool
     {
@@ -1926,7 +1931,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Get the value for a given offset.
+     * Obtient la valeur pour un offset donné.
      */
     public function offsetGet(mixed $offset): mixed
     {
@@ -1934,7 +1939,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Set the value for a given offset.
+     * Définit la valeur pour un offset donné.
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
@@ -1942,7 +1947,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Unset the value for a given offset.
+     * Supprime la valeur pour un offset donné.
      */
     public function offsetUnset(mixed $offset): void
     {
@@ -1955,7 +1960,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Determine if an attribute or relation exists on the model.
+     * Détermine si un attribut ou une relation existe sur le modèle.
      */
     public function __isset(string $key): bool
     {
@@ -1963,7 +1968,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Unset an attribute on the model.
+     * Supprime un attribut sur le modèle.
      */
     public function __unset(string $key): void
     {
@@ -1971,7 +1976,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Handle dynamic method calls into the model.
+     * Gère les appels de méthode dynamiques vers le modèle.
      */
     public function __call(string $method, array $parameters = []): mixed
     {
@@ -1992,7 +1997,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Handle dynamic static method calls into the model.
+     * Gère les appels de méthode statiques dynamiques vers le modèle.
      */
     public static function __callStatic(string $method, array $parameters = []): mixed
     {
@@ -2004,7 +2009,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Convert the model to its string representation.
+     * Convertit le modèle en sa représentation sous forme de chaîne.
      */
     public function __toString(): string
     {
@@ -2014,7 +2019,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Indicate that the object's string representation should be escaped when __toString is invoked.
+     * Indique que la représentation sous forme de chaîne de l'objet doit être échappée lorsque __toString est invoqué.
      */
     public function escapeWhenCastingToString(bool $escape = true): static
     {
@@ -2024,7 +2029,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * Prepare the object for serialization.
+     * Prépare l'objet pour la sérialisation.
      */
     public function __sleep(): array
     {
@@ -2049,7 +2054,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     }
 
     /**
-     * When a model is being unserialized, check if it needs to be booted.
+     * Lorsqu'un modèle est désérialisé, vérifie s'il doit être démarré.
      */
     public function __wakeup(): void
     {

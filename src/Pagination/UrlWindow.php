@@ -13,19 +13,22 @@ namespace BlitzPHP\Wolke\Pagination;
 
 use BlitzPHP\Wolke\Contracts\LengthAwarePaginator as PaginatorContract;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\UrlWindow</a>
+ */
 class UrlWindow
 {
     /**
-     * Create a new URL window instance.
+     * Crée une nouvelle instance de fenêtre d'URL.
      *
-     * @param PaginatorContract $paginator The paginator implementation.
+     * @param PaginatorContract $paginator L'implémentation du paginateur.
      */
     public function __construct(protected PaginatorContract $paginator)
     {
     }
 
     /**
-     * Create a new URL window instance.
+     * Crée une nouvelle instance de fenêtre d'URL.
      */
     public static function make(PaginatorContract $paginator): array
     {
@@ -33,7 +36,7 @@ class UrlWindow
     }
 
     /**
-     * Get the window of URLs to be shown.
+     * Obtient la fenêtre des URL à afficher.
      */
     public function get(): array
     {
@@ -47,7 +50,7 @@ class UrlWindow
     }
 
     /**
-     * Get the slider of URLs there are not enough pages to slide.
+     * Obtient le curseur d'URL lorsqu'il n'y a pas assez de pages pour faire défiler.
      */
     protected function getSmallSlider(): array
     {
@@ -59,7 +62,7 @@ class UrlWindow
     }
 
     /**
-     * Create a URL slider links.
+     * Crée un curseur de liens URL.
      */
     protected function getUrlSlider(int $onEachSide): array
     {
@@ -69,28 +72,28 @@ class UrlWindow
             return ['first' => null, 'slider' => null, 'last' => null];
         }
 
-        // If the current page is very close to the beginning of the page range, we will
-        // just render the beginning of the page range, followed by the last 2 of the
-        // links in this list, since we will not have room to create a full slider.
+        // Si la page actuelle est très proche du début de la plage de pages, nous
+        // afficherons simplement le début de la plage de pages, suivi des 2 derniers
+        // liens de cette liste, car nous n'aurons pas de place pour créer un curseur complet.
         if ($this->currentPage() <= $window) {
             return $this->getSliderTooCloseToBeginning($window, $onEachSide);
         }
 
-        // If the current page is close to the ending of the page range we will just get
-        // this first couple pages, followed by a larger window of these ending pages
-        // since we're too close to the end of the list to create a full on slider.
+        // Si la page actuelle est proche de la fin de la plage de pages, nous obtiendrons
+        // ces premières pages, suivies d'une plus grande fenêtre de ces pages de fin
+        // car nous sommes trop près de la fin de la liste pour créer un curseur complet.
         if ($this->currentPage() > ($this->lastPage() - $window)) {
             return $this->getSliderTooCloseToEnding($window, $onEachSide);
         }
 
-        // If we have enough room on both sides of the current page to build a slider we
-        // will surround it with both the beginning and ending caps, with this window
-        // of pages in the middle providing a Google style sliding paginator setup.
+        // Si nous avons assez d'espace des deux côtés de la page actuelle pour construire un curseur,
+        // nous l'entourerons à la fois des chapeaux de début et de fin, avec cette fenêtre
+        // de pages au milieu fournissant une configuration de paginateur coulissant de style Google.
         return $this->getFullSlider($onEachSide);
     }
 
     /**
-     * Get the slider of URLs when too close to beginning of window.
+     * Obtient le curseur d'URL quand trop près du début de la fenêtre.
      */
     protected function getSliderTooCloseToBeginning(int $window, int $onEachSide): array
     {
@@ -102,7 +105,7 @@ class UrlWindow
     }
 
     /**
-     * Get the slider of URLs when too close to ending of window.
+     * Obtient le curseur d'URL quand trop près de la fin de la fenêtre.
      */
     protected function getSliderTooCloseToEnding(int $window, int $onEachSide): array
     {
@@ -119,7 +122,7 @@ class UrlWindow
     }
 
     /**
-     * Get the slider of URLs when a full slider can be made.
+     * Obtient le curseur d'URL quand un curseur complet peut être fait.
      */
     protected function getFullSlider(int $onEachSide): array
     {
@@ -131,7 +134,7 @@ class UrlWindow
     }
 
     /**
-     * Get the page range for the current page window.
+     * Obtient la plage de pages pour la fenêtre de page actuelle.
      */
     public function getAdjacentUrlRange(int $onEachSide): array
     {
@@ -142,7 +145,7 @@ class UrlWindow
     }
 
     /**
-     * Get the starting URLs of a pagination slider.
+     * Obtient les URL de début d'un curseur de pagination.
      */
     public function getStart(): array
     {
@@ -150,7 +153,7 @@ class UrlWindow
     }
 
     /**
-     * Get the ending URLs of a pagination slider.
+     * Obtient les URL de fin d'un curseur de pagination.
      */
     public function getFinish(): array
     {
@@ -161,7 +164,7 @@ class UrlWindow
     }
 
     /**
-     * Determine if the underlying paginator being presented has pages to show.
+     * Détermine si le paginateur sous-jacent présenté a des pages à afficher.
      */
     public function hasPages(): bool
     {
@@ -169,7 +172,7 @@ class UrlWindow
     }
 
     /**
-     * Get the current page from the paginator.
+     * Obtient la page actuelle du paginateur.
      */
     protected function currentPage(): int
     {
@@ -177,7 +180,7 @@ class UrlWindow
     }
 
     /**
-     * Get the last page from the paginator.
+     * Obtient la dernière page du paginateur.
      */
     protected function lastPage(): int
     {

@@ -12,6 +12,8 @@
 namespace BlitzPHP\Wolke\Contracts;
 
 /**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Pagination\Paginator</a>
+ * 
  * @template TKey of array-key
  *
  * @template-covariant TValue
@@ -21,95 +23,95 @@ namespace BlitzPHP\Wolke\Contracts;
 interface Paginator
 {
     /**
-     * Get the URL for a given page.
+     * Obtient l'URL pour une page donnée.
      */
     public function url(int $page): string;
 
     /**
-     * Add a set of query string values to the paginator.
+     * Ajoute un ensemble de valeurs de chaîne de requête au paginateur.
      *
      * @return $this
      */
     public function appends(array|string|null $key, ?string $value = null);
 
     /**
-     * Get / set the URL fragment to be appended to URLs.
+     * Obtient/définit le fragment d'URL à ajouter aux URL.
      *
      * @return $this|string
      */
     public function fragment(?string $fragment = null);
 
     /**
-     * Add all current query string values to the paginator.
+     * Ajoute toutes les valeurs de chaîne de requête actuelles au paginateur.
      *
      * @return $this
      */
     public function withQueryString();
 
     /**
-     * The URL for the next page, or null.
+     * L'URL de la page suivante, ou null.
      */
     public function nextPageUrl(): ?string;
 
     /**
-     * Get the URL for the previous page, or null.
+     * Obtient l'URL de la page précédente, ou null.
      */
     public function previousPageUrl(): ?string;
 
     /**
-     * Get all of the items being paginated.
+     * Obtient tous les éléments paginés.
      *
      * @return array<TKey, TValue>
      */
     public function items(): array;
 
     /**
-     * Get the "index" of the first item being paginated.
+     * Obtient "l'index" du premier élément paginé.
      */
     public function firstItem(): ?int;
 
     /**
-     * Get the "index" of the last item being paginated.
+     * Obtient "l'index" du dernier élément paginé.
      */
     public function lastItem(): ?int;
 
     /**
-     * Determine how many items are being shown per page.
+     * Détermine combien d'éléments sont affichés par page.
      */
     public function perPage(): int;
 
     /**
-     * Determine the current page being paginated.
+     * Détermine la page actuelle en cours de pagination.
      */
     public function currentPage(): ?int;
 
     /**
-     * Determine if there are enough items to split into multiple pages.
+     * Détermine s'il y a assez d'éléments pour diviser en plusieurs pages.
      */
     public function hasPages(): bool;
 
     /**
-     * Determine if there are more items in the data store.
+     * Détermine s'il y a plus d'éléments dans le magasin de données.
      */
     public function hasMorePages(): bool;
 
     /**
-     * Get the base path for paginator generated URLs.
+     * Obtient le chemin de base pour les URL générées par le paginateur.
      */
     public function path(): ?string;
 
     /**
-     * Determine if the list of items is empty or not.
+     * Détermine si la liste des éléments est vide ou non.
      */
     public function isEmpty(): bool;
 
     /**
-     * Determine if the list of items is not empty.
+     * Détermine si la liste des éléments n'est pas vide.
      */
     public function isNotEmpty(): bool;
 
     /**
-     * Render the paginator using a given view.
+     * Affiche le paginateur en utilisant une vue donnée.
      */
     public function render(?string $view = null, array $data = []): string;
 }

@@ -20,11 +20,13 @@ use BlitzPHP\Wolke\Model;
  * @template TDeclaringModel of Model
  *
  * @extends MorphOneOrMany<TRelatedModel, TDeclaringModel, Collection<int, TRelatedModel>>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphMany</a>
  */
 class MorphMany extends MorphOneOrMany
 {
     /**
-     * Convert the relationship to a "morph one" relationship.
+     * Convertit la relation en une relation "morph one".
      * 
      * @return MorphOne<TRelatedModel, TDeclaringModel>
      */
@@ -77,7 +79,7 @@ class MorphMany extends MorphOneOrMany
     }
 
     /**
-     * Create a new instance of the related model. Allow mass-assignment.
+     * Crée une nouvelle instance du modèle lié. Permet l'assignation en masse.
      */
     public function forceCreate(array $attributes = []): Model
     {

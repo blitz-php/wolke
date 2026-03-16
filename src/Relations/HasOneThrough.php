@@ -21,6 +21,8 @@ use BlitzPHP\Wolke\Relations\Concerns\ComparesRelatedModels;
 use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
 
 /**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasOneThrough</a>
+ * 
  * @template TRelatedModel of Model
  * @template TIntermediateModel of Model
  * @template TDeclaringModel of Model
@@ -64,9 +66,9 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
     {
         $dictionary = $this->buildDictionary($results);
 
-        // Once we have the dictionary we can simply spin through the parent models to
-        // link them up with their children using the keyed dictionary to make the
-        // matching very convenient and easy work. Then we'll just return them.
+        // Une fois que nous avons le dictionnaire, nous pouvons simplement parcourir les modèles parents pour
+        // les lier à leurs enfants en utilisant le dictionnaire indexé par clé pour rendre la
+        // correspondance très pratique et facile à travailler. Ensuite, nous les retournerons.
         foreach ($models as $model) {
             $key = $this->getDictionaryKey($model->getAttribute($this->localKey));
             
@@ -102,7 +104,7 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
     {
         $query->select([$this->getQualifiedFirstKeyName()]);
 
-        // We need to join subqueries that aren't the inner-most subquery which is joined in the CanBeOneOfMany::ofMany method...
+        // Nous devons joindre des sous-requêtes qui ne sont pas la sous-requête la plus interne, qui est jointe dans la méthode CanBeOneOfMany::ofMany...
         if ($this->getOneOfManySubQuery() !== null) {
             $this->performJoin($query);
         }
@@ -125,7 +127,7 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
     }
 
     /**
-     * Make a new related instance for the given model.
+     * Crée une nouvelle instance liée pour le modèle donné.
      *
      * @param  TDeclaringModel  $parent
      * 

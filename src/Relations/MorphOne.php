@@ -26,6 +26,8 @@ use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
  * @template TDeclaringModel of Model
  *
  * @extends MorphOneOrMany<TRelatedModel, TDeclaringModel, ?TRelatedModel>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphOne</a>
  */
 class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
 {
@@ -78,7 +80,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     }
 
     /**
-     * Add constraints for inner join subselect for one of many relationships.
+     * Ajoute des contraintes pour la sous-requête de jointure interne pour les relations one of many.
 	 * 
 	 * @param Builder<TRelatedModel>  $query
      * @param array|string|null $aggregate
@@ -89,7 +91,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     }
 
     /**
-     * Get the columns that should be selected by the one of many subquery.
+     * Obtient les colonnes qui doivent être sélectionnées par la sous-requête one of many.
      */
     public function getOneOfManySubQuerySelectColumns(): array
     {
@@ -97,7 +99,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     }
 
     /**
-     * Add join query constraints for one of many relationships.
+     * Ajoute des contraintes de requête de jointure pour les relations one of many.
      */
     public function addOneOfManyJoinSubQueryConstraints(JoinClause $join): void
     {
@@ -107,7 +109,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     }
 
     /**
-     * Make a new related instance for the given model.
+     * Crée une nouvelle instance liée pour le modèle donné.
      */
     public function newRelatedInstanceFor(Model $parent): Model
     {
@@ -120,7 +122,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     }
 
     /**
-     * Get the value of the model's foreign key.
+     * Obtient la valeur de la clé étrangère du modèle.
      *
      * @param  TRelatedModel  $model
      * 

@@ -13,20 +13,23 @@ namespace BlitzPHP\Wolke\Exceptions;
 
 use RuntimeException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\JsonEncodingException</a>
+ */
 class JsonEncodingException extends RuntimeException
 {
     /**
-     * Create a new JSON encoding exception for the model.
+     * Crée une nouvelle exception d'encodage JSON pour le modèle.
      *
      * @return static
      */
     public static function forModel(object $model, string $message)
     {
-        return new static('Error encoding model [' . get_class($model) . '] with ID [' . $model->getKey() . '] to JSON: ' . $message);
+        return new static('Erreur d\'encodage du modèle [' . get_class($model) . '] avec l\'ID [' . $model->getKey() . '] en JSON : ' . $message);
     }
 
     /**
-     * Create a new JSON encoding exception for the resource.
+     * Crée une nouvelle exception d'encodage JSON pour la ressource.
      *
      * @param \Illuminate\Http\Resources\Json\JsonResource $resource
      *
@@ -36,11 +39,11 @@ class JsonEncodingException extends RuntimeException
     {
         $model = $resource->resource;
 
-        return new static('Error encoding resource [' . get_class($resource) . '] with model [' . get_class($model) . '] with ID [' . $model->getKey() . '] to JSON: ' . $message);
+        return new static('Erreur d\'encodage de la ressource [' . get_class($resource) . '] avec le modèle [' . get_class($model) . '] avec l\'ID [' . $model->getKey() . '] en JSON : ' . $message);
     }
 
     /**
-     * Create a new JSON encoding exception for an attribute.
+     * Crée une nouvelle exception d'encodage JSON pour un attribut.
      *
      * @return static
      */
@@ -48,6 +51,6 @@ class JsonEncodingException extends RuntimeException
     {
         $class = get_class($model);
 
-        return new static("Unable to encode attribute [{$key}] for model [{$class}] to JSON: {$message}.");
+        return new static("Impossible d'encoder l'attribut [{$key}] pour le modèle [{$class}] en JSON : {$message}.");
     }
 }

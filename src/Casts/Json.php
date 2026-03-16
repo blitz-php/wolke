@@ -31,7 +31,7 @@ class Json
     protected static $decoder;
 
     /**
-     * Encoder la valeur donnée.
+     * Encode la valeur donnée.
      */
     public static function encode(mixed $value, int $flags = 0): mixed
     {
@@ -41,7 +41,7 @@ class Json
     }
 
     /**
-     * Décodez la valeur donnée.
+     * Décode la valeur donnée.
      */
     public static function decode(mixed $value, ?bool $associative = true): mixed
     {
@@ -51,7 +51,7 @@ class Json
     }
 
     /**
-     * Encode toutes les valeurs à l'aide du callable donné.
+     * Encode toutes les valeurs en utilisant le callable donné.
      */
     public static function encodeUsing(?callable $encoder): void
     {
@@ -59,7 +59,7 @@ class Json
     }
 
     /**
-     * Décode toutes les valeurs à l'aide du callable donné.
+     * Décode toutes les valeurs en utilisant le callable donné.
      */
     public static function decodeUsing(?callable $decoder): void
     {

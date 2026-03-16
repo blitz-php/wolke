@@ -13,21 +13,24 @@ namespace BlitzPHP\Wolke\Exceptions;
 
 use RuntimeException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\ClassMorphViolationException</a>
+ */
 class ClassMorphViolationException extends RuntimeException
 {
     /**
-     * The name of the affected Wolke model.
+     * Le nom du modèle Wolke concerné.
      */
     public string $model;
 
     /**
-     * Create a new exception instance.
+     * Crée une nouvelle instance d'exception.
      */
     public function __construct(object $model)
     {
         $class = get_class($model);
 
-        parent::__construct("No morph map defined for model [{$class}].");
+        parent::__construct("Aucune carte morph définie pour le modèle [{$class}].");
 
         $this->model = $class;
     }

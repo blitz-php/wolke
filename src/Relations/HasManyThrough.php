@@ -23,11 +23,13 @@ use BlitzPHP\Wolke\Model;
  * @template TDeclaringModel of Model
  *
  * @extends HasOneOrManyThrough<TRelatedModel, TIntermediateModel, TDeclaringModel, Collection<int, TRelatedModel>>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasManyThrough</a>
  */
 class HasManyThrough extends HasOneOrManyThrough
 {
     /**
-     * Convert the relationship to a "has one through" relationship.
+     * Convertit la relation en une relation "has one through".
      *
      * @return HasOneThrough<TRelatedModel, TIntermediateModel, TDeclaringModel>
      */
@@ -63,9 +65,9 @@ class HasManyThrough extends HasOneOrManyThrough
     {
         $dictionary = $this->buildDictionary($results);
 
-        // Once we have the dictionary we can simply spin through the parent models to
-        // link them up with their children using the keyed dictionary to make the
-        // matching very convenient and easy work. Then we'll just return them.
+        // Une fois que nous avons le dictionnaire, nous pouvons simplement parcourir les modèles parents pour
+        // les lier à leurs enfants en utilisant le dictionnaire indexé par clé pour rendre la
+        // correspondance très pratique et facile à travailler. Ensuite, nous les retournerons.
         foreach ($models as $model) {
             $key = $this->getDictionaryKey($model->getAttribute($this->localKey));
             

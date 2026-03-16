@@ -11,10 +11,13 @@
 
 namespace BlitzPHP\Wolke\Contracts;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Database\Eloquent\Castable</a>
+ */
 interface Castable
 {
     /**
-     * Get the name of the caster class to use when casting from / to this cast target.
+     * Obtient le nom de la classe de cast à utiliser lors du casting depuis/vers cette cible de cast.
      *
      * @param  list<string>  $arguments
      * 

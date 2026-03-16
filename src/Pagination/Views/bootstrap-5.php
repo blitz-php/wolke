@@ -2,7 +2,7 @@
     <nav class="d-flex justify-items-center justify-content-between">
         <div class="d-flex justify-content-between flex-fill d-sm-none">
             <ul class="pagination">
-                <?php // Previous Page Link ?>
+                <?php // Lien de la page précédente ?>
                 <?php if ($paginator->onFirstPage()): ?>
                     <li class="page-item disabled" aria-disabled="true">
                         <span class="page-link"><?= lang('Pagination.previous'); ?></span>
@@ -13,7 +13,7 @@
                     </li>
                 <?php endif; ?>
 
-                <?php // Next Page Link ?>
+                <?php // Lien de la page suivante ?>
                 <?php if ($paginator->hasMorePages()): ?>
                     <li class="page-item">
                         <a class="page-link" href="<?php echo $paginator->nextPageUrl(); ?>" rel="next"><?= lang('Pagination.next'); ?></a>
@@ -29,19 +29,19 @@
         <div class="d-none flex-sm-fill d-sm-flex align-items-sm-center justify-content-sm-between">
             <div>
                 <p class="small text-muted">
-                    <?php echo __('Showing'); ?>
+                    <?php echo __('Affichage'); ?>
                     <span class="fw-semibold"><?php echo $paginator->firstItem(); ?></span>
-                    <?php echo __('to'); ?>
+                    <?php echo __('à'); ?>
                     <span class="fw-semibold"><?php echo $paginator->lastItem(); ?></span>
-                    <?php echo __('of'); ?>
+                    <?php echo __('sur'); ?>
                     <span class="fw-semibold"><?php echo $paginator->total(); ?></span>
-                    <?php echo __('results'); ?>
+                    <?php echo __('résultats'); ?>
                 </p>
             </div>
 
             <div>
                 <ul class="pagination">
-                    <?php // Previous Page Link ?>
+                    <?php // Lien de la page précédente ?>
                     <?php if ($paginator->onFirstPage()): ?>
                         <li class="page-item disabled" aria-disabled="true" aria-label="<?= lang('Pagination.previous'); ?>">
                             <span class="page-link" aria-hidden="true">&lsaquo;</span>
@@ -52,14 +52,14 @@
                         </li>
                     <?php endif; ?>
 
-                    <?php // Pagination Elements ?>
+                    <?php // Éléments de pagination ?>
                     <?php foreach ($elements as $element): ?>
-                        <?php // "Three Dots" Separator ?>
+                        <?php // Séparateur "Trois points" ?>
                         <?php if (is_string($element)): ?>
                             <li class="page-item disabled" aria-disabled="true"><span class="page-link"><?php echo $element; ?></span></li>
                         <?php endif; ?>
 
-                        <?php // Array Of Links ?>
+                        <?php // Tableau de liens ?>
                         <?php if (is_array($element)): ?>
                             <?php foreach ($element as $page => $url): ?>
                                 <?php if ($page == $paginator->currentPage()): ?>
@@ -71,7 +71,7 @@
                         <?php endif; ?>
                     <?php endforeach; ?>
 
-                    <?php // Next Page Link ?>
+                    <?php // Lien de la page suivante ?>
                     <?php if ($paginator->hasMorePages()): ?>
                         <li class="page-item">
                             <a class="page-link" href="<?php echo $paginator->nextPageUrl(); ?>" rel="next" aria-label="<?= lang('Pagination.next'); ?>">&rsaquo;</a>

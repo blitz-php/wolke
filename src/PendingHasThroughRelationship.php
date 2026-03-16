@@ -23,21 +23,23 @@ use BlitzPHP\Wolke\Relations\MorphOneOrMany;
  * @template TIntermediateModel of Model
  * @template TDeclaringModel of Model
  * @template TLocalRelationship of HasOneOrMany<TIntermediateModel, TDeclaringModel>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\PendingHasThroughRelationship</a>
  */
 class PendingHasThroughRelationship
 {
     /**
-     * Create a pending has-many-through or has-one-through relationship.
+     * Crée une relation has-many-through ou has-one-through en attente.
      *
-     * @param TDeclaringModel    $rootModel         The root model that the relationship exists on.
-     * @param TLocalRelationship $localRelationship The local relationship.
+     * @param TDeclaringModel    $rootModel         Le modèle racine sur lequel la relation existe.
+     * @param TLocalRelationship $localRelationship La relation locale.
      */
     public function __construct(protected Model $rootModel, protected HasOneOrMany $localRelationship)
     {
     }
 
     /**
-     * Define the distant relationship that this model has.
+     * Définit la relation distante que ce modèle possède.
      *
      * @template TRelatedModel of Model
      *
@@ -93,7 +95,7 @@ class PendingHasThroughRelationship
     }
 
     /**
-     * Handle dynamic method calls into the model.
+     * Gère les appels de méthode dynamiques vers le modèle.
      */
     public function __call(string $method, array $parameters): mixed
     {
@@ -102,7 +104,7 @@ class PendingHasThroughRelationship
         }
 
         throw new BadMethodCallException(sprintf(
-            'Call to undefined method %s::%s()',
+            'Appel à la méthode non définie %s::%s()',
             static::class,
             $method
         ));

@@ -30,6 +30,8 @@ use Closure;
  * @template TResult
  *
  * @mixin \BlitzPHP\Wolke\Builder
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Relation</a>
  */
 abstract class Relation
 {
@@ -38,44 +40,44 @@ abstract class Relation
     }
 
     /**
-     * The related model instance.
+     * L'instance du modèle lié.
      *
      * @var TRelatedModel
      */
     protected Model $related;
 
     /**
-     * Indicates whether the eagerly loaded relation should implicitly return an empty collection.
+     * Indique si la relation chargée avec empressement doit retourner implicitement une collection vide.
      */
     protected bool $eagerKeysWereEmpty = false;
 
     /**
-     * Indicates if the relation is adding constraints.
+     * Indique si la relation ajoute des contraintes.
      */
     protected static bool $constraints = true;
 
     /**
-     * An array to map class names to their morph names in the database.
+     * Un tableau pour mapper les noms de classe à leurs noms morph dans la base de données.
      * 
      * @var array<string, class-string<Model>>
      */
     public static array $morphMap = [];
 
     /**
-     * Prevents morph relationships without a morph map.
+     * Empêche les relations morph sans carte morph.
      */
     protected static bool $requireMorphMap = false;
 
     /**
-     * The count of self joins.
+     * Le nombre d'auto-jointures.
      */
     protected static int $selfJoinCount = 0;
 
     /**
-     * Create a new relation instance.
+     * Crée une nouvelle instance de relation.
      *
-     * @param Builder<TRelatedModel> $query  The Wolke query builder instance.
-     * @param TDeclaringModel        $parent The parent model instance.
+     * @param Builder<TRelatedModel> $query  L'instance de constructeur de requête Wolke.
+     * @param TDeclaringModel        $parent L'instance du modèle parent.
      */
     public function __construct(protected Builder $query, protected Model $parent)
     {
@@ -85,7 +87,7 @@ abstract class Relation
     }
 
     /**
-     * Run a callback with constraints disabled on the relation.
+     * Exécute un rappel avec les contraintes désactivées sur la relation.
      * 
      * @template TReturn of mixed
      *
@@ -99,9 +101,9 @@ abstract class Relation
 
         static::$constraints = false;
 
-        // When resetting the relation where clause, we want to shift the first element
-        // off of the bindings, leaving only the constraints that the developers put
-        // as "extra" on the relationships, and not original relation constraints.
+        // Lors de la réinitialisation de la clause where de la relation, nous voulons décaler le premier élément
+        // des liaisons, ne laissant que les contraintes que les développeurs ont mises
+        // comme "supplémentaires" sur les relations, et non les contraintes originales de la relation.
         try {
             return $callback();
         } finally {
@@ -110,19 +112,19 @@ abstract class Relation
     }
 
     /**
-     * Set the base constraints on the relation query.
+     * Définit les contraintes de base sur la requête de relation.
      */
     abstract public function addConstraints(): void;
 
     /**
-     * Set the constraints for an eager load of the relation.
+     * Définit les contraintes pour un chargement empressé de la relation.
      * 
      * @param list<TDeclaringModel>  $models
      */
     abstract public function addEagerConstraints(array $models): void;
 
     /**
-     * Initialize the relation on a set of models.
+     * Initialise la relation sur un ensemble de modèles.
      *
      * @param list<TDeclaringModel>  $models
      * 
@@ -131,7 +133,7 @@ abstract class Relation
     abstract public function initRelation(array $models, string $relation): array;
 
     /**
-     * Match the eagerly loaded results to their parents.
+     * Fait correspondre les résultats chargés avec empressement à leurs parents.
      * 
      * @param  list<TDeclaringModel>  $models
      * @param  Collection<int, TRelatedModel>  $results
@@ -141,14 +143,14 @@ abstract class Relation
     abstract public function match(array $models, Collection $results, string $relation): array;
 
     /**
-     * Get the results of the relationship.
+     * Obtient les résultats de la relation.
      *
      * @return TResult
      */
     abstract public function getResults(): mixed;
 
     /**
-     * Get the relationship for eager loading.
+     * Obtient la relation pour le chargement empressé.
      *
      * @return Collection<int, TRelatedModel>
      */
@@ -160,7 +162,7 @@ abstract class Relation
     }
 
     /**
-     * Execute the query and get the first result if it's the sole matching record.
+     * Exécute la requête et obtient le premier résultat s'il est le seul enregistrement correspondant.
      *
      * @return TRelatedModel
      * 
@@ -185,7 +187,7 @@ abstract class Relation
     }
 
     /**
-     * Execute the query as a "select" statement.
+     * Exécute la requête en tant qu'instruction "select".
      * 
      * @return Collection<int, TRelatedModel>
      */
@@ -195,7 +197,7 @@ abstract class Relation
     }
 
     /**
-     * Touch all of the related models for the relationship.
+     * Touche tous les modèles liés pour la relation.
      */
     public function touch(): void
     {
@@ -209,7 +211,7 @@ abstract class Relation
     }
 
     /**
-     * Run a raw update against the base query.
+     * Exécute une mise à jour brute sur la requête de base.
      *
      * @return int
      */
@@ -219,7 +221,7 @@ abstract class Relation
     }
 
     /**
-     * Add the constraints for a relationship count query.
+     * Ajoute les contraintes pour une requête de comptage de relation.
      *
      * @param Builder<TRelatedModel>  $query
      * @param Builder<TDeclaringModel>  $parentQuery
@@ -237,9 +239,9 @@ abstract class Relation
     }
 
     /**
-     * Add the constraints for an internal relationship existence query.
+     * Ajoute les contraintes pour une requête d'existence de relation interne.
      *
-     * Essentially, these queries compare on column names like whereColumn.
+     * Essentiellement, ces requêtes comparent les noms de colonnes comme whereColumn.
      *
      * @param Builder<TRelatedModel>  $query
      * @param Builder<TDeclaringModel>  $parentQuery
@@ -256,7 +258,7 @@ abstract class Relation
     }
 
     /**
-     * Get a relationship join table hash.
+     * Obtient un hachage de table de jointure de relation.
      */
     public function getRelationCountHash(bool $incrementJoinCount = true): string
     {
@@ -264,7 +266,7 @@ abstract class Relation
     }
 
     /**
-     * Get all of the primary keys for an array of models.
+     * Obtient toutes les clés primaires d'un tableau de modèles.
      * 
      * @param list<TDeclaringModel> $models
      * 
@@ -281,7 +283,7 @@ abstract class Relation
     }
 
     /**
-     * Get the query builder that will contain the relationship constraints.
+     * Obtient le constructeur de requête qui contiendra les contraintes de relation.
      * 
      * @return Builder<TRelatedModel>
      */
@@ -291,7 +293,7 @@ abstract class Relation
     }
 
     /**
-     * Get the underlying query for the relation.
+     * Obtient la requête sous-jacente pour la relation.
      * 
      * @return Builder<TRelatedModel>
      */
@@ -301,7 +303,7 @@ abstract class Relation
     }
 
     /**
-     * Get the base query builder driving the Eloquent builder.
+     * Obtient le constructeur de requête de base qui pilote le constructeur Eloquent.
      */
     public function getBaseQuery(): BaseBuilder
     {
@@ -309,7 +311,7 @@ abstract class Relation
     }
 
     /**
-     * Get a base query builder instance.
+     * Obtient une instance de constructeur de requête de base.
      */
     public function toBase(): BaseBuilder
     {
@@ -317,7 +319,7 @@ abstract class Relation
     }
 
     /**
-     * Get the parent model of the relation.
+     * Obtient le modèle parent de la relation.
      *
      * @return TDeclaringModel
      */
@@ -327,7 +329,7 @@ abstract class Relation
     }
 
     /**
-     * Get the fully qualified parent key name.
+     * Obtient le nom de la clé parente complètement qualifié.
      */
     public function getQualifiedParentKeyName(): string
     {
@@ -335,7 +337,7 @@ abstract class Relation
     }
 
     /**
-     * Get the related model of the relation.
+     * Obtient le modèle lié de la relation.
      *
      * @return TRelatedModel
      */
@@ -345,7 +347,7 @@ abstract class Relation
     }
 
     /**
-     * Get the name of the "created at" column.
+     * Obtient le nom de la colonne "created at".
      */
     public function createdAt(): string
     {
@@ -353,7 +355,7 @@ abstract class Relation
     }
 
     /**
-     * Get the name of the "updated at" column.
+     * Obtient le nom de la colonne "updated at".
      */
     public function updatedAt(): string
     {
@@ -361,7 +363,7 @@ abstract class Relation
     }
 
     /**
-     * Get the name of the related model's "updated at" column.
+     * Obtient le nom de la colonne "updated at" du modèle lié.
      */
     public function relatedUpdatedAt(): string
     {
@@ -369,7 +371,7 @@ abstract class Relation
     }
 
     /**
-     * Add a whereIn eager constraint for the given set of model keys to be loaded.
+     * Ajoute une contrainte whereIn avec empressement pour l'ensemble donné de clés de modèle à charger.
      * 
      * @param Builder<TRelatedModel>|null  $query
      */
@@ -383,7 +385,7 @@ abstract class Relation
     }
 
     /**
-     * Get the name of the "where in" method for eager loading.
+     * Obtient le nom de la méthode "where in" pour le chargement empressé.
      */
     protected function whereInMethod(Model $model, string $key): string
     {
@@ -394,7 +396,7 @@ abstract class Relation
     }
 
     /**
-     * Prevent polymorphic relationships from being used without model mappings.
+     * Empêche les relations polymorphes d'être utilisées sans mappages de modèles.
      */
     public static function requireMorphMap(bool $requireMorphMap = true): void
     {
@@ -402,7 +404,7 @@ abstract class Relation
     }
 
     /**
-     * Determine if polymorphic relationships require explicit model mapping.
+     * Détermine si les relations polymorphes nécessitent un mappage de modèle explicite.
      */
     public static function requiresMorphMap(): bool
     {
@@ -410,7 +412,7 @@ abstract class Relation
     }
 
     /**
-     * Define the morph map for polymorphic relations and require all morphed models to be explicitly mapped.
+     * Définit la carte morph pour les relations polymorphes et exige que tous les modèles morph soient explicitement mappés.
      * 
      * @param array<array-key, class-string<Model>> $map
      */
@@ -422,7 +424,7 @@ abstract class Relation
     }
 
     /**
-     * Set or get the morph map for polymorphic relations.
+     * Définit ou obtient la carte morph pour les relations polymorphes.
      *
      * @param array<array-key, class-string<Model>>|null $map
      * 
@@ -441,7 +443,7 @@ abstract class Relation
     }
 
     /**
-     * Builds a table-keyed array from model class names.
+     * Construit un tableau indexé par table à partir des noms de classe de modèles.
      *
      * @param  array<array-key, class-string<Model>>|null  $models
      * 
@@ -457,7 +459,7 @@ abstract class Relation
     }
 
     /**
-     * Get the model associated with a custom polymorphic type.
+     * Obtient le modèle associé à un type polymorphe personnalisé.
      * 
      * @return class-string<Model>|null
      */
@@ -467,7 +469,7 @@ abstract class Relation
     }
 
     /**
-     * Get the alias associated with a custom polymorphic class.
+     * Obtient l'alias associé à une classe polymorphe personnalisée.
      *
      * @param  class-string<Model>  $className
      * 
@@ -479,7 +481,7 @@ abstract class Relation
     }
 
     /**
-     * Handle dynamic method calls to the relationship.
+     * Gère les appels de méthode dynamiques à la relation.
      */
     public function __call(string $method, array $parameters = []): mixed
     {
@@ -491,7 +493,7 @@ abstract class Relation
     }
 
     /**
-     * Force a clone of the underlying query builder when cloning.
+     * Force un clonage du constructeur de requête sous-jacent lors du clonage.
      */
     public function __clone(): void
     {

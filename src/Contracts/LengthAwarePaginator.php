@@ -12,6 +12,8 @@
 namespace BlitzPHP\Wolke\Contracts;
 
 /**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Pagination\LengthAwarePaginator</a>
+ * 
  * @template TKey of array-key
  *
  * @template-covariant TValue
@@ -21,17 +23,17 @@ namespace BlitzPHP\Wolke\Contracts;
 interface LengthAwarePaginator extends Paginator
 {
     /**
-     * Create a range of pagination URLs.
+     * Crée une plage d'URL de pagination.
      */
     public function getUrlRange(int $start, int $end): array;
 
     /**
-     * Determine the total number of items in the data store.
+     * Détermine le nombre total d'éléments dans le magasin de données.
      */
     public function total(): int;
 
     /**
-     * Get the page number of the last available page.
+     * Obtient le numéro de page de la dernière page disponible.
      */
     public function lastPage(): int;
 }

@@ -15,34 +15,37 @@ use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Utilities\Iterable\Collection;
 use UnexpectedValueException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\Cursor</a>
+ */
 class Cursor implements Arrayable
 {
     /**
-     * Create a new cursor instance.
+     * Crée une nouvelle instance de curseur.
      *
-     * @param array $parameters        The parameters associated with the cursor.
-     * @param bool  $pointsToNextItems Determine whether the cursor points to the next or previous set of items.
+     * @param array $parameters        Les paramètres associés au curseur.
+     * @param bool  $pointsToNextItems Détermine si le curseur pointe vers l'ensemble d'éléments suivant ou précédent.
      */
     public function __construct(protected array $parameters, protected bool $pointsToNextItems = true)
     {
     }
 
     /**
-     * Get the given parameter from the cursor.
+     * Obtient le paramètre donné à partir du curseur.
      *
      * @throws UnexpectedValueException
      */
     public function parameter(string $parameterName): ?string
     {
         if (! isset($this->parameters[$parameterName])) {
-            throw new UnexpectedValueException("Unable to find parameter [{$parameterName}] in pagination item.");
+            throw new UnexpectedValueException("Impossible de trouver le paramètre [{$parameterName}] dans l'élément de pagination.");
         }
 
         return $this->parameters[$parameterName];
     }
 
     /**
-     * Get the given parameters from the cursor.
+     * Obtient les paramètres donnés à partir du curseur.
      */
     public function parameters(array $parameterNames): array
     {
@@ -52,7 +55,7 @@ class Cursor implements Arrayable
     }
 
     /**
-     * Determine whether the cursor points to the next set of items.
+     * Détermine si le curseur pointe vers l'ensemble d'éléments suivant.
      */
     public function pointsToNextItems(): bool
     {
@@ -60,7 +63,7 @@ class Cursor implements Arrayable
     }
 
     /**
-     * Determine whether the cursor points to the previous set of items.
+     * Détermine si le curseur pointe vers l'ensemble d'éléments précédent.
      */
     public function pointsToPreviousItems(): bool
     {
@@ -68,7 +71,7 @@ class Cursor implements Arrayable
     }
 
     /**
-     * Get the array representation of the cursor.
+     * Obtient la représentation en tableau du curseur.
      */
     public function toArray(): array
     {
@@ -78,7 +81,7 @@ class Cursor implements Arrayable
     }
 
     /**
-     * Get the encoded string representation of the cursor to construct a URL.
+     * Obtient la représentation en chaîne encodée du curseur pour construire une URL.
      */
     public function encode(): string
     {
@@ -86,7 +89,7 @@ class Cursor implements Arrayable
     }
 
     /**
-     * Get a cursor instance from the encoded string representation.
+     * Obtient une instance de curseur à partir de la représentation en chaîne encodée.
      */
     public static function fromEncoded(?string $encodedString): ?static
     {

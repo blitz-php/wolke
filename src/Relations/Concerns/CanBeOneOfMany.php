@@ -20,25 +20,28 @@ use BlitzPHP\Wolke\Builder;
 use Closure;
 use InvalidArgumentException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Concerns\CanBeOneOfMany</a>
+ */
 trait CanBeOneOfMany
 {
     /**
-     * Determines whether the relationship is one-of-many.
+     * Détermine si la relation est une relation one-of-many.
      */
     protected bool $isOneOfMany = false;
 
     /**
-     * The name of the relationship.
+     * Le nom de la relation.
      */
     protected string $relationName = '';
 
     /**
-     * The one of many inner join subselect query builder instance.
+     * L'instance de constructeur de sous-requête de jointure interne one of many.
      */
     protected ?Builder $oneOfManySubQuery = null;
 
     /**
-     * Add constraints for inner join subselect for one of many relationships.
+     * Ajoute des contraintes pour la sous-requête de jointure interne pour les relations one of many.
 	 * 
 	 * @param Builder<*>  $query
      * @param array|string|null $aggregate
@@ -46,19 +49,19 @@ trait CanBeOneOfMany
     abstract public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void;
 
     /**
-     * Get the columns the determine the relationship groups.
+     * Obtient les colonnes qui déterminent les groupes de relations.
      *
      * @return array|string
      */
     abstract public function getOneOfManySubQuerySelectColumns();
 
     /**
-     * Add join query constraints for one of many relationships.
+     * Ajoute des contraintes de requête de jointure pour les relations one of many.
      */
     abstract public function addOneOfManyJoinSubQueryConstraints(JoinClause $join): void;
 
     /**
-     * Indicate that the relation is a single result of a larger one-to-many relationship.
+     * Indique que la relation est un résultat unique d'une relation un-à-plusieurs plus large.
      *
      * @throws InvalidArgumentException
      */
@@ -87,7 +90,7 @@ trait CanBeOneOfMany
 
         foreach ($columns as $column => $aggregate) {
             if (! in_array(strtolower($aggregate), ['min', 'max'], true)) {
-                throw new InvalidArgumentException("Invalid aggregate [{$aggregate}] used within ofMany relation. Available aggregates: MIN, MAX");
+                throw new InvalidArgumentException("Agrégat [{$aggregate}] invalide utilisé dans la relation ofMany. Agrégats disponibles : MIN, MAX");
             }
 
             $subQuery = $this->newOneOfManySubQuery(
@@ -132,7 +135,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Indicate that the relation is the latest single result of a larger one-to-many relationship.
+     * Indique que la relation est le dernier résultat unique d'une relation un-à-plusieurs plus large.
      */
     public function latestOfMany(array|string|null $column = 'id', ?string $relation = null): static
     {
@@ -144,7 +147,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Indicate that the relation is the oldest single result of a larger one-to-many relationship.
+     * Indique que la relation est le premier résultat unique d'une relation un-à-plusieurs plus large.
      */
     public function oldestOfMany(array|string|null $column = 'id', ?string $relation = null): self
     {
@@ -156,7 +159,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Get the default alias for the one of many inner join clause.
+     * Obtient l'alias par défaut pour la clause de jointure interne one of many.
      */
     protected function getDefaultOneOfManyJoinAlias(string $relation): string
     {
@@ -166,7 +169,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Get a new query for the related model, grouping the query by the given column, often the foreign key of the relationship.
+     * Obtient une nouvelle requête pour le modèle lié, regroupant la requête par la colonne donnée, souvent la clé étrangère de la relation.
      *
      * @param list<string>|null $columns
      * 
@@ -202,7 +205,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Add the join subquery to the given query on the given column and the relationship's foreign key.
+     * Ajoute la sous-requête de jointure à la requête donnée sur la colonne donnée et la clé étrangère de la relation.
      *
      * @param Builder<*> $parent
      * @param Builder<*> $subQuery
@@ -224,7 +227,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Merge the relationship query joins to the given query builder.
+     * Fusionne les jointures de la requête de relation dans le constructeur de requête donné.
      */
     protected function mergeOneOfManyJoinsTo(Builder $query): void
     {
@@ -234,7 +237,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Get the query builder that will contain the relationship constraints.
+     * Obtient le constructeur de requête qui contiendra les contraintes de relation.
      *
      * @return Builder<*>
      */
@@ -246,7 +249,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Get the one of many inner join subselect builder instance.
+     * Obtient l'instance de constructeur de sous-requête de jointure interne one of many.
      *
      * @return Builder<*>|null
      */
@@ -256,7 +259,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Get the qualified column name for the one-of-many relationship using the subselect join query's alias.
+     * Obtient le nom de colonne qualifié pour la relation one-of-many en utilisant l'alias de la requête de jointure sous-sélectionnée.
      */
     public function qualifySubSelectColumn(string $column): string
     {
@@ -264,7 +267,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Qualify related column using the related table name if it is not already qualified.
+     * Qualifie la colonne liée en utilisant le nom de la table liée si elle n'est pas déjà qualifiée.
      */
     protected function qualifyRelatedColumn(string $column): string
     {
@@ -272,7 +275,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Guess the "hasOne" relationship's name via backtrace.
+     * Devine le nom de la relation "hasOne" via la trace.
      */
     protected function guessRelationship(): string
     {
@@ -280,7 +283,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Determine whether the relationship is a one-of-many relationship.
+     * Détermine si la relation est une relation one-of-many.
      */
     public function isOneOfMany(): bool
     {
@@ -288,7 +291,7 @@ trait CanBeOneOfMany
     }
 
     /**
-     * Get the name of the relationship.
+     * Obtient le nom de la relation.
      */
     public function getRelationName(): string
     {

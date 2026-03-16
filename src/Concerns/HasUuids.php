@@ -13,12 +13,15 @@ namespace BlitzPHP\Wolke\Concerns;
 
 use BlitzPHP\Utilities\String\Text;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasUuids</a>
+ */
 trait HasUuids
 {
     use HasUniqueStringIds;
 
     /**
-     * Generate a new UUID for the model.
+     * Génère un nouvel UUID pour le modèle.
      */
     public function newUniqueId(): string
     {
@@ -26,7 +29,7 @@ trait HasUuids
     }
 
     /**
-     * Determine if given key is valid.
+     * Détermine si la clé donnée est valide.
      */
     protected function isValidUniqueId(mixed $value): bool
     {

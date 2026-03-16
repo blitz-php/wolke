@@ -31,19 +31,21 @@ use JsonSerializable;
  * @implements ArrayAccess<TKey, TValue>
  * @implements IteratorAggregate<TKey, TValue>
  * @implements LengthAwarePaginatorContract<TKey, TValue>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\LengthAwarePaginator</a>
  */
 class LengthAwarePaginator extends AbstractPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, LengthAwarePaginatorContract
 {
     /**
-     * The last available page.
+     * La dernière page disponible.
      */
     protected int $lastPage;
 
     /**
-     * Create a new paginator instance.
+     * Crée une nouvelle instance de paginateur.
      *
      * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $items
-     * @param int $total The total number of items before slicing.
+     * @param int $total Le nombre total d'éléments avant le découpage.
      * @param  array{path: string, query: array, fragment: ?string, pageName: string}  $options
      */
     public function __construct(mixed $items, protected int $total, int $perPage, ?int $currentPage = null, array $options = [])
@@ -62,7 +64,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Get the current page for the request.
+     * Obtient la page actuelle pour la requête.
      */
     protected function setCurrentPage(?int $currentPage, string $pageName): int
     {
@@ -72,7 +74,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Render the paginator using the given view.
+     * Affiche le paginateur en utilisant la vue donnée.
      */
     public function links(?string $view = null, array $data = []): string
     {
@@ -80,7 +82,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Render the paginator using the given view.
+     * Affiche le paginateur en utilisant la vue donnée.
      */
     public function render(?string $view = null, array $data = []): string
     {
@@ -91,7 +93,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Get the paginator links as a collection (for JSON responses).
+     * Obtient les liens du paginateur sous forme de collection (pour les réponses JSON).
      */
     public function linkCollection(): Collection
     {
@@ -108,18 +110,18 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
             ]);
         })->prepend([
             'url'    => $this->previousPageUrl(),
-            'label'  => function_exists('lang') ? lang('Pagination.previous') : 'Previous',
+            'label'  => function_exists('lang') ? lang('Pagination.previous') : 'Précédent',
             'active' => false,
         ])->push([
             'url'    => $this->nextPageUrl(),
-            'label'  => function_exists('lang') ? lang('Pagination.next') : 'Next',
+            'label'  => function_exists('lang') ? lang('Pagination.next') : 'Suivant',
             'page'   => $this->hasMorePages() ? $this->currentPage() + 1 : null,
             'active' => false,
         ]);
     }
 
     /**
-     * Get the array of elements to pass to the view.
+     * Obtient le tableau des éléments à passer à la vue.
      */
     protected function elements(): array
     {
@@ -135,7 +137,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Get the total number of items being paginated.
+     * Obtient le nombre total d'éléments paginés.
      */
     public function total(): int
     {
@@ -143,7 +145,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Determine if there are more items in the data source.
+     * Détermine s'il y a plus d'éléments dans la source de données.
      */
     public function hasMorePages(): bool
     {
@@ -151,7 +153,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Get the URL for the next page.
+     * Obtient l'URL de la page suivante.
      */
     public function nextPageUrl(): ?string
     {
@@ -163,7 +165,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Get the last page.
+     * Obtient la dernière page.
      */
     public function lastPage(): int
     {
@@ -171,7 +173,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Get the instance as an array.
+     * Obtient l'instance sous forme de tableau.
      */
     public function toArray(): array
     {
@@ -193,7 +195,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Convert the object into something JSON serializable.
+     * Convertit l'objet en quelque chose de sérialisable en JSON.
      */
     public function jsonSerialize(): array
     {
@@ -201,7 +203,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Convert the object to its JSON representation.
+     * Convertit l'objet en sa représentation JSON.
      */
     public function toJson(int $options = 0): string
     {
@@ -209,7 +211,7 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     }
 
     /**
-     * Convert the object to pretty print formatted JSON.
+     * Convertit l'objet en JSON formaté de façon jolie.
      */
     public function toPrettyJson(int $options = 0): string
     {

@@ -13,15 +13,18 @@ namespace BlitzPHP\Wolke\Contracts;
 
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Database\Eloquent\DeviatesCastableAttributes</a>
+ */
 interface DeviatesCastableAttributes
 {
     /**
-     * Increment the attribute.
+     * Incrémente l'attribut.
      */
     public function increment(Model $model, string $key, mixed $value, array $attributes): mixed;
 
     /**
-     * Decrement the attribute.
+     * Décrémente l'attribut.
      */
     public function decrement(Model $model, string $key, mixed $value, array $attributes): mixed;
 }

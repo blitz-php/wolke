@@ -15,10 +15,13 @@ use BlitzPHP\Contracts\Container\ContainerInterface;
 use BlitzPHP\Contracts\View\RendererInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\PaginationState</a>
+ */
 class PaginationState
 {
     /**
-     * Bind the pagination state resolvers using the given application container as a base.
+     * Lie les résolveurs d'état de pagination en utilisant le conteneur d'application donné comme base.
      */
     public static function resolveUsing(ContainerInterface $container): void
     {

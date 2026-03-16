@@ -13,24 +13,27 @@ namespace BlitzPHP\Wolke\Exceptions;
 
 use RuntimeException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\RelationNotFoundException</a>
+ */
 class RelationNotFoundException extends RuntimeException
 {
     /**
-     * The name of the affected Eloquent model.
+     * Le nom du modèle Eloquent concerné.
      *
      * @var string
      */
     public $model;
 
     /**
-     * The name of the relation.
+     * Le nom de la relation.
      *
      * @var string
      */
     public $relation;
 
     /**
-     * Create a new exception instance.
+     * Crée une nouvelle instance d'exception.
      *
      * @return static
      */
@@ -40,8 +43,8 @@ class RelationNotFoundException extends RuntimeException
 
         $instance = new static(
             null === $type
-                ? "Call to undefined relationship [{$relation}] on model [{$class}]."
-                : "Call to undefined relationship [{$relation}] on model [{$class}] of type [{$type}].",
+                ? "Appel à la relation [{$relation}] non définie sur le modèle [{$class}]."
+                : "Appel à la relation [{$relation}] non définie sur le modèle [{$class}] de type [{$type}].",
         );
 
         $instance->model    = $class;

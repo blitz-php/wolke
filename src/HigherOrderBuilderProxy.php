@@ -13,21 +13,23 @@ namespace BlitzPHP\Wolke;
 
 /**
  * @mixin Builder
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\HigherOrderBuilderProxy</a>
  */
 class HigherOrderBuilderProxy
 {
     /**
-     * Create a new proxy instance.
+     * Crée une nouvelle instance de proxy.
      *
-     * @param Builder<*> $builder The collection being operated on.
-     * @param string  $method  The method being proxied.
+     * @param Builder<*> $builder La collection sur laquelle on opère.
+     * @param string  $method  La méthode étant proxifiée.
      */
     public function __construct(protected Builder $builder, protected string $method)
     {
     }
 
     /**
-     * Proxy a scope call onto the query builder.
+     * Proxifie un appel de portée vers le constructeur de requête.
      */
     public function __call(string $method, array $parameters = []): mixed
     {

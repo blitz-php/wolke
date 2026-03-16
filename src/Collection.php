@@ -30,13 +30,15 @@ use TModel;
  * @template TModel of \BlitzPHP\Wolke\Model
  *
  * @extends \BlitzPHP\Utilities\Iterable\Collection<TKey, TModel>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Collection</a>
  */
 class Collection extends IterableCollection implements QueueableCollection
 {
     use InteractsWithDictionary;
 
     /**
-     * Find a model in the collection by key.
+     * Trouve un modèle dans la collection par sa clé.
      *
      * @template TFindDefault
      *
@@ -66,7 +68,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Find a model in the collection by key or throw an exception.
+     * Trouve un modèle dans la collection par sa clé ou lance une exception.
      *
      * @return TModel
      *
@@ -97,7 +99,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationships onto the collection.
+     * Charge un ensemble de relations sur la collection.
      *
      * @param  array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -117,7 +119,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of aggregations over relationship's column onto the collection.
+     * Charge un ensemble d'agrégations sur la colonne de relation sur la collection.
      *
      * @param  array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -151,7 +153,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationship counts onto the collection.
+     * Charge un ensemble de compteurs de relations sur la collection.
      *
      * @param array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -161,7 +163,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationship's max column values onto the collection.
+     * Charge un ensemble de valeurs maximales de colonne de relation sur la collection.
      *
      * @param array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -171,7 +173,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationship's min column values onto the collection.
+     * Charge un ensemble de valeurs minimales de colonne de relation sur la collection.
      *
      * @param  array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -181,7 +183,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationship's column summations onto the collection.
+     * Charge un ensemble de sommes de colonne de relation sur la collection.
      *
      * @param  array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -191,7 +193,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationship's average column values onto the collection.
+     * Charge un ensemble de valeurs moyennes de colonne de relation sur la collection.
      *
      * @param  array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -201,7 +203,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of related existences onto the collection.
+     * Charge un ensemble d'existences de relations sur la collection.
      *
      * @param  array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -211,7 +213,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationships onto the collection if they are not already eager loaded.
+     * Charge un ensemble de relations sur la collection si elles ne sont pas déjà chargées avec empressement.
      *
      * @param  array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>|string  $relations
      */
@@ -249,7 +251,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a relationship path for models of the given type if it is not already eager loaded.
+     * Charge un chemin de relation pour les modèles du type donné s'il n'est pas déjà chargé avec empressement.
      *
      * @param array<int, <string, class-string>>  $tuples
      */
@@ -277,7 +279,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a relationship path if it is not already eager loaded.
+     * Charge un chemin de relation s'il n'est pas déjà chargé avec empressement.
      * 
      * @param Collection<int, TModel>  $models
      */
@@ -307,7 +309,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationships onto the mixed relationship collection.
+     * Charge un ensemble de relations sur la collection de relations mixtes.
      *
      * @param array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>  $relations
      */
@@ -322,7 +324,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Load a set of relationship counts onto the mixed relationship collection.
+     * Charge un ensemble de compteurs de relations sur la collection de relations mixtes.
      *
      * @param array<array-key, array|(callable(Relation<*, *, *>): mixed)|string>  $relations
      */
@@ -337,7 +339,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Determine if a key exists in the collection.
+     * Détermine si une clé existe dans la collection.
      *
      * @param  (callable(TModel, TKey): bool)|TModel|string|int  $key
      */
@@ -355,7 +357,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Determine if a key does not exist in the collection.
+     * Détermine si une clé n'existe pas dans la collection.
      *
      * @param  (callable(TModel, TKey): bool)|TModel|string|int  $key
      */
@@ -365,7 +367,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Get the array of primary keys.
+     * Obtient le tableau des clés primaires.
      *
      * @return array<int, array-key>
      */
@@ -375,7 +377,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Merge the collection with the given items.
+     * Fusionne la collection avec les éléments donnés.
      *
      * @param iterable<array-key, TModel> $items
      */
@@ -384,14 +386,14 @@ class Collection extends IterableCollection implements QueueableCollection
         $dictionary = $this->getDictionary();
 
         foreach ($items as $item) {
-            $dictionary[$this->geDictionaryKey($item->getKey())] = $item;
+            $dictionary[$this->getDictionaryKey($item->getKey())] = $item;
         }
 
         return new static(array_values($dictionary));
     }
 
     /**
-     * Run a map over each of the items.
+     * Exécute une carte sur chacun des éléments.
      *
      * @template TMapValue
      *
@@ -407,9 +409,9 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Run an associative map over each of the items.
+     * Exécute une carte associative sur chacun des éléments.
      *
-     * The callback should return an associative array with a single key / value pair.
+     * Le rappel doit retourner un tableau associatif avec une seule paire clé/valeur.
      *
      * @template TMapWithKeysKey of array-key
      * @template TMapWithKeysValue
@@ -426,7 +428,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Reload a fresh model instance from the database for all the entities.
+     * Recharge une nouvelle instance de modèle fraîche depuis la base de données pour toutes les entités.
      *
      * @param array<array-key, string>|string $with
      */
@@ -449,7 +451,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Diff the collection with the given items.
+     * Différencie la collection avec les éléments donnés.
      *
      * @param iterable<array-key, TModel> $items
      */
@@ -469,7 +471,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Intersect the collection with the given items.
+     * Intersecte la collection avec les éléments donnés.
      *
      * @param iterable<array-key, TModel> $items
      */
@@ -493,7 +495,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Return only unique items from the collection.
+     * Retourne uniquement les éléments uniques de la collection.
      *
      * @param (callable(TModel, TKey): mixed)|string|null $key
      *
@@ -509,7 +511,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Returns only the models from the collection with the specified keys.
+     * Retourne uniquement les modèles de la collection avec les clés spécifiées.
      *
      * @param array<array-key, mixed>|null $keys
      *
@@ -527,7 +529,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Returns all models in the collection except the models with specified keys.
+     * Retourne tous les modèles de la collection sauf ceux avec les clés spécifiées.
      *
      * @param array<array-key, mixed>|null $keys
      *
@@ -545,7 +547,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Make the given, typically visible, attributes hidden across the entire collection.
+     * Rend les attributs donnés, typiquement visibles, cachés sur toute la collection.
      *
      * @param array<array-key, string>|string $attributes
      */
@@ -555,7 +557,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Merge the given, typically visible, attributes hidden across the entire collection.
+     * Fusionne les attributs donnés, typiquement visibles, cachés sur toute la collection.
      *
      * @param  array<array-key, string>|string  $attributes
      */
@@ -565,7 +567,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Set the hidden attributes across the entire collection.
+     * Définit les attributs cachés sur toute la collection.
      *
      * @param array<int, string> $hidden
      */
@@ -575,7 +577,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Make the given, typically hidden, attributes visible across the entire collection.
+     * Rend les attributs donnés, typiquement cachés, visibles sur toute la collection.
      *
      * @param array<array-key, string>|string $attributes
      */
@@ -585,7 +587,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Merge the given, typically hidden, attributes visible across the entire collection.
+     * Fusionne les attributs donnés, typiquement cachés, visibles sur toute la collection.
      *
      * @param  array<array-key, string>|string  $attributes
      */
@@ -595,7 +597,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Set the visible attributes across the entire collection.
+     * Définit les attributs visibles sur toute la collection.
      *
      * @param array<int, string> $visible
      */
@@ -605,7 +607,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Append an attribute across the entire collection.
+     * Ajoute un attribut sur toute la collection.
      *
      * @param array<array-key, string>|string $attributes
      */
@@ -615,7 +617,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Sets the appends on every element of the collection, overwriting the existing appends for each.
+     * Définit les ajouts sur chaque élément de la collection, écrasant les ajouts existants pour chacun.
      *
      * @param  array<array-key, mixed>  $appends
      */
@@ -625,7 +627,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Remove appended properties from every element in the collection.
+     * Supprime les propriétés ajoutées de chaque élément de la collection.
      */
     public function withoutAppends(): static
     {
@@ -633,7 +635,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Get a dictionary keyed by primary keys.
+     * Obtient un dictionnaire indexé par les clés primaires.
      *
      * @param iterable<array-key, TModel>|null $items
      *
@@ -653,7 +655,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * The following methods are intercepted to always return base collections.
+     * Les méthodes suivantes sont interceptées pour toujours retourner des collections de base.
      *
      * @param mixed|null $countBy
      */
@@ -771,7 +773,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Enable relationship autoloading for all models in this collection.
+     * Active l'autochargement des relations pour tous les modèles de cette collection.
      */
     public function withRelationshipAutoloading(): static
     {
@@ -787,7 +789,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Get the type of the entities being queued.
+     * Obtient le type des entités mises en file d'attente.
      *
      * @throws LogicException
      */
@@ -809,7 +811,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Get the queueable class name for the given model.
+     * Obtient le nom de classe de file d'attente pour le modèle donné.
      */
     protected function getQueueableModelClass(Model $model): string
     {
@@ -819,7 +821,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Get the identifiers for all of the entities.
+     * Obtient les identifiants pour toutes les entités.
      * 
      * @return list<mixed>
      */
@@ -835,7 +837,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Get the relationships of the entities being queued.
+     * Obtient les relations des entités mises en file d'attente.
      * 
      * @return list<string>
      */
@@ -858,7 +860,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Get the connection of the entities being queued.
+     * Obtient la connexion des entités mises en file d'attente.
      *
      * @throws LogicException
      */
@@ -880,7 +882,7 @@ class Collection extends IterableCollection implements QueueableCollection
     }
 
     /**
-     * Get the Wolke query builder from the collection.
+     * Obtient le constructeur de requête Wolke à partir de la collection.
      *
      * @return Builder<TModel>
      *
@@ -891,13 +893,13 @@ class Collection extends IterableCollection implements QueueableCollection
         $model = $this->first();
 
         if (! $model) {
-            throw new LogicException('Unable to create query for empty collection.');
+            throw new LogicException('Impossible de créer une requête pour une collection vide.');
         }
 
         $class = get_class($model);
 
         if ($this->reject(static fn ($model) => $model instanceof $class)->isNotEmpty()) {
-            throw new LogicException('Unable to create query for collection with mixed types.');
+            throw new LogicException('Impossible de créer une requête pour une collection avec des types mixtes.');
         }
 
         return $model->newModelQuery()->whereKey($this->modelKeys());

@@ -11,22 +11,25 @@
 
 namespace BlitzPHP\Wolke\Concerns;
 
-use BlitzPHP\Utilities\Date;
+use BlitzPHP\Utilities\DateTime\Date;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasTimestamps</a>
+ */
 trait HasTimestamps
 {
     /**
-     * Indicates if the model should be timestamped.
+     * Indique si le modèle doit être horodaté.
      */
     public array|bool $timestamps = true;
 
     /**
-     * The list of models classes that have timestamps temporarily disabled.
+     * La liste des classes de modèles qui ont temporairement désactivé les horodatages.
      */
     protected static array $ignoreTimestampsOn = [];
 
     /**
-     * Update the model's update timestamp.
+     * Met à jour l'horodatage de mise à jour du modèle.
      */
     public function touch(?string $attribute = null): bool
     {
@@ -46,7 +49,7 @@ trait HasTimestamps
     }
 
     /**
-     * Update the model's update timestamp without raising any events.
+     * Met à jour l'horodatage de mise à jour du modèle sans déclencher d'événements.
      */
     public function touchQuietly(?string $attribute = null): bool
     {
@@ -54,7 +57,7 @@ trait HasTimestamps
     }
 
     /**
-     * Update the creation and update timestamps.
+     * Met à jour les horodatages de création et de mise à jour.
      */
     public function updateTimestamps(): static
     {
@@ -76,7 +79,7 @@ trait HasTimestamps
     }
 
     /**
-     * Set the value of the "created at" attribute.
+     * Définit la valeur de l'attribut "created at".
      */
     public function setCreatedAt(mixed $value): static
     {
@@ -86,7 +89,7 @@ trait HasTimestamps
     }
 
     /**
-     * Set the value of the "updated at" attribute.
+     * Définit la valeur de l'attribut "updated at".
      */
     public function setUpdatedAt(mixed $value): static
     {
@@ -96,7 +99,7 @@ trait HasTimestamps
     }
 
     /**
-     * Get a fresh timestamp for the model.
+     * Obtient un horodatage frais pour le modèle.
      */
     public function freshTimestamp(): Date
     {
@@ -104,7 +107,7 @@ trait HasTimestamps
     }
 
     /**
-     * Get a fresh timestamp for the model.
+     * Obtient un horodatage frais pour le modèle sous forme de chaîne.
      */
     public function freshTimestampString(): string
     {
@@ -112,7 +115,7 @@ trait HasTimestamps
     }
 
     /**
-     * Determine if the model uses timestamps.
+     * Détermine si le modèle utilise des horodatages.
      */
     public function usesTimestamps(): bool
     {
@@ -120,7 +123,7 @@ trait HasTimestamps
     }
 
     /**
-     * Get the name of the "created at" column.
+     * Obtient le nom de la colonne "created at".
      */
     public function getCreatedAtColumn(): ?string
     {
@@ -128,7 +131,7 @@ trait HasTimestamps
     }
 
     /**
-     * Get the name of the "updated at" column.
+     * Obtient le nom de la colonne "updated at".
      */
     public function getUpdatedAtColumn(): ?string
     {
@@ -136,7 +139,7 @@ trait HasTimestamps
     }
 
     /**
-     * Get the fully qualified "created at" column.
+     * Obtient la colonne "created at" complètement qualifiée.
      */
     public function getQualifiedCreatedAtColumn(): ?string
     {
@@ -144,7 +147,7 @@ trait HasTimestamps
     }
 
     /**
-     * Get the fully qualified "updated at" column.
+     * Obtient la colonne "updated at" complètement qualifiée.
      */
     public function getQualifiedUpdatedAtColumn(): ?string
     {
@@ -152,7 +155,7 @@ trait HasTimestamps
     }
 
     /**
-     * Disable timestamps for the current class during the given callback scope.
+     * Désactive les horodatages pour la classe actuelle pendant la portée de rappel donnée.
      */
     public static function withoutTimestamps(callable $callback): mixed
     {
@@ -160,7 +163,7 @@ trait HasTimestamps
     }
 
     /**
-     * Disable timestamps for the given model classes during the given callback scope.
+     * Désactive les horodatages pour les classes de modèle données pendant la portée de rappel donnée.
      */
     public static function withoutTimestampsOn(array $models, callable $callback): mixed
     {
@@ -178,7 +181,7 @@ trait HasTimestamps
     }
 
     /**
-     * Determine if the given model is ignoring timestamps / touches.
+     * Détermine si le modèle donné ignore les horodatages / touches.
      */
     public static function isIgnoringTimestamps(?string $class = null): bool
     {

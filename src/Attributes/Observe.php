@@ -24,7 +24,7 @@ class Observe
     public function __construct(public string $class)
     {
         if (! class_exists($class) || ! is_subclass_of($class, Model::class)) {
-            throw new InvalidArgumentException(sprintf('La classe observée doit être une sous classe de %s', Model::class));
+            throw new InvalidArgumentException(sprintf('La classe observée doit être une sous-classe de %s', Model::class));
         }
     }
 }

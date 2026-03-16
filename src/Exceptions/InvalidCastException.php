@@ -13,20 +13,23 @@ namespace BlitzPHP\Wolke\Exceptions;
 
 use RuntimeException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\InvalidCastException</a>
+ */
 class InvalidCastException extends RuntimeException
 {
     /**
-     * The name of the affected Eloquent model.
+     * Le nom du modèle Eloquent concerné.
      *
      * @var string
      */
     public $model;
 
     /**
-     * Create a new exception instance.
+     * Crée une nouvelle instance d'exception.
      *
-     * @param string $column   The name of the column.
-     * @param string $castType The name of the cast type.
+     * @param string $column   Le nom de la colonne.
+     * @param string $castType Le nom du type de cast.
      *
      * @return static
      */
@@ -34,7 +37,7 @@ class InvalidCastException extends RuntimeException
     {
         $class = get_class($model);
 
-        parent::__construct("Call to undefined cast [{$castType}] on column [{$column}] in model [{$class}].");
+        parent::__construct("Appel au cast [{$castType}] non défini sur la colonne [{$column}] dans le modèle [{$class}].");
 
         $this->model = $class;
     }

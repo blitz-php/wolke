@@ -47,53 +47,56 @@ use Stringable;
 use UnitEnum;
 use ValueError;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasAttributes</a>
+ */
 trait HasAttributes
 {
     /**
-     * The model's attributes.
+     * Les attributs du modèle.
      *
      * @var array<string, mixed>
      */
     protected array $attributes = [];
 
     /**
-     * The model attribute's original state.
+     * L'état original des attributs du modèle.
      *
      * @var array<string, mixed>
      */
     protected array $original = [];
 
     /**
-     * The changed model attributes.
+     * Les attributs modifiés du modèle.
      *
      * @var array<string, mixed>
      */
     protected array $changes = [];
 
     /**
-     * The previous state of the changed model attributes.
+     * L'état précédent des attributs modifiés du modèle.
      *
      * @var array<string, mixed>
      */
     protected array $previous = [];
 
     /**
-     * The attributes that should be cast.
+     * Les attributs qui doivent être castés.
      */
     protected array $casts = [];
 
     /**
-     * The attributes that have been cast using custom classes.
+     * Les attributs qui ont été castés en utilisant des classes personnalisées.
      */
     protected array $classCastCache = [];
 
     /**
-     * The attributes that have been cast using "Attribute" return type mutators.
+     * Les attributs qui ont été castés en utilisant des mutateurs de type retour "Attribute".
      */
     protected array $attributeCastCache = [];
 
     /**
-     * The built-in, primitive cast types supported by Eloquent.
+     * Les types de cast primitifs intégrés supportés par Eloquent.
      *
      * @var list<string>
      */
@@ -125,52 +128,52 @@ trait HasAttributes
     ];
 
     /**
-     * The storage format of the model's date columns.
+     * Le format de stockage des colonnes de date du modèle.
      */
     protected string $dateFormat = 'Y-m-d H:i:s';
 
     /**
-     * The accessors to append to the model's array form.
+     * Les accesseurs à ajouter à la forme de tableau du modèle.
      */
     protected array $appends = [];
 
     /**
-     * Indicates whether attributes are snake cased on arrays.
+     * Indique si les attributs sont en snake case dans les tableaux.
      */
     public static bool $snakeAttributes = true;
 
     /**
-     * The cache of the mutated attributes for each class.
+     * Le cache des attributs mutés pour chaque classe.
      */
     protected static array $mutatorCache = [];
 
     /**
-     * The cache of the "Attribute" return type marked mutated attributes for each class.
+     * Le cache des attributs mutés marqués de type retour "Attribute" pour chaque classe.
      */
     protected static array $attributeMutatorCache = [];
 
     /**
-     * The cache of the "Attribute" return type marked mutated, gettable attributes for each class.
+     * Le cache des attributs mutés marqués de type retour "Attribute", accessibles en get pour chaque classe.
      */
     protected static array $getAttributeMutatorCache = [];
 
     /**
-     * The cache of the "Attribute" return type marked mutated, settable attributes for each class.
+     * Le cache des attributs mutés marqués de type retour "Attribute", accessibles en set pour chaque classe.
      */
     protected static array $setAttributeMutatorCache = [];
 
     /**
-     * The cache of the converted cast types.
+     * Le cache des types de cast convertis.
      */
     protected static array $castTypeCache = [];
 
     /**
-     * The encrypter instance that is used to encrypt attributes.
+     * L'instance de chiffrement utilisée pour chiffrer les attributs.
      */
     public static ?EncrypterInterface $encrypter = null;
 
     /**
-     * Initialize the trait.
+     * Initialise le trait.
      */
     protected function initializeHasAttributes(): void
     {
@@ -180,7 +183,7 @@ trait HasAttributes
     }
 
     /**
-     * Convertissez les attributs du modèle en tableau.
+     * Convertit les attributs du modèle en tableau.
      *
      * @return array<string, mixed>
      */
@@ -217,7 +220,7 @@ trait HasAttributes
     }
 
     /**
-     * Ajoutez les attributs de date au tableau d'attributs.
+     * Ajoute les attributs de date au tableau d'attributs.
      *
      * @param  array<string, mixed>  $attributes
      * 
@@ -239,7 +242,7 @@ trait HasAttributes
     }
 
     /**
-     * Ajoutez les attributs mutés au tableau d'attributs.
+     * Ajoute les attributs mutés au tableau d'attributs.
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<string, mixed>  $mutatedAttributes
@@ -267,7 +270,7 @@ trait HasAttributes
     }
 
     /**
-     * Ajoutez les attributs castés au tableau d'attributs.
+     * Ajoute les attributs castés au tableau d'attributs.
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<string, mixed>  $mutatedAttributes
@@ -326,7 +329,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez un tableau d'attributs de tous les attributs pouvant être mis en tableau.
+     * Obtient un tableau d'attributs de tous les attributs pouvant être mis en tableau.
      *
      * @return array<string, mixed>
      */
@@ -336,7 +339,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez toutes les valeurs annexables qui peuvent être mises en tableau.
+     * Obtient toutes les valeurs annexables qui peuvent être mises en tableau.
      */
     protected function getArrayableAppends(): array
     {
@@ -350,7 +353,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez les relations du modèle sous forme de tableau.
+     * Obtient les relations du modèle sous forme de tableau.
      */
     public function relationsToArray(): array
     {
@@ -391,7 +394,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez un tableau d'attributs de toutes les relations pouvant être mises en tableau (arrayable).
+     * Obtient un tableau d'attributs de toutes les relations pouvant être mises en tableau (arrayable).
      */
     protected function getArrayableRelations(): array
     {
@@ -399,7 +402,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez un tableau d'attributs de toutes les valeurs pouvant être mises en tableau.
+     * Obtient un tableau d'attributs de toutes les valeurs pouvant être mises en tableau.
      */
     protected function getArrayableItems(array $values): array
     {
@@ -415,7 +418,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine whether an attribute exists on the model.
+     * Détermine si un attribut existe sur le modèle.
      */
     public function hasAttribute(string $key): bool
     {
@@ -427,7 +430,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez un attribut du modèle.
+     * Obtient un attribut du modèle.
      */
     public function getAttribute(string $key): mixed
     {
@@ -451,7 +454,7 @@ trait HasAttributes
     }
 
     /**
-     * Either throw a missing attribute exception or return null depending on Eloquent's configuration.
+     * Soit lance une exception d'attribut manquant, soit retourne null selon la configuration d'Eloquent.
      *
      * @return null
      *
@@ -473,7 +476,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez un attribut simple (pas une relation).
+     * Obtient un attribut simple (pas une relation).
      */
     public function getAttributeValue(string $key): mixed
     {
@@ -491,7 +494,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez une relation.
+     * Obtient une relation.
      */
     public function getRelationValue(string $key): mixed
     {
@@ -521,7 +524,7 @@ trait HasAttributes
     }
 
     /**
-     * Déterminez si la clé donnée est une méthode de relation sur le modèle.
+     * Détermine si la clé donnée est une méthode de relation sur le modèle.
      */
     public function isRelation(string $key): bool
     {
@@ -534,7 +537,7 @@ trait HasAttributes
     }
 
     /**
-     * Handle a lazy loading violation.
+     * Gère une violation de chargement paresseux.
      */
     protected function handleLazyLoadingViolation(string $key): mixed
     {
@@ -550,7 +553,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenir une valeur de relation à partir d'une méthode.
+     * Obtient une valeur de relation à partir d'une méthode.
      *
      * @throws LogicException
      */
@@ -561,14 +564,14 @@ trait HasAttributes
         if (! $relation instanceof Relation) {
             if (null === $relation) {
                 throw new LogicException(sprintf(
-                    "%s::%s doit renvoyer une instance de relation, mais \"null\" a été renvoyé. Le mot clé \"return\" a-t-il été utilisé\u{a0}?",
+                    "%s::%s doit retourner une instance de relation, mais \"null\" a été retourné. Le mot-clé \"return\" a-t-il été utilisé ?",
                     static::class,
                     $method
                 ));
             }
 
             throw new LogicException(sprintf(
-                '%s::%s doit renvoyer une instance de relation.',
+                '%s::%s doit retourner une instance de relation.',
                 static::class,
                 $method
             ));
@@ -580,7 +583,7 @@ trait HasAttributes
     }
 
     /**
-     * Déterminez si un mutateur get existe pour un attribut.
+     * Détermine si un mutateur get existe pour un attribut.
      */
     public function hasGetMutator(string $key): bool
     {
@@ -588,7 +591,7 @@ trait HasAttributes
     }
 
     /**
-     * Détermine si un mutateur marqué de type de retour "Attribute" existe pour un attribut.
+     * Détermine si un mutateur marqué de type retour "Attribute" existe pour un attribut.
      */
     public function hasAttributeMutator(string $key): bool
     {
@@ -607,7 +610,7 @@ trait HasAttributes
     }
 
     /**
-     * Déterminez si un type de retour « Attribut » marqué get mutator existe pour un attribut.
+     * Détermine si un mutateur get marqué de type retour "Attribute" existe pour un attribut.
      */
     public function hasAttributeGetMutator(string $key): bool
     {
@@ -623,7 +626,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if any get mutator exists for an attribute.
+     * Détermine si un mutateur get existe pour un attribut.
      */
     public function hasAnyGetMutator(string $key): bool
     {
@@ -631,7 +634,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenir la valeur d'un attribut à l'aide de son mutateur.
+     * Obtient la valeur d'un attribut à l'aide de son mutateur.
      */
     protected function mutateAttribute(string $key, mixed $value): mixed
     {
@@ -641,7 +644,7 @@ trait HasAttributes
     }
 
     /**
-     * Récupère la valeur d'un attribut marqué de type de retour "Attribute" à l'aide de son mutateur.
+     * Récupère la valeur d'un attribut marqué de type retour "Attribute" à l'aide de son mutateur.
      */
     protected function mutateAttributeMarkedAttribute(string $key, mixed $value): mixed
     {
@@ -665,7 +668,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez la valeur d'un attribut à l'aide de son mutateur pour la conversion de tableau.
+     * Obtient la valeur d'un attribut à l'aide de son mutateur pour la conversion de tableau.
      */
     protected function mutateAttributeForArray(string $key, mixed $value): mixed
     {
@@ -685,7 +688,7 @@ trait HasAttributes
     }
 
     /**
-     * Fusionnez les nouveaux casts avec les casts existants sur le modèle.
+     * Fusionne les nouveaux casts avec les casts existants sur le modèle.
      */
     public function mergeCasts(array $casts): self
     {
@@ -697,7 +700,7 @@ trait HasAttributes
     }
 
     /**
-     * Ensure that the given casts are strings.
+     * S'assure que les casts donnés sont des chaînes de caractères.
      */
     protected function ensureCastsAreStringValues(array $casts): array
     {
@@ -709,7 +712,7 @@ trait HasAttributes
                     }
 
                     throw new InvalidArgumentException(
-                        "The cast object for the {$attribute} attribute must implement Stringable."
+                        "L'objet de cast pour l'attribut {$attribute} doit implémenter Stringable."
                     );
                 }),
                 is_array($cast) => Helpers::value(function () use ($cast) {
@@ -729,7 +732,7 @@ trait HasAttributes
     }
 
     /**
-     * Attribuez un attribut à un type PHP natif.
+     * Convertit un attribut vers un type PHP natif.
      */
     protected function castAttribute(string $key, mixed $value): mixed
     {
@@ -809,7 +812,7 @@ trait HasAttributes
     }
 
     /**
-     * Cast l'attribut donné à l'aide d'une classe de Cast personnalisée.
+     * Caste l'attribut donné à l'aide d'une classe de Cast personnalisée.
      */
     protected function getClassCastableAttributeValue(string $key, mixed $value): mixed
     {
@@ -835,7 +838,7 @@ trait HasAttributes
     }
 
     /**
-     * Castez l'attribut donné en énumération.
+     * Caste l'attribut donné en énumération.
      */
     protected function getEnumCastableAttributeValue(string $key, mixed $value): mixed
     {
@@ -853,7 +856,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez le type de cast pour un attribut de modèle.
+     * Obtient le type de cast pour un attribut de modèle.
      */
     protected function getCastType(string $key): string
     {
@@ -890,7 +893,7 @@ trait HasAttributes
     }
 
     /**
-     * Sérialisez l'attribut donné à l'aide de la classe de distribution personnalisée.
+     * Sérialise l'attribut donné à l'aide de la classe de distribution personnalisée.
      */
     protected function serializeClassCastableAttribute(string $key, mixed $value): mixed
     {
@@ -903,7 +906,7 @@ trait HasAttributes
     }
 
     /**
-     * Compare two values for the given attribute using the custom cast class.
+     * Compare deux valeurs pour l'attribut donné en utilisant la classe de cast personnalisée.
      */
     protected function compareClassCastableAttribute(string $key, mixed $original, mixed $value): bool
     {
@@ -913,7 +916,7 @@ trait HasAttributes
     }
 
     /**
-     * Déterminez si le type de cast est un cast date/heure personnalisée.
+     * Détermine si le type de cast est un cast date/heure personnalisée.
      */
     protected function isCustomDateTimeCast(string $cast): bool
     {
@@ -922,7 +925,7 @@ trait HasAttributes
     }
 
     /**
-     * Déterminez si le type de cast est un cast décimal.
+     * Détermine si le type de cast est un cast décimal.
      */
     protected function isDecimalCast(string $cast): bool
     {
@@ -930,7 +933,7 @@ trait HasAttributes
     }
 
     /**
-     * Définissez un attribut donné sur le modèle.
+     * Définit un attribut donné sur le modèle.
      */
     public function setAttribute(string $key, mixed $value): mixed
     {
@@ -995,7 +998,7 @@ trait HasAttributes
     }
 
     /**
-     * Déterminez si un mutateur d'ensemble marqué de type de retour "Attribut" existe pour un attribut.
+     * Détermine si un mutateur set marqué de type retour "Attribute" existe pour un attribut.
      */
     public function hasAttributeSetMutator(string $key): bool
     {
@@ -1015,7 +1018,7 @@ trait HasAttributes
     }
 
     /**
-     * Définissez la valeur d'un attribut à l'aide de son mutateur.
+     * Définit la valeur d'un attribut à l'aide de son mutateur.
      */
     protected function setMutatedAttributeValue(string $key, mixed $value): mixed
     {
@@ -1025,7 +1028,7 @@ trait HasAttributes
     }
 
     /**
-     * Définissez la valeur d'un attribut marqué de type de retour "Attribute" à l'aide de son mutateur.
+     * Définit la valeur d'un attribut marqué de type retour "Attribute" à l'aide de son mutateur.
      */
     protected function setAttributeMarkedMutatedAttributeValue(string $key, mixed $value): mixed
     {
@@ -1055,7 +1058,7 @@ trait HasAttributes
     }
 
     /**
-     * Déterminez si l'attribut donné est une date ou une date castable.
+     * Détermine si l'attribut donné est une date ou une date castable.
      */
     protected function isDateAttribute(string $key): bool
     {
@@ -1064,7 +1067,7 @@ trait HasAttributes
     }
 
     /**
-     * Définissez un attribut JSON donné sur le modèle.
+     * Définit un attribut JSON donné sur le modèle.
      */
     public function fillJsonAttribute(string $key, mixed $value): self
     {
@@ -1087,7 +1090,7 @@ trait HasAttributes
     }
 
     /**
-     * Définissez la valeur d'un attribut castable de classe.
+     * Définit la valeur d'un attribut castable de classe.
      */
     protected function setClassCastableAttribute(string $key, mixed $value): void
     {
@@ -1111,7 +1114,7 @@ trait HasAttributes
     }
 
     /**
-     * Définissez la valeur d'un attribut castable enum.
+     * Définit la valeur d'un attribut castable enum.
      *
      * @param int|string|UnitEnum $value
      */
@@ -1131,7 +1134,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez une instance de cas enum à partir d'une classe et d'une valeur données.
+     * Obtient une instance de cas enum à partir d'une classe et d'une valeur données.
      *
      * @param int|string $value
      *
@@ -1145,7 +1148,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez la valeur stockable à partir de l'énumération donnée.
+     * Obtient la valeur stockable à partir de l'énumération donnée.
      *
      * @param BackedEnum|UnitEnum $value
      *
@@ -1154,14 +1157,14 @@ trait HasAttributes
     protected function getStorableEnumValue(string $expectedEnum, $value)
     {
         if (! $value instanceof $expectedEnum) {
-            throw new ValueError(sprintf('Value [%s] is not of the expected enum type [%s].', var_export($value, true), $expectedEnum));
+            throw new ValueError(sprintf('La valeur [%s] n\'est pas du type enum attendu [%s].', var_export($value, true), $expectedEnum));
         }
 
         return Helpers::enumValue($value);
     }
 
     /**
-     * Obtenez un attribut de tableau avec la clé et la valeur définies.
+     * Obtient un attribut de tableau avec la clé et la valeur définies.
      */
     protected function getArrayAttributeWithValue(string $path, string $key, mixed $value): array
     {
@@ -1171,7 +1174,7 @@ trait HasAttributes
     }
 
     /**
-     * Récupère un attribut de tableau ou renvoie un tableau vide s'il n'est pas défini.
+     * Récupère un attribut de tableau ou retourne un tableau vide s'il n'est pas défini.
      */
     protected function getArrayAttributeByKey(string $key): array
     {
@@ -1187,7 +1190,7 @@ trait HasAttributes
     }
 
     /**
-     * Convertissez l'attribut donné en JSON.
+     * Convertit l'attribut donné en JSON.
      */
     protected function castAttributeAsJson(string $key, mixed $value): string
     {
@@ -1205,7 +1208,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the JSON casting flags for the given attribute.
+     * Obtient les drapeaux de cast JSON pour l'attribut donné.
      */
     protected function getJsonCastFlags(string $key): int
     {
@@ -1219,7 +1222,7 @@ trait HasAttributes
     }
 
     /**
-     * Encodez la valeur donnée au format JSON.
+     * Encode la valeur donnée au format JSON.
      */
     protected function asJson(mixed $value, int $flags = 0): string
     {
@@ -1227,7 +1230,7 @@ trait HasAttributes
     }
 
     /**
-     * Décodez le JSON donné dans un tableau ou un objet.
+     * Décode le JSON donné dans un tableau ou un objet.
      */
     public function fromJson(?string $value, bool $asObject = false): mixed
     {
@@ -1239,7 +1242,7 @@ trait HasAttributes
     }
 
     /**
-     * Déchiffrer la chaîne chiffrée donnée.
+     * Déchiffre la chaîne chiffrée donnée.
      */
     public function fromEncryptedString(string $value): mixed
     {
@@ -1247,7 +1250,7 @@ trait HasAttributes
     }
 
     /**
-     * Castez l'attribut donné en une chaîne chiffrée.
+     * Caste l'attribut donné en une chaîne chiffrée.
      */
     protected function castAttributeAsEncryptedString(string $key, mixed $value): string
     {
@@ -1255,7 +1258,7 @@ trait HasAttributes
     }
 
     /**
-     * Définissez l'instance de chiffrement qui sera utilisée pour chiffrer les attributs.
+     * Définit l'instance de chiffrement qui sera utilisée pour chiffrer les attributs.
      */
     public static function encryptUsing(?EncrypterInterface $encrypter): void
     {
@@ -1263,7 +1266,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the current encrypter being used by the model.
+     * Obtient le chiffreur actuel utilisé par le modèle.
      */
     public static function currentEncrypter(): EncrypterInterface
     {
@@ -1271,7 +1274,7 @@ trait HasAttributes
     }
 
     /**
-     * Castez l'attribut donné en une chaîne hachée.
+     * Caste l'attribut donné en une chaîne hachée.
      */
     protected function castAttributeAsHashedString(string $key, mixed $value): ?string
     {
@@ -1286,7 +1289,7 @@ trait HasAttributes
         }
 
         if (! $hashing->verifyConfiguration($value)) {
-            throw new RuntimeException("Could not verify the hashed value's configuration.");
+            throw new RuntimeException("Impossible de vérifier la configuration de la valeur hachée.");
         }
 
         return (string) $value;
@@ -1306,7 +1309,7 @@ trait HasAttributes
     }
 
     /**
-     * Renvoie un nombre décimal sous forme de chaîne.
+     * Retourne un nombre décimal sous forme de chaîne.
      */
     protected function asDecimal(float $value, int $decimals): string
     {
@@ -1314,7 +1317,7 @@ trait HasAttributes
     }
 
     /**
-     * Renvoie un horodatage en tant qu'objet DateTime avec l'heure définie sur 00:00:00
+     * Retourne un horodatage en tant qu'objet DateTime avec l'heure définie sur 00:00:00
      */
     protected function asDate(mixed $value): Date
     {
@@ -1322,11 +1325,11 @@ trait HasAttributes
     }
 
     /**
-     * Renvoie un horodatage en tant qu'objet DateTime.
+     * Retourne un horodatage en tant qu'objet DateTime.
      */
     protected function asDateTime(mixed $value): Date
     {
-        // Si cette valeur est déjà une instance Date, nous la renverrons simplement telle quelle.
+        // Si cette valeur est déjà une instance Date, nous la retournerons simplement telle quelle.
         // Cela nous évite d'avoir à ré-instancier une instance Date alors que nous savons qu'elle en est déjà une,
         // ce qui ne serait pas remplie par la vérification DateTime.
         if ($value instanceof Date) {
@@ -1343,8 +1346,8 @@ trait HasAttributes
             );
         }
 
-        // If this value is an integer, we will assume it is a UNIX timestamp's value and format a Date object from this timestamp.
-        // This allows flexibility when defining your date fields as they might be UNIX timestamps here.
+        // Si cette valeur est un entier, nous supposerons qu'il s'agit de la valeur d'un horodatage UNIX et formaterons un objet Date à partir de cet horodatage.
+        // Cela permet une flexibilité lors de la définition de vos champs de date car ils pourraient être des horodatages UNIX ici.
         if (is_numeric($value)) {
             return Date::createFromTimestamp($value, date_default_timezone_get());
         }
@@ -1359,7 +1362,7 @@ trait HasAttributes
 
         // Enfin, nous supposerons simplement que cette date est dans le format utilisé par défaut sur
         // la connexion à la base de données et utiliserons ce format pour créer l'objet Date qui est
-        // renvoyé aux développeurs après l'avoir converti ici.
+        // retourné aux développeurs après l'avoir converti ici.
         try {
             $date = Date::createFromFormat($format, $value);
         } catch (InvalidArgumentException $e) {
@@ -1370,7 +1373,7 @@ trait HasAttributes
     }
 
     /**
-     * Déterminez si la valeur donnée est un format de date standard.
+     * Détermine si la valeur donnée est un format de date standard.
      */
     protected function isStandardDateFormat(string $value): bool
     {
@@ -1378,7 +1381,7 @@ trait HasAttributes
     }
 
     /**
-     * Convertir un DateTime en une chaîne stockable.
+     * Convertit un DateTime en une chaîne stockable.
      */
     public function fromDateTime(mixed $value): ?string
     {
@@ -1388,7 +1391,7 @@ trait HasAttributes
     }
 
     /**
-     * Return a timestamp as unix timestamp.
+     * Retourne un horodatage en tant qu'horodatage unix.
      */
     protected function asTimestamp(mixed $value): int
     {
@@ -1396,7 +1399,7 @@ trait HasAttributes
     }
 
     /**
-     * Préparez une date pour la sérialisation du tableau/JSON.
+     * Prépare une date pour la sérialisation en tableau/JSON.
      */
     protected function serializeDate(DateTimeInterface $date): string
     {
@@ -1404,7 +1407,7 @@ trait HasAttributes
     }
 
     /**
-     * Obtenez les attributs qui doivent être convertis en dates.
+     * Obtient les attributs qui doivent être convertis en dates.
      */
     public function getDates(): array
     {
@@ -1421,7 +1424,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the format for database stored dates.
+     * Obtient le format pour les dates stockées en base de données.
      */
     public function getDateFormat(): string
     {
@@ -1429,7 +1432,7 @@ trait HasAttributes
     }
 
     /**
-     * Set the date format used by the model.
+     * Définit le format de date utilisé par le modèle.
      */
     public function setDateFormat(string $format): self
     {
@@ -1439,7 +1442,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine whether an attribute should be cast to a native type.
+     * Détermine si un attribut doit être casté vers un type natif.
      */
     public function hasCast(string $key, array|string|null $types = null): bool
     {
@@ -1451,7 +1454,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the casts array.
+     * Obtient le tableau des casts.
      */
     public function getCasts(): array
     {
@@ -1469,7 +1472,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the attributes that should be cast.
+     * Obtient les attributs qui doivent être castés.
      *
      * @return array<string, string>
      */
@@ -1479,7 +1482,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine whether a value is Date / DateTime castable for inbound manipulation.
+     * Détermine si une valeur est castable en Date/DateTime pour la manipulation entrante.
      */
     protected function isDateCastable(string $key): bool
     {
@@ -1487,7 +1490,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine whether a value is Date / DateTime custom-castable for inbound manipulation.
+     * Détermine si une valeur est castable en Date/DateTime avec format personnalisé pour la manipulation entrante.
      */
     protected function isDateCastableWithCustomFormat(string $key): bool
     {
@@ -1495,7 +1498,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine whether a value is JSON castable for inbound manipulation.
+     * Détermine si une valeur est castable en JSON pour la manipulation entrante.
      */
     protected function isJsonCastable(string $key): bool
     {
@@ -1503,7 +1506,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine whether a value is an encrypted castable for inbound manipulation.
+     * Détermine si une valeur est un castable chiffré pour la manipulation entrante.
      */
     protected function isEncryptedCastable(string $key): bool
     {
@@ -1511,7 +1514,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the given key is cast using a custom class.
+     * Détermine si la clé donnée est castée en utilisant une classe personnalisée.
      *
      * @throws InvalidCastException
      */
@@ -1537,7 +1540,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the given key is cast using an enum.
+     * Détermine si la clé donnée est castée en utilisant un enum.
      */
     protected function isEnumCastable(string $key): bool
     {
@@ -1561,7 +1564,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the key is deviable using a custom class.
+     * Détermine si la clé est déviable en utilisant une classe personnalisée.
      *
      * @throws InvalidCastException
      */
@@ -1577,7 +1580,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the key is serializable using a custom class.
+     * Détermine si la clé est sérialisable en utilisant une classe personnalisée.
      *
      * @throws InvalidCastException
      */
@@ -1589,7 +1592,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the key is comparable using a custom class.
+     * Détermine si la clé est comparable en utilisant une classe personnalisée.
      */
     protected function isClassComparable(string $key): bool
     {
@@ -1599,7 +1602,7 @@ trait HasAttributes
     }
 
     /**
-     * Resolve the custom caster class for a given key.
+     * Résout la classe de cast personnalisée pour une clé donnée.
      */
     protected function resolveCasterClass(string $key): mixed
     {
@@ -1626,7 +1629,7 @@ trait HasAttributes
     }
 
     /**
-     * Parse the given caster class, removing any arguments.
+     * Analyse la classe de cast donnée, en supprimant les arguments.
      */
     protected function parseCasterClass(string $class): string
     {
@@ -1642,7 +1645,7 @@ trait HasAttributes
     }
 
     /**
-     * Merge the cast class and attribute cast attributes back into the model.
+     * Fusionne les attributs de cast de classe et de cast d'attribut dans le modèle.
      */
     protected function mergeAttributesFromCachedCasts(): void
     {
@@ -1651,7 +1654,7 @@ trait HasAttributes
     }
 
     /**
-     * Merge the a cast class and attribute cast attribute back into the model.
+     * Fusionne un attribut de cast de classe et de cast d'attribut dans le modèle.
      */
     protected function mergeAttributeFromCachedCasts(string $key): void
     {
@@ -1660,7 +1663,7 @@ trait HasAttributes
     }
 
     /**
-     * Merge the cast class attributes back into the model.
+     * Fusionne les attributs de cast de classe dans le modèle.
      */
     protected function mergeAttributesFromClassCasts(): void
     {
@@ -1670,7 +1673,7 @@ trait HasAttributes
     }
 
     /**
-     * Merge the cast class attribute back into the model.
+     * Fusionne l'attribut de cast de classe dans le modèle.
      */
     protected function mergeAttributeFromClassCasts(string $key): void
     {
@@ -1691,7 +1694,7 @@ trait HasAttributes
     }
 
     /**
-     * Merge the cast class attributes back into the model.
+     * Fusionne les attributs de cast d'attribut dans le modèle.
      */
     protected function mergeAttributesFromAttributeCasts(): void
     {
@@ -1701,7 +1704,7 @@ trait HasAttributes
     }
 
     /**
-     * Merge the cast class attribute back into the model.
+     * Fusionne l'attribut de cast d'attribut dans le modèle.
      */
     protected function mergeAttributeFromAttributeCasts(string $key): void
     {
@@ -1730,7 +1733,7 @@ trait HasAttributes
     }
 
     /**
-     * Normalize the response from a custom class caster.
+     * Normalise la réponse d'une classe de cast personnalisée.
      */
     protected function normalizeCastClassResponse(string $key, mixed $value): array
     {
@@ -1738,7 +1741,7 @@ trait HasAttributes
     }
 
     /**
-     * Get all of the current attributes on the model.
+     * Obtient tous les attributs actuels sur le modèle.
      *
      * @return array<string, mixed>
      */
@@ -1750,7 +1753,7 @@ trait HasAttributes
     }
 
     /**
-     * Get all of the current attributes on the model for an insert operation.
+     * Obtient tous les attributs actuels sur le modèle pour une opération d'insertion.
      */
     protected function getAttributesForInsert(): array
     {
@@ -1758,7 +1761,7 @@ trait HasAttributes
     }
 
     /**
-     * Set the array of model attributes. No checking is done.
+     * Définit le tableau des attributs du modèle. Aucune vérification n'est effectuée.
      */
     public function setRawAttributes(array $attributes, bool $sync = false): self
     {
@@ -1775,7 +1778,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the model's original attribute values.
+     * Obtient les valeurs d'attribut d'origine du modèle.
      *
      * @return ($key is null ? array<string, mixed> : mixed)
      */
@@ -1788,7 +1791,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the model's original attribute values.
+     * Obtient les valeurs d'attribut d'origine du modèle.
      *
      * @return ($key is null ? array<string, mixed> : mixed)
      */
@@ -1807,7 +1810,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the model's raw original attribute values.
+     * Obtient les valeurs d'attribut d'origine brutes du modèle.
      *
      * @return ($key is null ? array<string, mixed> : mixed)
      */
@@ -1817,7 +1820,7 @@ trait HasAttributes
     }
 
     /**
-     * Get a subset of the model's attributes.
+     * Obtient un sous-ensemble des attributs du modèle.
      *
      * @param  array<string>|mixed  $attributes
      * 
@@ -1835,7 +1838,7 @@ trait HasAttributes
     }
 
     /**
-     * Get all attributes except the given ones.
+     * Obtient tous les attributs sauf ceux donnés.
      *
      * @param  array<string>|mixed  $attributes
      */
@@ -1855,7 +1858,7 @@ trait HasAttributes
     }
 
     /**
-     * Sync the original attributes with the current.
+     * Synchronise les attributs originaux avec les actuels.
      */
     public function syncOriginal(): self
     {
@@ -1865,7 +1868,7 @@ trait HasAttributes
     }
 
     /**
-     * Sync a single original attribute with its current value.
+     * Synchronise un seul attribut original avec sa valeur actuelle.
      */
     public function syncOriginalAttribute(string $attribute): self
     {
@@ -1873,7 +1876,7 @@ trait HasAttributes
     }
 
     /**
-     * Sync multiple original attribute with their current values.
+     * Synchronise plusieurs attributs originaux avec leurs valeurs actuelles.
      *
      * @param  array<string>|string  $attributes
      */
@@ -1891,7 +1894,7 @@ trait HasAttributes
     }
 
     /**
-     * Sync the changed attributes.
+     * Synchronise les attributs modifiés.
      */
     public function syncChanges(): self
     {
@@ -1902,7 +1905,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the model or any of the given attribute(s) have been modified.
+     * Détermine si le modèle ou l'un des attributs donnés a été modifié.
      *
      * @param  list<string>|string|null  $attributes
      */
@@ -1915,7 +1918,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the model and all the given attribute(s) have remained the same.
+     * Détermine si le modèle et tous les attributs donnés sont restés identiques.
      *
      * @param  array<string>|string|null  $attributes
      */
@@ -1925,7 +1928,7 @@ trait HasAttributes
     }
 
     /**
-     * Discard attribute changes and reset the attributes to their original state.
+     * Ignore les modifications d'attributs et réinitialise les attributs à leur état d'origine.
      */
     public function discardChanges(): self
     {
@@ -1938,7 +1941,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the model or any of the given attribute(s) have been modified.
+     * Détermine si le modèle ou l'un des attributs donnés a été modifié.
      *
      * @param  array<string>|string|null  $attributes
      */
@@ -1951,23 +1954,23 @@ trait HasAttributes
     }
 
     /**
-     * Determine if any of the given attributes were changed.
+     * Détermine si l'un des attributs donnés a été modifié.
      * 
      * @param  array<string>  $changes
      * @param  array<string>|string|null  $attributes
      */
     protected function hasChanges(array $changes, array|string|null $attributes = null): bool
     {
-        // If no specific attributes were provided, we will just see if the dirty array
-        // already contains any attributes. If it does we will just return that this
-        // count is greater than zero. Else, we need to check specific attributes.
+        // Si aucun attribut spécifique n'a été fourni, nous vérifierons simplement si le tableau dirty
+        // contient déjà des attributs. Si c'est le cas, nous retournerons que ce
+        // comptage est supérieur à zéro. Sinon, nous devons vérifier des attributs spécifiques.
         if (empty($attributes)) {
             return count($changes) > 0;
         }
 
-        // Here we will spin through every attribute and see if this is in the array of
-        // dirty attributes. If it is, we will return true and if we make it through
-        // all of the attributes for the entire array we will return false at end.
+        // Ici, nous allons parcourir chaque attribut et voir s'il se trouve dans le tableau des
+        // attributs dirty. Si c'est le cas, nous retournerons true et si nous parcourons
+        // tous les attributs pour le tableau entier, nous retournerons false à la fin.
         foreach (Arr::wrap($attributes) as $attribute) {
             if (array_key_exists($attribute, $changes)) {
                 return true;
@@ -1978,7 +1981,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the attributes that have been changed since the last sync.
+     * Obtient les attributs qui ont été modifiés depuis la dernière synchronisation.
      *
      * @return array<string, mixed>
      */
@@ -1996,7 +1999,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the attributes that have been changed since the last sync for an update operation.
+     * Obtient les attributs qui ont été modifiés depuis la dernière synchronisation pour une opération de mise à jour.
      *
      * @return array<string, mixed>
      */
@@ -2006,7 +2009,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the attributes that were changed.
+     * Obtient les attributs qui ont été modifiés.
      *
      * @return array<string, mixed>
      */
@@ -2016,7 +2019,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the attributes that were previously original before the model was last saved.
+     * Obtient les attributs qui étaient originaux avant la dernière sauvegarde du modèle.
      *
      * @return array<string, mixed>
      */
@@ -2026,7 +2029,7 @@ trait HasAttributes
     }
 
     /**
-     * Determine if the new and old values for a given key are equivalent.
+     * Détermine si les nouvelles et anciennes valeurs pour une clé donnée sont équivalentes.
      */
     public function originalIsEquivalent(string $key): bool
     {
@@ -2079,13 +2082,13 @@ trait HasAttributes
     }
 
     /**
-     * Transform a raw model value using mutators, casts, etc.
+     * Transforme une valeur de modèle brute en utilisant des mutateurs, des casts, etc.
      */
     protected function transformModelValue(string $key, mixed $value): mixed
     {
-        // If the attribute has a get mutator, we will call that then return what
-        // it returns as the value, which is useful for transforming values on
-        // retrieval from the model to a form that is more useful for usage.
+        // Si l'attribut a un mutateur get, nous l'appellerons puis retournerons ce
+        // qu'il retourne comme valeur, ce qui est utile pour transformer les valeurs
+        // lors de la récupération du modèle vers une forme plus utile pour l'utilisation.
         if ($this->hasGetMutator($key)) {
             return $this->mutateAttribute($key, $value);
         }
@@ -2093,9 +2096,9 @@ trait HasAttributes
             return $this->mutateAttributeMarkedAttribute($key, $value);
         }
 
-        // If the attribute exists within the cast array, we will convert it to
-        // an appropriate native PHP type dependent upon the associated value
-        // given with the key in the pair. Dayle made this comment line up.
+        // Si l'attribut existe dans le tableau de cast, nous le convertirons vers
+        // un type PHP natif approprié en fonction de la valeur associée
+        // donnée avec la clé dans la paire.
         if ($this->hasCast($key)) {
             if (static::preventsAccessingMissingAttributes()
                 && ! array_key_exists($key, $this->attributes)
@@ -2107,9 +2110,9 @@ trait HasAttributes
             return $this->castAttribute($key, $value);
         }
 
-        // If the attribute is listed as a date, we will convert it to a DateTime
-        // instance on retrieval, which makes it quite convenient to work with
-        // date fields without having to create a mutator for each property.
+        // Si l'attribut est listé comme une date, nous le convertirons en une instance DateTime
+        // lors de la récupération, ce qui rend assez pratique le travail avec
+        // les champs de date sans avoir à créer un mutateur pour chaque propriété.
         if ($value !== null && in_array($key, $this->getDates(), false)) {
             return $this->asDateTime($value);
         }
@@ -2118,7 +2121,7 @@ trait HasAttributes
     }
 
     /**
-     * Append attributes to query when building a query.
+     * Ajoute des attributs à la requête lors de la construction d'une requête.
      *
      * @param  array<string>|string  $attributes. 
      */
@@ -2132,7 +2135,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the accessors that are being appended to model arrays.
+     * Obtient les accesseurs qui sont ajoutés aux tableaux du modèle.
      */
     public function getAppends(): array
     {
@@ -2140,7 +2143,7 @@ trait HasAttributes
     }
 
     /**
-     * Set the accessors to append to model arrays.
+     * Définit les accesseurs à ajouter aux tableaux du modèle.
      */
     public function setAppends(array $appends): self
     {
@@ -2150,7 +2153,7 @@ trait HasAttributes
     }
 
     /**
-     * Merge new appended attributes with existing appended attributes on the model.
+     * Fusionne de nouveaux attributs annexés avec les attributs annexés existants sur le modèle.
      *
      * @param list<string> $appends
      */
@@ -2162,7 +2165,7 @@ trait HasAttributes
     }
 
     /**
-     * Return whether the accessor attribute has been appended.
+     * Retourne si l'attribut accesseur a été annexé.
      */
     public function hasAppended(string $attribute): bool
     {
@@ -2170,7 +2173,7 @@ trait HasAttributes
     }
 
     /**
-     * Remove all appended properties from the model.
+     * Supprime toutes les propriétés annexées du modèle.
      */
     public function withoutAppends(): self
     {
@@ -2178,7 +2181,7 @@ trait HasAttributes
     }
 
     /**
-     * Get the mutated attributes for a given instance.
+     * Obtient les attributs mutés pour une instance donnée.
      */
     public function getMutatedAttributes(): array
     {
@@ -2190,7 +2193,7 @@ trait HasAttributes
     }
 
     /**
-     * Extract and cache all the mutated attributes of a class.
+     * Extrait et met en cache tous les attributs mutés d'une classe.
      */
     public static function cacheMutatedAttributes(object|string $classOrInstance): void
     {
@@ -2209,7 +2212,7 @@ trait HasAttributes
     }
 
     /**
-     * Get all of the attribute mutator methods.
+     * Obtient toutes les méthodes de mutateur d'attribut.
      */
     protected static function getMutatorMethods(mixed $class): array
     {
@@ -2219,7 +2222,7 @@ trait HasAttributes
     }
 
     /**
-     * Get all of the "Attribute" return typed attribute mutator methods.
+     * Obtient toutes les méthodes de mutateur d'attribut typées avec retour "Attribute".
      */
     protected static function getAttributeMarkedMutatorMethods(object|string $class): array
     {

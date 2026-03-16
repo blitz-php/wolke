@@ -20,11 +20,13 @@ use BlitzPHP\Wolke\Model;
  * @template TDeclaringModel of Model
  *
  * @extends HasOneOrMany<TRelatedModel, TDeclaringModel, Collection<int, TRelatedModel>>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasMany</a>
  */
 class HasMany extends HasOneOrMany
 {
     /**
-     * Convert the relationship to a "has one" relationship.
+     * Convertit la relation en une relation "has one".
      *
      * @return HasOne<TRelatedModel, TDeclaringModel>
      */

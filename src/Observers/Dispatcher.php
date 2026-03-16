@@ -18,28 +18,31 @@ use BlitzPHP\Wolke\Contracts\Dispatcher as DispatcherContract;
 use BlitzPHP\Wolke\Support\ReflectsClosures;
 use Closure;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Events\Dispatcher</a>
+ */
 class Dispatcher implements DispatcherContract
 {
     use Macroable;
     use ReflectsClosures;
 
     /**
-     * The registered event listeners.
+     * Les écouteurs d'événements enregistrés.
      */
     protected array $listeners = [];
 
     /**
-     * The wildcard listeners.
+     * Les écouteurs génériques (wildcard).
      */
     protected array $wildcards = [];
 
     /**
-     * The cached wildcard listeners.
+     * Le cache des écouteurs génériques.
      */
     protected array $wildcardsCache = [];
 
     /**
-     * Register an event listener with the dispatcher.
+     * Enregistre un écouteur d'événement avec le répartiteur.
      */
     public function listen(array|Closure|string $events, array|Closure|string|null $listener = null): void
     {
@@ -59,7 +62,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Setup a wildcard listener callback.
+     * Configure un rappel d'écouteur générique (wildcard).
      *
      * @param string         $event
      * @param Closure|string $listener
@@ -74,7 +77,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Determine if a given event has listeners.
+     * Détermine si un événement donné a des écouteurs.
      */
     public function hasListeners(string $eventName): bool
     {
@@ -84,7 +87,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Determine if the given event has any wildcard listeners.
+     * Détermine si l'événement donné a des écouteurs génériques.
      */
     public function hasWildcardListeners(string $eventName): bool
     {
@@ -98,7 +101,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Register an event and payload to be fired later.
+     * Enregistre un événement et sa charge utile pour être déclenchés plus tard.
      */
     public function push(string $event, array $payload = []): void
     {
@@ -108,7 +111,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Flush a set of pushed events.
+     * Vide un ensemble d'événements mis en attente.
      */
     public function flush(string $event): void
     {
@@ -116,7 +119,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Register an event subscriber with the dispatcher.
+     * Enregistre un abonné aux événements avec le répartiteur.
      */
     public function subscribe(object|string $subscriber): void
     {
@@ -134,7 +137,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Resolve the subscriber instance.
+     * Résout l'instance d'abonné.
      */
     protected function resolveSubscriber(object|string $subscriber): object
     {
@@ -146,7 +149,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Fire an event until the first non-null response is returned.
+     * Déclenche un événement jusqu'à ce que la première réponse non nulle soit retournée.
      */
     public function until(object|string $event, mixed $payload = []): ?array
     {
@@ -154,13 +157,13 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Fire an event and call the listeners.
+     * Déclenche un événement et appelle les écouteurs.
      */
     public function dispatch(object|string $event, mixed $payload = [], bool $halt = false): ?array
     {
-        // When the given "event" is actually an object we will assume it is an event
-        // object and use the class as the event name and this event itself as the
-        // payload to the handler, which makes object based events quite simple.
+        // Lorsque "l'événement" donné est en fait un objet, nous supposerons qu'il s'agit d'un objet événement
+        // et utiliserons la classe comme nom d'événement et cet événement lui-même comme
+        // charge utile pour le gestionnaire, ce qui rend les événements basés sur des objets assez simples.
         [$event, $payload] = $this->parseEventAndPayload(
             $event,
             $payload
@@ -171,16 +174,16 @@ class Dispatcher implements DispatcherContract
         foreach ($this->getListeners($event) as $listener) {
             $response = $listener($event, $payload);
 
-            // If a response is returned from the listener and event halting is enabled
-            // we will just return this response, and not call the rest of the event
-            // listeners. Otherwise we will add the response on the response list.
+            // Si une réponse est retournée par l'écouteur et que l'arrêt d'événement est activé,
+            // nous retournerons simplement cette réponse, et n'appellerons pas le reste des écouteurs
+            // d'événement. Sinon, nous ajouterons la réponse à la liste des réponses.
             if ($halt && null !== $response) {
                 return (array) $response;
             }
 
-            // If a boolean false is returned from a listener, we will stop propagating
-            // the event to any further listeners down in the chain, else we keep on
-            // looping through the listeners and firing every one in our sequence.
+            // Si un booléen false est retourné par un écouteur, nous arrêterons de propager
+            // l'événement vers d'autres écouteurs plus bas dans la chaîne, sinon nous continuerons
+            // à parcourir les écouteurs et à déclencher chacun dans notre séquence.
             if ($response === false) {
                 break;
             }
@@ -192,7 +195,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Parse the given event and payload and prepare them for dispatching.
+     * Analyse l'événement et la charge utile donnés et les prépare pour la distribution.
      */
     protected function parseEventAndPayload(mixed $event, mixed $payload): array
     {
@@ -204,7 +207,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Get all of the listeners for a given event name.
+     * Obtient tous les écouteurs pour un nom d'événement donné.
      */
     public function getListeners(string $eventName): array
     {
@@ -221,7 +224,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Get the wildcard listeners for the event.
+     * Obtient les écouteurs génériques pour l'événement.
      */
     protected function getWildcardListeners(string $eventName): array
     {
@@ -237,7 +240,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Add the listeners for the event's interfaces to the given array.
+     * Ajoute les écouteurs pour les interfaces de l'événement au tableau donné.
      */
     protected function addInterfaceListeners(string $eventName, array $listeners = []): array
     {
@@ -253,7 +256,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Register an event listener with the dispatcher.
+     * Enregistre un écouteur d'événement avec le répartiteur.
      */
     public function makeListener(array|Closure|string $listener, bool $wildcard = false): Closure
     {
@@ -275,7 +278,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Create a class based listener using the IoC container.
+     * Crée un écouteur basé sur une classe en utilisant le conteneur IoC.
      */
     public function createClassListener(array|string $listener, bool $wildcard = false): Closure
     {
@@ -291,7 +294,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Create the class based event callable.
+     * Crée l'appelable d'événement basé sur une classe.
      *
      * @return callable
      */
@@ -311,7 +314,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Parse the class listener into class and method.
+     * Analyse l'écouteur de classe en classe et méthode.
      */
     protected function parseClassCallable(string $listener): array
     {
@@ -319,7 +322,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Remove a set of listeners from the dispatcher.
+     * Supprime un ensemble d'écouteurs du répartiteur.
      */
     public function forget(string $event): void
     {
@@ -337,7 +340,7 @@ class Dispatcher implements DispatcherContract
     }
 
     /**
-     * Forget all of the pushed listeners.
+     * Oublie tous les écouteurs mis en attente.
      */
     public function forgetPushed(): void
     {

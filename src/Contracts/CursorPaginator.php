@@ -14,6 +14,8 @@ namespace BlitzPHP\Wolke\Contracts;
 use BlitzPHP\Wolke\Pagination\Cursor;
 
 /**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Pagination\CursorPaginator</a>
+ * 
  * @template TKey of array-key
  *
  * @template-covariant TValue
@@ -23,95 +25,95 @@ use BlitzPHP\Wolke\Pagination\Cursor;
 interface CursorPaginator
 {
     /**
-     * Get the URL for a given cursor.
+     * Obtient l'URL pour un curseur donné.
      */
     public function url(?Cursor $cursor): string;
 
     /**
-     * Add a set of query string values to the paginator.
+     * Ajoute un ensemble de valeurs de chaîne de requête au paginateur.
      *
      * @return $this
      */
     public function appends(array|string|null $key, ?string $value = null);
 
     /**
-     * Get / set the URL fragment to be appended to URLs.
+     * Obtient/définit le fragment d'URL à ajouter aux URL.
      *
      * @return $this|string|null
      */
     public function fragment(?string $fragment = null);
 
     /**
-     * Add all current query string values to the paginator.
+     * Ajoute toutes les valeurs de chaîne de requête actuelles au paginateur.
      *
      * @return $this
      */
     public function withQueryString();
 
     /**
-     * Get the URL for the previous page, or null.
+     * Obtient l'URL de la page précédente, ou null.
      */
     public function previousPageUrl(): ?string;
 
     /**
-     * The URL for the next page, or null.
+     * L'URL de la page suivante, ou null.
      */
     public function nextPageUrl(): ?string;
 
     /**
-     * Get all of the items being paginated.
+     * Obtient tous les éléments paginés.
      *
      * @return array<TKey, TValue>
      */
     public function items(): array;
 
     /**
-     * Get the "cursor" of the previous set of items.
+     * Obtient le "curseur" de l'ensemble d'éléments précédent.
      */
     public function previousCursor(): ?Cursor;
 
     /**
-     * Get the "cursor" of the next set of items.
+     * Obtient le "curseur" de l'ensemble d'éléments suivant.
      */
     public function nextCursor(): ?Cursor;
 
     /**
-     * Determine how many items are being shown per page.
+     * Détermine combien d'éléments sont affichés par page.
      */
     public function perPage(): int;
 
     /**
-     * Get the current cursor being paginated.
+     * Obtient le curseur actuel en cours de pagination.
      */
     public function cursor(): ?Cursor;
 
     /**
-     * Determine if there are enough items to split into multiple pages.
+     * Détermine s'il y a assez d'éléments pour diviser en plusieurs pages.
      */
     public function hasPages(): bool;
 
     /**
-     * Determine if there are more items in the data source.
+     * Détermine s'il y a plus d'éléments dans la source de données.
      */
     public function hasMorePages(): bool;
 
     /**
-     * Get the base path for paginator generated URLs.
+     * Obtient le chemin de base pour les URL générées par le paginateur.
      */
     public function path(): ?string;
 
     /**
-     * Determine if the list of items is empty or not.
+     * Détermine si la liste des éléments est vide ou non.
      */
     public function isEmpty(): bool;
 
     /**
-     * Determine if the list of items is not empty.
+     * Détermine si la liste des éléments n'est pas vide.
      */
     public function isNotEmpty(): bool;
 
     /**
-     * Render the paginator using a given view.
+     * Affiche le paginateur en utilisant une vue donnée.
      */
     public function render(?string $view = null, array $data = []): string;
 }

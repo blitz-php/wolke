@@ -16,10 +16,13 @@ use Closure;
 use ReflectionFunction;
 use RuntimeException;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Support\Traits\ReflectsClosures</a>
+ */
 trait ReflectsClosures
 {
     /**
-     * Get the class names / types of the parameters of the given Closure.
+     * Obtient les noms de classe / types des paramètres de la fermeture donnée.
      *
      * @throws ReflectionException
      */
@@ -37,7 +40,7 @@ trait ReflectsClosures
     }
 
     /**
-     * Get the class name of the first parameter of the given Closure.
+     * Obtient le nom de classe du premier paramètre de la fermeture donnée.
      *
      * @throws ReflectionException
      * @throws RuntimeException
@@ -47,11 +50,11 @@ trait ReflectsClosures
         $types = array_values($this->closureParameterTypes($closure));
 
         if (! $types) {
-            throw new RuntimeException('The given Closure has no parameters.');
+            throw new RuntimeException('La fermeture donnée n\'a pas de paramètres.');
         }
 
         if ($types[0] === null) {
-            throw new RuntimeException('The first parameter of the given Closure is missing a type hint.');
+            throw new RuntimeException('Le premier paramètre de la fermeture donnée n\'a pas d\'indication de type.');
         }
 
         return $types[0];

@@ -13,10 +13,13 @@ namespace BlitzPHP\Wolke\Contracts;
 
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Database\Eloquent\SerializesCastableAttributes</a>
+ */
 interface SerializesCastableAttributes
 {
     /**
-     * Serialize the attribute when converting the model to an array.
+     * Sérialise l'attribut lors de la conversion du modèle en tableau.
      * 
      * @param array<string, mixed> $attributes
      */

@@ -20,7 +20,7 @@ use JsonSerializable;
 class ArrayObject extends BaseArrayObject implements Arrayable, JsonSerializable
 {
     /**
-     * Get a collection containing the underlying array.
+     * Obtient une collection contenant le tableau sous-jacent.
      */
     public function collect(): Collection
     {
@@ -28,7 +28,7 @@ class ArrayObject extends BaseArrayObject implements Arrayable, JsonSerializable
     }
 
     /**
-     * Get the instance as an array.
+     * Obtient l'instance sous forme de tableau.
      */
     public function toArray(): array
     {
@@ -36,7 +36,7 @@ class ArrayObject extends BaseArrayObject implements Arrayable, JsonSerializable
     }
 
     /**
-     * Get the array that should be JSON serialized.
+     * Obtient le tableau qui doit être sérialisé en JSON.
      */
     public function jsonSerialize(): array
     {

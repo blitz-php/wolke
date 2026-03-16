@@ -13,10 +13,13 @@ namespace BlitzPHP\Wolke\Contracts;
 
 use BlitzPHP\Wolke\Model;
 
+/**
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Database\Eloquent\CastsInboundAttributes</a>
+ */
 interface CastsInboundAttributes
 {
     /**
-     * Transform the attribute to its underlying model values.
+     * Transforme l'attribut vers ses valeurs sous-jacentes du modèle.
      * 
      * @param  array<string, mixed>  $attributes
      */

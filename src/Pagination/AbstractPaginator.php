@@ -15,7 +15,6 @@ use ArrayIterator;
 use BlitzPHP\Contracts\View\RendererInterface;
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Traits\Support\Tappable;
-use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection;
 use Closure;
@@ -26,6 +25,8 @@ use Closure;
  * @template-covariant TValue
  *
  * @mixin Collection<TKey, TValue>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\AbstractPaginator</a>
  */
 abstract class AbstractPaginator
 {
@@ -33,96 +34,96 @@ abstract class AbstractPaginator
     use Tappable;
 
     /**
-     * All of the items being paginated.
+     * Tous les éléments paginés.
      *
      * @var Collection<TKey, TValue>
      */
     protected $items;
 
     /**
-     * The number of items to be shown per page.
+     * Le nombre d'éléments à afficher par page.
      *
      * @var int
      */
     protected $perPage;
 
     /**
-     * The current page being "viewed".
+     * La page actuellement "visualisée".
      *
      * @var int
      */
     protected $currentPage;
 
     /**
-     * The base path to assign to all URLs.
+     * Le chemin de base à assigner à toutes les URL.
      */
     protected string $path = '/';
 
     /**
-     * The query parameters to add to all URLs.
+     * Les paramètres de requête à ajouter à toutes les URL.
      */
     protected array $query = [];
 
     /**
-     * The URL fragment to add to all URLs.
+     * Le fragment d'URL à ajouter à toutes les URL.
      */
     protected ?string $fragment = null;
 
     /**
-     * The query string variable used to store the page.
+     * La variable de chaîne de requête utilisée pour stocker la page.
      */
     protected string $pageName = 'page';
 
     /**
-     * The number of links to display on each side of current page link.
+     * Le nombre de liens à afficher de chaque côté du lien de la page actuelle.
      */
     public int $onEachSide = 3;
 
     /**
-     * The paginator options.
+     * Les options du paginateur.
      */
     protected array $options = [];
 
     /**
-     * The current path resolver callback.
+     * Le rappel de résolution du chemin actuel.
      *
      * @var Closure
      */
     protected static $currentPathResolver;
 
     /**
-     * The current page resolver callback.
+     * Le rappel de résolution de la page actuelle.
      *
      * @var Closure
      */
     protected static $currentPageResolver;
 
     /**
-     * The query string resolver callback.
+     * Le rappel de résolution de la chaîne de requête.
      *
      * @var Closure
      */
     protected static $queryStringResolver;
 
     /**
-     * The view factory resolver callback.
+     * Le rappel de résolution de la fabrique de vues.
      *
      * @var Closure
      */
     protected static $viewFactoryResolver;
 
     /**
-     * The default pagination view.
+     * La vue de pagination par défaut.
      */
     public static string $defaultView = 'BlitzPHP\Wolke\Pagination\Views\bootstrap-5';
 
     /**
-     * The default "simple" pagination view.
+     * La vue de pagination "simple" par défaut.
      */
     public static string $defaultSimpleView = 'BlitzPHP\Wolke\Pagination\Views\simple-bootstrap-5';
 
     /**
-     * Determine if the given value is a valid page number.
+     * Détermine si la valeur donnée est un numéro de page valide.
      */
     protected function isValidPageNumber(mixed $page): bool
     {
@@ -130,7 +131,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the URL for the previous page.
+     * Obtient l'URL de la page précédente.
      */
     public function previousPageUrl(): ?string
     {
@@ -142,7 +143,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Create a range of pagination URLs.
+     * Crée une plage d'URL de pagination.
      */
     public function getUrlRange(int $start, int $end): array
     {
@@ -152,7 +153,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the URL for a given page number.
+     * Obtient l'URL pour un numéro de page donné.
      */
     public function url(int $page): string
     {
@@ -160,9 +161,9 @@ abstract class AbstractPaginator
             $page = 1;
         }
 
-        // If we have any extra query string key / value pairs that need to be added
-        // onto the URL, we will put them in query string form and then attach it
-        // to the URL. This allows for extra information like sortings storage.
+        // Si nous avons des paires clé/valeur supplémentaires de chaîne de requête qui doivent être ajoutées
+        // à l'URL, nous les mettrons sous forme de chaîne de requête puis les attacherons
+        // à l'URL. Cela permet d'ajouter des informations supplémentaires comme le stockage des tris.
         $parameters = [$this->pageName => $page];
 
         if (count($this->query) > 0) {
@@ -176,7 +177,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get / set the URL fragment to be appended to URLs.
+     * Obtient/définit le fragment d'URL à ajouter aux URL.
      *
      * @return self|string|null
      */
@@ -192,7 +193,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Add a set of query string values to the paginator.
+     * Ajoute un ensemble de valeurs de chaîne de requête au paginateur.
      */
     public function appends(array|string|null $key, ?string $value = null): static
     {
@@ -208,7 +209,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Add an array of query string values.
+     * Ajoute un tableau de valeurs de chaîne de requête.
      */
     protected function appendArray(array $keys): static
     {
@@ -220,7 +221,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Add all current query string values to the paginator.
+     * Ajoute toutes les valeurs de chaîne de requête actuelles au paginateur.
      */
     public function withQueryString(): static
     {
@@ -232,7 +233,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Add a query string value to the paginator.
+     * Ajoute une valeur de chaîne de requête au paginateur.
      */
     protected function addQuery(string $key, string $value): static
     {
@@ -244,7 +245,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Build the full fragment portion of a URL.
+     * Construit la partie complète du fragment d'une URL.
      */
     protected function buildFragment(): string
     {
@@ -252,7 +253,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Load a set of relationships onto the mixed relationship collection.
+     * Charge un ensemble de relations sur la collection de relations mixtes.
      */
     public function loadMorph(string $relation, array $relations): static
     {
@@ -262,7 +263,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Load a set of relationship counts onto the mixed relationship collection.
+     * Charge un ensemble de compteurs de relations sur la collection de relations mixtes.
      */
     public function loadMorphCount(string $relation, array $relations): static
     {
@@ -272,7 +273,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the slice of items being paginated.
+     * Obtient la tranche d'éléments paginés.
      *
      * @return array<TKey, TValue>
      */
@@ -282,7 +283,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the number of the first item in the slice.
+     * Obtient le numéro du premier élément dans la tranche.
      */
     public function firstItem(): ?int
     {
@@ -290,7 +291,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the number of the last item in the slice.
+     * Obtient le numéro du dernier élément dans la tranche.
      */
     public function lastItem(): ?int
     {
@@ -298,7 +299,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Transform each item in the slice of items using a callback.
+     * Transforme chaque élément de la tranche d'éléments en utilisant un rappel.
      *
      * @template TMapValue
      *
@@ -314,7 +315,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the number of items shown per page.
+     * Obtient le nombre d'éléments affichés par page.
      */
     public function perPage(): int
     {
@@ -322,7 +323,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Determine if there are enough items to split into multiple pages.
+     * Détermine s'il y a assez d'éléments pour diviser en plusieurs pages.
      */
     public function hasPages(): bool
     {
@@ -330,7 +331,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Determine if the paginator is on the first page.
+     * Détermine si le paginateur est sur la première page.
      */
     public function onFirstPage(): bool
     {
@@ -338,7 +339,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Determine if the paginator is on the last page.
+     * Détermine si le paginateur est sur la dernière page.
      */
     public function onLastPage(): bool
     {
@@ -346,7 +347,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the current page.
+     * Obtient la page actuelle.
      */
     public function currentPage(): ?int
     {
@@ -354,7 +355,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the query string variable used to store the page.
+     * Obtient la variable de chaîne de requête utilisée pour stocker la page.
      */
     public function getPageName(): string
     {
@@ -362,7 +363,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the query string variable used to store the page.
+     * Définit la variable de chaîne de requête utilisée pour stocker la page.
      */
     public function setPageName(string $name): static
     {
@@ -372,7 +373,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the base path to assign to all URLs.
+     * Définit le chemin de base à assigner à toutes les URL.
      */
     public function withPath(string $path): static
     {
@@ -380,7 +381,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the base path to assign to all URLs.
+     * Définit le chemin de base à assigner à toutes les URL.
      */
     public function setPath(string $path): static
     {
@@ -390,7 +391,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the number of links to display on each side of current page link.
+     * Définit le nombre de liens à afficher de chaque côté du lien de la page actuelle.
      */
     public function onEachSide(int $count): static
     {
@@ -400,7 +401,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the base path for paginator generated URLs.
+     * Obtient le chemin de base pour les URL générées par le paginateur.
      */
     public function path(): ?string
     {
@@ -408,7 +409,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Resolve the current request path or return the default value.
+     * Résout le chemin de la requête actuelle ou retourne la valeur par défaut.
      */
     public static function resolveCurrentPath(string $default = '/'): string
     {
@@ -420,7 +421,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the current request path resolver callback.
+     * Définit le rappel de résolution du chemin de requête actuel.
      */
     public static function currentPathResolver(Closure $resolver): void
     {
@@ -428,7 +429,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Resolve the current page or return the default value.
+     * Résout la page actuelle ou retourne la valeur par défaut.
      */
     public static function resolveCurrentPage(string $pageName = 'page', int $default = 1): int
     {
@@ -440,7 +441,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the current page resolver callback.
+     * Définit le rappel de résolution de la page actuelle.
      */
     public static function currentPageResolver(Closure $resolver): void
     {
@@ -448,7 +449,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Resolve the query string or return the default value.
+     * Résout la chaîne de requête ou retourne la valeur par défaut.
      * 
      * @return string
      */
@@ -462,7 +463,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set with query string resolver callback.
+     * Définit le rappel de résolution de la chaîne de requête.
      */
     public static function queryStringResolver(Closure $resolver): void
     {
@@ -470,7 +471,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get an instance of the view factory from the resolver.
+     * Obtient une instance de la fabrique de vues à partir du résolveur.
      */
     public static function viewFactory(): RendererInterface
     {
@@ -478,7 +479,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the view factory resolver callback.
+     * Définit le rappel de résolution de la fabrique de vues.
      */
     public static function viewFactoryResolver(Closure $resolver): void
     {
@@ -486,7 +487,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the default pagination view.
+     * Définit la vue de pagination par défaut.
      */
     public static function defaultView(string $view): void
     {
@@ -494,7 +495,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the default "simple" pagination view.
+     * Définit la vue de pagination "simple" par défaut.
      */
     public static function defaultSimpleView(string $view): void
     {
@@ -502,7 +503,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Indicate that Tailwind styling should be used for generated links.
+     * Indique que le style Tailwind doit être utilisé pour les liens générés.
      */
     public static function useTailwind(): void
     {
@@ -511,7 +512,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Indicate that Bootstrap 4 styling should be used for generated links.
+     * Indique que le style Bootstrap 4 doit être utilisé pour les liens générés.
      */
     public static function useBootstrap(int $version = 5): void
     {
@@ -523,7 +524,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Indicate that Bootstrap 3 styling should be used for generated links.
+     * Indique que le style Bootstrap 3 doit être utilisé pour les liens générés.
      */
     public static function useBootstrapThree(): void
     {
@@ -532,7 +533,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Indicate that Bootstrap 4 styling should be used for generated links.
+     * Indique que le style Bootstrap 4 doit être utilisé pour les liens générés.
      */
     public static function useBootstrapFour(): void
     {
@@ -541,7 +542,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Indicate that Bootstrap 5 styling should be used for generated links.
+     * Indique que le style Bootstrap 5 doit être utilisé pour les liens générés.
      */
     public static function useBootstrapFive()
     {
@@ -550,7 +551,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get an iterator for the items.
+     * Obtient un itérateur pour les éléments.
      *
      * @return ArrayIterator<TKey, TValue>
      */
@@ -560,7 +561,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Determine if the list of items is empty.
+     * Détermine si la liste des éléments est vide.
      */
     public function isEmpty(): bool
     {
@@ -568,7 +569,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Determine if the list of items is not empty.
+     * Détermine si la liste des éléments n'est pas vide.
      */
     public function isNotEmpty(): bool
     {
@@ -576,7 +577,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the number of items for the current page.
+     * Obtient le nombre d'éléments pour la page actuelle.
      */
     public function count(): int
     {
@@ -584,7 +585,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the paginator's underlying collection.
+     * Obtient la collection sous-jacente du paginateur.
      *
      * @return Collection<TKey, TValue>
      */
@@ -594,7 +595,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the paginator's underlying collection.
+     * Définit la collection sous-jacente du paginateur.
      *
      * @param Collection<TKey, TValue>  $collection
      */
@@ -606,7 +607,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the paginator options.
+     * Obtient les options du paginateur.
      */
     public function getOptions(): array
     {
@@ -614,7 +615,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Determine if the given item exists.
+     * Détermine si l'élément donné existe.
      */
     public function offsetExists(mixed $key): bool
     {
@@ -622,7 +623,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Get the item at the given offset.
+     * Obtient l'élément à l'offset donné.
      */
     public function offsetGet(mixed $key): mixed
     {
@@ -630,7 +631,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Set the item at the given offset.
+     * Définit l'élément à l'offset donné.
      */
     public function offsetSet(mixed $key, mixed $value): void
     {
@@ -638,7 +639,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Unset the item at the given key.
+     * Supprime l'élément à la clé donnée.
      */
     public function offsetUnset(mixed $key): void
     {
@@ -646,7 +647,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Render the contents of the paginator to HTML.
+     * Affiche le contenu du paginateur en HTML.
      */
     public function toHtml(): string
     {
@@ -654,7 +655,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Make dynamic calls into the collection.
+     * Effectue des appels dynamiques vers la collection.
      */
     public function __call(string $method, array $parameters): mixed
     {
@@ -662,7 +663,7 @@ abstract class AbstractPaginator
     }
 
     /**
-     * Render the contents of the paginator when casting to a string.
+     * Affiche le contenu du paginateur lors de la conversion en chaîne.
      */
     public function __toString(): string
     {

@@ -32,6 +32,8 @@ use Stringable;
  * @template-covariant TValue
  *
  * @mixin Collection<TKey, TValue>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\AbstractCursorPaginator</a>
  */
 abstract class AbstractCursorPaginator implements Stringable
 {
@@ -39,76 +41,76 @@ abstract class AbstractCursorPaginator implements Stringable
     use Tappable;
 
     /**
-     * Indicates whether there are more items in the data source.
+     * Indique s'il y a plus d'éléments dans la source de données.
      *
      * @return bool
      */
     protected $hasMore;
 
     /**
-     * All of the items being paginated.
+     * Tous les éléments paginés.
      *
      * @var Collection<TKey, TValue>
      */
     protected $items;
 
     /**
-     * The number of items to be shown per page.
+     * Le nombre d'éléments à afficher par page.
      *
      * @var int
      */
     protected $perPage;
 
     /**
-     * The base path to assign to all URLs.
+     * Le chemin de base à assigner à toutes les URL.
      */
     protected string $path = '/';
 
     /**
-     * The query parameters to add to all URLs.
+     * Les paramètres de requête à ajouter à toutes les URL.
      */
     protected array $query = [];
 
     /**
-     * The URL fragment to add to all URLs.
+     * Le fragment d'URL à ajouter à toutes les URL.
      */
     protected ?string $fragment = null;
 
     /**
-     * The cursor string variable used to store the page.
+     * La variable de chaîne de curseur utilisée pour stocker la page.
      */
     protected string $cursorName = 'cursor';
 
     /**
-     * The current cursor.
+     * Le curseur actuel.
      */
     protected ?Cursor $cursor = null;
 
     /**
-     * The paginator parameters for the cursor.
+     * Les paramètres du paginateur pour le curseur.
      */
     protected array $parameters = [];
 
     /**
-     * The paginator options.
+     * Les options du paginateur.
      */
     protected array $options = [];
 
     /**
-     * The current cursor resolver callback.
+     * Le rappel de résolution du curseur actuel.
      *
      * @var Closure
      */
     protected static $currentCursorResolver;
 
     /**
-     * Get the URL for a given cursor.
+     * Obtient l'URL pour un curseur donné.
      */
     public function url(?Cursor $cursor): string
     {
-        // If we have any extra query string key / value pairs that need to be added
-        // onto the URL, we will put them in query string form and then attach it
-        // to the URL. This allows for extra information like sortings storage.
+        // Si nous avons des paires clé/valeur supplémentaires de chaîne de requête qui doivent être ajoutées
+        // à l'URL, nous les mettrons sous forme de chaîne de requête puis les attacherons
+        // à l'URL. Cela permet d'ajouter des informations supplémentaires comme le stockage des tris.
         $parameters = null === $cursor ? [] : [$this->cursorName => $cursor->encode()];
 
         if (count($this->query) > 0) {
@@ -122,7 +124,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the URL for the previous page.
+     * Obtient l'URL de la page précédente.
      */
     public function previousPageUrl(): ?string
     {
@@ -134,7 +136,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * The URL for the next page, or null.
+     * L'URL de la page suivante, ou null.
      */
     public function nextPageUrl(): ?string
     {
@@ -146,7 +148,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the "cursor" that points to the previous set of items.
+     * Obtient le "curseur" qui pointe vers l'ensemble d'éléments précédent.
      */
     public function previousCursor(): ?Cursor
     {
@@ -163,7 +165,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the "cursor" that points to the next set of items.
+     * Obtient le "curseur" qui pointe vers l'ensemble d'éléments suivant.
      */
     public function nextCursor(): ?Cursor
     {
@@ -180,7 +182,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get a cursor instance for the given item.
+     * Obtient une instance de curseur pour l'élément donné.
      */
     public function getCursorForItem(ArrayAccess|stdClass $item, bool $isNext = true): Cursor
     {
@@ -188,7 +190,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the cursor parameters for a given object.
+     * Obtient les paramètres du curseur pour un objet donné.
      *
      * @throws Exception
      */
@@ -213,12 +215,12 @@ abstract class AbstractCursorPaginator implements Stringable
                     );
                 }
 
-                throw new Exception('Only arrays and objects are supported when cursor paginating items.');
+                throw new Exception('Seuls les tableaux et les objets sont supportés lors de la pagination par curseur des éléments.');
             })->toArray();
     }
 
     /**
-     * Get the cursor parameter value from a pivot model if applicable.
+     * Obtient la valeur du paramètre de curseur à partir d'un modèle pivot si applicable.
      */
     protected function getPivotParameterForItem(Model $item, string $parameterName): ?string
     {
@@ -236,9 +238,9 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Ensure the parameter is a primitive type.
+     * S'assure que le paramètre est d'un type primitif.
      *
-     * This can resolve issues that arise the developer uses a value object for an attribute.
+     * Cela peut résoudre les problèmes qui surviennent lorsque le développeur utilise un objet valeur pour un attribut.
      */
     protected function ensureParameterIsPrimitive(mixed $parameter): mixed
     {
@@ -248,7 +250,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get / set the URL fragment to be appended to URLs.
+     * Obtient/définit le fragment d'URL à ajouter aux URL.
      *
      * @return self|string|null
      */
@@ -264,7 +266,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Add a set of query string values to the paginator.
+     * Ajoute un ensemble de valeurs de chaîne de requête au paginateur.
      */
     public function appends(array|string|null $key, ?string $value = null): static
     {
@@ -280,7 +282,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Add an array of query string values.
+     * Ajoute un tableau de valeurs de chaîne de requête.
      */
     protected function appendArray(array $keys): static
     {
@@ -292,7 +294,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Add all current query string values to the paginator.
+     * Ajoute toutes les valeurs de chaîne de requête actuelles au paginateur.
      */
     public function withQueryString(): static
     {
@@ -304,7 +306,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Add a query string value to the paginator.
+     * Ajoute une valeur de chaîne de requête au paginateur.
      */
     protected function addQuery(string $key, string $value): static
     {
@@ -316,7 +318,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Build the full fragment portion of a URL.
+     * Construit la partie complète du fragment d'une URL.
      */
     protected function buildFragment(): string
     {
@@ -324,7 +326,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Load a set of relationships onto the mixed relationship collection.
+     * Charge un ensemble de relations sur la collection de relations mixtes.
      */
     public function loadMorph(string $relation, array $relations): static
     {
@@ -334,7 +336,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Load a set of relationship counts onto the mixed relationship collection.
+     * Charge un ensemble de compteurs de relations sur la collection de relations mixtes.
      */
     public function loadMorphCount(string $relation, array $relations): static
     {
@@ -344,7 +346,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the slice of items being paginated.
+     * Obtient la tranche d'éléments paginés.
      *
      * @return array<TKey, TValue>
      */
@@ -354,7 +356,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Transform each item in the slice of items using a callback.
+     * Transforme chaque élément de la tranche d'éléments en utilisant un rappel.
      *
      * @template TThroughValue
      *
@@ -370,7 +372,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the number of items shown per page.
+     * Obtient le nombre d'éléments affichés par page.
      */
     public function perPage(): int
     {
@@ -378,7 +380,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the current cursor being paginated.
+     * Obtient le curseur actuel en cours de pagination.
      */
     public function cursor(): ?Cursor
     {
@@ -386,7 +388,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the query string variable used to store the cursor.
+     * Obtient la variable de chaîne de requête utilisée pour stocker le curseur.
      */
     public function getCursorName(): string
     {
@@ -394,7 +396,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Set the query string variable used to store the cursor.
+     * Définit la variable de chaîne de requête utilisée pour stocker le curseur.
      */
     public function setCursorName(string $name): static
     {
@@ -404,7 +406,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Set the base path to assign to all URLs.
+     * Définit le chemin de base à assigner à toutes les URL.
      */
     public function withPath(string $path): static
     {
@@ -412,7 +414,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Set the base path to assign to all URLs.
+     * Définit le chemin de base à assigner à toutes les URL.
      */
     public function setPath(string $path): static
     {
@@ -422,7 +424,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the base path for paginator generated URLs.
+     * Obtient le chemin de base pour les URL générées par le paginateur.
      */
     public function path(): ?string
     {
@@ -430,7 +432,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Resolve the current cursor or return the default value.
+     * Résout le curseur actuel ou retourne la valeur par défaut.
      */
     public static function resolveCurrentCursor(string $cursorName = 'cursor', ?Cursor $default = null): ?Cursor
     {
@@ -442,7 +444,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Set the current cursor resolver callback.
+     * Définit le rappel de résolution du curseur actuel.
      */
     public static function currentCursorResolver(Closure $resolver): void
     {
@@ -450,7 +452,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get an instance of the view factory from the resolver.
+     * Obtient une instance de la fabrique de vues à partir du résolveur.
      */
     public static function viewFactory(): RendererInterface
     {
@@ -458,7 +460,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get an iterator for the items.
+     * Obtient un itérateur pour les éléments.
      */
     public function getIterator(): ArrayIterator
     {
@@ -466,7 +468,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Determine if the list of items is empty.
+     * Détermine si la liste des éléments est vide.
      */
     public function isEmpty(): bool
     {
@@ -474,7 +476,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Determine if the list of items is not empty.
+     * Détermine si la liste des éléments n'est pas vide.
      */
     public function isNotEmpty(): bool
     {
@@ -482,7 +484,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the number of items for the current page.
+     * Obtient le nombre d'éléments pour la page actuelle.
      */
     public function count(): int
     {
@@ -490,7 +492,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the paginator's underlying collection.
+     * Obtient la collection sous-jacente du paginateur.
      *
      * @return Collection<TKey, TValue>
      */
@@ -500,7 +502,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Set the paginator's underlying collection.
+     * Définit la collection sous-jacente du paginateur.
      *
      * @template TSetKey of array-key
      * @template TSetValue
@@ -517,7 +519,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the paginator options.
+     * Obtient les options du paginateur.
      */
     public function getOptions(): array
     {
@@ -525,7 +527,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Determine if the given item exists.
+     * Détermine si l'élément donné existe.
      */
     public function offsetExists(mixed $key): bool
     {
@@ -533,7 +535,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Get the item at the given offset.
+     * Obtient l'élément à l'offset donné.
      */
     public function offsetGet(mixed $key): mixed
     {
@@ -541,7 +543,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Set the item at the given offset.
+     * Définit l'élément à l'offset donné.
      */
     public function offsetSet(mixed $key, mixed $value): void
     {
@@ -549,7 +551,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Unset the item at the given key.
+     * Supprime l'élément à la clé donnée.
      */
     public function offsetUnset(mixed $key): void
     {
@@ -557,7 +559,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Render the contents of the paginator to HTML.
+     * Affiche le contenu du paginateur en HTML.
      */
     public function toHtml(): string
     {
@@ -565,7 +567,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Make dynamic calls into the collection.
+     * Effectue des appels dynamiques vers la collection.
      */
     public function __call(string $method, array $parameters = []): mixed
     {
@@ -573,7 +575,7 @@ abstract class AbstractCursorPaginator implements Stringable
     }
 
     /**
-     * Render the contents of the paginator when casting to a string.
+     * Affiche le contenu du paginateur lors de la conversion en chaîne.
      */
     public function __toString(): string
     {

@@ -23,23 +23,25 @@ use BlitzPHP\Wolke\Model;
  * @template TResult
  *
  * @extends HasOneOrMany<TRelatedModel, TDeclaringModel, TResult>
+ * 
+ * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphOneOrMany</a>
  */
 abstract class MorphOneOrMany extends HasOneOrMany
 {
     /**
-     * The foreign key type for the relationship.
+     * Le type de clé étrangère pour la relation.
      */
     protected string $morphType;
 
     /**
-     * The class name of the parent model.
+     * Le nom de classe du modèle parent.
      *
      * @var class-string<TRelatedModel>
      */
     protected string $morphClass;
 
     /**
-     * Create a new morph one or many relationship instance.
+     * Crée une nouvelle instance de relation morph one or many.
      * 
      * @param Builder<TRelatedModel>  $query
      * @param TDeclaringModel  $parent
@@ -54,7 +56,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Set the base constraints on the relation query.
+     * Définit les contraintes de base sur la requête de relation.
      */
     public function addConstraints(): void
     {
@@ -76,7 +78,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Create a new instance of the related model. Allow mass-assignment.
+     * Crée une nouvelle instance du modèle lié. Permet l'assignation en masse.
      *
      * @param  array  $attributes
      * 
@@ -91,7 +93,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Set the foreign ID and type for creating a related model.
+     * Définit l'ID étranger et le type pour la création d'un modèle lié.
      * 
      * @param  TRelatedModel  $model
      */
@@ -113,7 +115,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Insert new records or update the existing ones.
+     * Insère de nouveaux enregistrements ou met à jour ceux existants.
      */
     public function upsert(array $values, array|string $uniqueBy, ?array $update = null): int
     {
@@ -129,7 +131,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Get the relationship query.
+     * Obtient la requête de relation.
      *
      * @param array|mixed $columns
      */
@@ -142,7 +144,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Get the foreign key "type" name.
+     * Obtient le nom du "type" de clé étrangère.
      */
     public function getQualifiedMorphType(): string
     {
@@ -150,7 +152,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Get the plain morph type name without the table.
+     * Obtient le nom du type morph simple sans la table.
      */
     public function getMorphType(): string
     {
@@ -158,7 +160,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Get the class name of the parent model.
+     * Obtient le nom de classe du modèle parent.
      *
      * @return class-string<TRelatedModel>
      */
@@ -168,7 +170,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     }
 
     /**
-     * Get the possible inverse relations for the parent model.
+     * Obtient les relations inverses possibles pour le modèle parent.
      *
      * @return array<non-empty-string>
      */
