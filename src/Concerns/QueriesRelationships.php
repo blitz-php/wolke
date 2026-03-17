@@ -827,7 +827,7 @@ trait QueriesRelationships
             // alors nous supprimerons ces éléments de la requête afin qu'elle s'exécute correctement
             // lorsqu'elle est donnée à la base de données. Sinon, nous pouvons recevoir des erreurs SQL ou une syntaxe incorrecte.
             Invader::make($query)->orders = [];
-            // $query->setBindings([], 'order');
+            $query->bindings->set([], 'order');
 
             $fields = $query->columns;
 
@@ -835,7 +835,7 @@ trait QueriesRelationships
                 $invader = Invader::make($query);
                 $invader->columns = [$fields[0]];
                 $invader->wheres = [];
-                // $query->bindings['select'] = [];
+                $query->bindings->set([], 'select');
             }
 
             // Enfin, nous ferons l'alias de colonne approprié à la requête et exécuterons cette sous-sélection sur
@@ -852,7 +852,7 @@ trait QueriesRelationships
             if ($function === 'exists') {
                 $this->selectRaw(
                     sprintf('exists(%s) as %s', $query->toSql(), $alias),
-                    $query->bindings->getValues()
+                    $query->getBindings()
                 )->withCasts([$alias => 'bool']);
             } else {
                 $this->selectSubquery(
@@ -949,7 +949,7 @@ trait QueriesRelationships
      */
     public function mergeConstraintsFrom(Builder $from)
     {
-        $whereBindings = $from->getQuery()->bindings->getValues();
+        $whereBindings = $from->getQuery()->bindings->getOrdered(['where']);
 
         $wheres = $from->getQuery()->getTable() !== $this->getQuery()->getTable()
             ? $this->requalifyWhereTables(
@@ -988,7 +988,7 @@ trait QueriesRelationships
      */
     protected function addWhereCountQuery(BaseBuilder $query, string $operator = '>=', Expression|int $count = 1, string $boolean = 'and'): static
     {
-        $this->query->bindings->addMany($query->bindings->getValues());
+        $this->query->bindings->merge($query->bindings);
 
         return $this->where(
             new Expression('(' . $query->toSql() . ')'),

@@ -56,20 +56,10 @@ trait BuildsQueries
      */
     public function mergeWheres(array $wheres, array $bindings): static
     {
-        $wheres = array_merge($wheres, $bindings);
-        $keys   = array_keys($wheres);
-        $values = array_values($wheres);
+        Invader::make($this->query)->wheres = array_merge($this->query->wheres, $wheres);
 
-        foreach ($wheres as $key => $value) {
-            $key   = is_string($key) ? trim($key) : $key;
-            $value = is_string($value) ? trim($value) : $value;
-
-            $this->query->where($key, $value);
-        }
-
-        Invader::make($this->query)->query_keys = array_merge(Invader::make($this->query)->query_keys, (array) $wheres);
-
-        Invader::make($this->query)->query_values = array_merge(Invader::make($this->query)->query_values, (array) $bindings);
+        $bindings = array_merge($this->query->bindings->getOrdered(['where']), $bindings);
+        $this->query->bindings->set(array_values($bindings), 'where');
 
         return $this;
     }
@@ -83,7 +73,7 @@ trait BuildsQueries
         $wheres[] = ['type' => 'exists'] + compact('query', 'boolean', 'not');
 
         Invader::make($this->query)->wheres = $wheres;
-        $this->query->bindings->addMany($query->bindings->getValues());
+        $this->query->bindings->merge($query->bindings);
         
         return $this;
     }
@@ -173,7 +163,7 @@ trait BuildsQueries
 
         if (null !== $cursor) {
             // Réinitialise les liaisons union pour pouvoir ajouter le curseur where à la bonne position...
-            // Invader::make($this->query)->unions = [];    
+            $this->query->bindings->set([], 'union');
 
             $addCursorConditions = function (self $builder, $previousColumn, $originalColumn, $i) use (&$addCursorConditions, $cursor, $orders) {
                 $unionBuilders = $builder->query->unions !== [] 
@@ -196,7 +186,7 @@ trait BuildsQueries
                             $cursor->parameter($previousColumn)
                         );
 
-                        $this->query->bindings->addMany($unionBuilder->bindings->getValues());
+                        $this->query->bindings->addMany($unionBuilder->bindings->getOrdered('where'), 'union');
                     });
                 }
 
@@ -218,7 +208,7 @@ trait BuildsQueries
                     }
 
                     $unionBuilders->each(function ($unionBuilder) use ($column, $direction, $cursor, $i, $orders, $addCursorConditions, $originalColumn) {
-                        $unionWheres = $unionBuilder->bindings->getValues();
+                        $unionWheres = $unionBuilder->bindings->getOrdered('where');
                         $originalColumn = $this->getOriginalColumnNameForCursorPagination($unionBuilder, $column);
                         
                         $unionBuilder->where(function ($unionBuilder) use ($column, $direction, $cursor, $i, $orders, $addCursorConditions, $originalColumn, $unionWheres) {
@@ -234,7 +224,8 @@ trait BuildsQueries
                                 });
                             }
 
-                            $this->query->bindings->addMany(array_merge($unionWheres, $unionBuilder->bindings->getValues()));
+                            $this->query->bindings->addMany($unionWheres, 'union');
+                            $this->query->bindings->addMany($unionBuilder->bindings->getOrdered('where'), 'union');
                         });
                     });
                 });
