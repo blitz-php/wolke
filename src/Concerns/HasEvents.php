@@ -49,7 +49,7 @@ trait HasEvents
      */
     public static function bootHasEvents(): void
     {
-        static::whenBooted(fn () => static::observe(static::resolveObserveAttributes()));
+        static::whenBooted(static fn () => static::observe(static::resolveObserveAttributes()));
     }
 
     /**
@@ -63,19 +63,17 @@ trait HasEvents
             && get_parent_class(static::class) !== Model::class;
 
         return (new Collection($reflectionClass->getAttributes(ObservedBy::class)))
-            ->map(fn ($attribute) => $attribute->getArguments())
+            ->map(static fn ($attribute) => $attribute->getArguments())
             ->flatten()
-            ->when($isWolkeGrandchild, function (Collection $attributes) {
-                return (new Collection(get_parent_class(static::class)::resolveObserveAttributes()))
-                    ->merge($attributes);
-            })
+            ->when($isWolkeGrandchild, static fn (Collection $attributes) => (new Collection(get_parent_class(static::class)::resolveObserveAttributes()))
+                ->merge($attributes))
             ->all();
     }
 
     /**
      * Enregistre des observateurs avec le modèle.
      *
-     * @param  object|list<string>|string  $classes
+     * @param list<string>|object|string $classes
      *
      * @throws RuntimeException
      */
@@ -109,7 +107,7 @@ trait HasEvents
 
     /**
      * Résout le nom de classe de l'observateur à partir d'un objet ou d'une chaîne.
-     * 
+     *
      * @return class-string
      *
      * @throws InvalidArgumentException
@@ -117,7 +115,7 @@ trait HasEvents
     private function resolveObserverClassName(object|string $class): string
     {
         if (is_object($class)) {
-            return get_class($class);
+            return $class::class;
         }
 
         if (class_exists($class)) {
@@ -140,14 +138,14 @@ trait HasEvents
                 'saving', 'saved', 'restoring', 'restored', 'replicating',
                 'trashed', 'deleting', 'deleted', 'forceDeleted',
             ],
-            $this->observables
+            $this->observables,
         );
     }
 
     /**
      * Définit les noms des événements observables.
      *
-     * @param  list<string>  $observables
+     * @param list<string> $observables
      */
     public function setObservableEvents(array $observables): self
     {
@@ -159,33 +157,33 @@ trait HasEvents
     /**
      * Ajoute un nom d'événement observable.
      *
-     * @param  list<string>|string  $observables
+     * @param list<string>|string $observables
      */
     public function addObservableEvents($observables): void
     {
         $this->observables = array_unique(array_merge(
             $this->observables,
-            is_array($observables) ? $observables : func_get_args()
+            is_array($observables) ? $observables : func_get_args(),
         ));
     }
 
     /**
      * Supprime un nom d'événement observable.
      *
-     * @param  list<string>|string  $observables
+     * @param list<string>|string $observables
      */
     public function removeObservableEvents($observables): void
     {
         $this->observables = array_diff(
             $this->observables,
-            is_array($observables) ? $observables : func_get_args()
+            is_array($observables) ? $observables : func_get_args(),
         );
     }
 
     /**
      * Enregistre un événement de modèle avec le répartiteur.
-     * 
-     * @param callable|array|class-string  $callback
+     *
+     * @param array|callable|class-string $callback
      */
     protected static function registerModelEvent(string $event, $callback): void
     {
@@ -211,7 +209,7 @@ trait HasEvents
         $method = $halt ? 'until' : 'dispatch';
 
         $result = $this->filterModelEventResults(
-            $this->fireCustomModelEvent($event, $method)
+            $this->fireCustomModelEvent($event, $method),
         );
 
         if ($result === false) {
@@ -225,10 +223,10 @@ trait HasEvents
 
     /**
      * Déclenche un événement de modèle personnalisé pour l'événement donné.
-     * 
-     * @param  'until'|'dispatch'  $method
-     * 
-     * @return array|null|void
+     *
+     * @param 'dispatch'|'until' $method
+     *
+     * @return array|void|null
      */
     protected function fireCustomModelEvent(string $event, string $method)
     {
@@ -258,7 +256,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "retrieved" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function retrieved(array|callable|string $callback): void
     {
@@ -268,7 +266,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "saving" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function saving(array|callable|string $callback): void
     {
@@ -278,7 +276,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "saved" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function saved(array|callable|string $callback): void
     {
@@ -288,7 +286,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "updating" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function updating(array|callable|string $callback): void
     {
@@ -298,7 +296,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "updated" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function updated(array|callable|string $callback): void
     {
@@ -308,7 +306,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "creating" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function creating(array|callable|string $callback): void
     {
@@ -318,7 +316,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "created" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function created(array|callable|string $callback): void
     {
@@ -328,7 +326,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "replicating" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function replicating(array|callable|string $callback): void
     {
@@ -338,7 +336,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "deleting" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function deleting(array|callable|string $callback): void
     {
@@ -348,7 +346,7 @@ trait HasEvents
     /**
      * Enregistre un événement de modèle "deleted" avec le répartiteur.
      *
-     * @param callable|array|class-string  $callback
+     * @param array|callable|class-string $callback
      */
     public static function deleted(array|callable|string $callback): void
     {

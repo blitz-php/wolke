@@ -16,7 +16,7 @@ use BlitzPHP\Wolke\Contracts\Scope;
 
 /**
  * @template TBuilder of Builder
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasBuilder</a>
  */
 trait HasBuilder

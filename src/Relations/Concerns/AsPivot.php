@@ -83,7 +83,7 @@ trait AsPivot
 
         $instance->setRawAttributes(
             array_merge($instance->getRawOriginal(), $attributes),
-            $exists
+            $exists,
         );
 
         return $instance;
@@ -92,8 +92,8 @@ trait AsPivot
     /**
      * Définit les clés pour une requête de sélection.
      *
-     * @param  Builder<static>  $query
-     * 
+     * @param Builder<static> $query
+     *
      * @return Builder<static>
      */
     protected function setKeysForSelectQuery(Builder $query): Builder
@@ -104,20 +104,20 @@ trait AsPivot
 
         $query->where($this->foreignKey, $this->getOriginal(
             $this->foreignKey,
-            $this->getAttribute($this->foreignKey)
+            $this->getAttribute($this->foreignKey),
         ));
 
         return $query->where($this->relatedKey, $this->getOriginal(
             $this->relatedKey,
-            $this->getAttribute($this->relatedKey)
+            $this->getAttribute($this->relatedKey),
         ));
     }
 
     /**
      * Définit les clés pour une requête de sauvegarde de mise à jour.
      *
-     * @param  Builder<static>  $query
-     * 
+     * @param Builder<static> $query
+     *
      * @return Builder<static>
      */
     protected function setKeysForSaveQuery(Builder $query): Builder
@@ -171,7 +171,7 @@ trait AsPivot
             $this->setTable(str_replace(
                 '\\',
                 '',
-                Text::snake(Text::singular(Helpers::classBasename($this)))
+                Text::snake(Text::singular(Helpers::classBasename($this))),
             ));
         }
 
@@ -267,7 +267,7 @@ trait AsPivot
             $this->foreignKey,
             $this->getAttribute($this->foreignKey),
             $this->relatedKey,
-            $this->getAttribute($this->relatedKey)
+            $this->getAttribute($this->relatedKey),
         );
     }
 
@@ -275,7 +275,7 @@ trait AsPivot
      * Obtient une nouvelle requête pour restaurer un ou plusieurs modèles par leurs IDs de file d'attente.
      *
      * @param list<int>|list<string>|string $ids
-     * 
+     *
      * @return Builder<static>
      */
     public function newQueryForRestoration($ids): Builder

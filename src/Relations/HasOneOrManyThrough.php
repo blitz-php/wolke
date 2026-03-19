@@ -12,8 +12,8 @@
 namespace BlitzPHP\Wolke\Relations;
 
 use BlitzPHP\Contracts\Support\Arrayable;
-use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
 use BlitzPHP\Database\Exceptions\MultipleRecordsFoundException;
+use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\LazyCollection;
@@ -34,7 +34,7 @@ use Closure;
  * @template TResult
  *
  * @extends Relation<TRelatedModel, TIntermediateModel, TResult>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough</a>
  */
 abstract class HasOneOrManyThrough extends Relation
@@ -44,13 +44,13 @@ abstract class HasOneOrManyThrough extends Relation
     /**
      * Crée une nouvelle instance de relation has many through.
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $farParent L'instance du modèle parent éloigné.
-     * @param  TIntermediateModel  $throughParent  L'instance du modèle parent "through".
-     * @param string $firstKey       La clé proche sur la relation.
-     * @param string $secondKey      La clé éloignée sur la relation.
-     * @param string $localKey       La clé locale sur la relation.
-     * @param string $secondLocalKey La clé locale sur le modèle intermédiaire.
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $farParent      L'instance du modèle parent éloigné.
+     * @param TIntermediateModel     $throughParent  L'instance du modèle parent "through".
+     * @param string                 $firstKey       La clé proche sur la relation.
+     * @param string                 $secondKey      La clé éloignée sur la relation.
+     * @param string                 $localKey       La clé locale sur la relation.
+     * @param string                 $secondLocalKey La clé locale sur le modèle intermédiaire.
      */
     public function __construct(Builder $query, protected Model $farParent, protected Model $throughParent, protected string $firstKey, protected string $secondKey, protected string $localKey, protected string $secondLocalKey)
     {
@@ -76,7 +76,7 @@ abstract class HasOneOrManyThrough extends Relation
     /**
      * Définit la clause de jointure sur la requête.
      *
-     * @param Builder<TRelatedModel>|null  $query
+     * @param Builder<TRelatedModel>|null $query
      */
     protected function performJoin(?Builder $query = null): void
     {
@@ -119,7 +119,7 @@ abstract class HasOneOrManyThrough extends Relation
         return $this;
     }
 
-    /** 
+    /**
      * {@inheritDoc}
      */
     public function addEagerConstraints(array $models): void
@@ -137,9 +137,9 @@ abstract class HasOneOrManyThrough extends Relation
     /**
      * Construit un dictionnaire de modèles indexé par la clé étrangère de la relation.
      *
-     * @param  Collection<int, TRelatedModel>  $results
-     * 
-     * @return array<array<array-key, TRelatedModel>>
+     * @param Collection<int, TRelatedModel> $results
+     *
+     * @return list<array<array-key, TRelatedModel>>
      */
     protected function buildDictionary(Collection $results): array
     {
@@ -178,11 +178,11 @@ abstract class HasOneOrManyThrough extends Relation
     /**
      * Obtient le premier enregistrement correspondant aux attributs. Si l'enregistrement n'est pas trouvé, le crée.
      *
-     * @param  (Closure(): array)|array  $values
-     * 
+     * @param array|(Closure(): array) $values
+     *
      * @return TRelatedModel
      */
-    public function firstOrCreate(array $attributes = [], Closure|array $values = []): Model
+    public function firstOrCreate(array $attributes = [], array|Closure $values = []): Model
     {
         if (null !== $instance = (clone $this)->where($attributes)->first()) {
             return $instance;
@@ -194,11 +194,11 @@ abstract class HasOneOrManyThrough extends Relation
     /**
      * Tente de créer l'enregistrement. Si une violation de contrainte unique se produit, tente de trouver l'enregistrement correspondant.
      *
-     * @param  (Closure(): array)|array  $values
-     * 
+     * @param array|(Closure(): array) $values
+     *
      * @return TRelatedModel
      */
-    public function createOrFirst(array $attributes = [], Closure|array $values = []): Model
+    public function createOrFirst(array $attributes = [], array|Closure $values = []): Model
     {
         try {
             return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, Helpers::value($values))));
@@ -214,7 +214,7 @@ abstract class HasOneOrManyThrough extends Relation
      */
     public function updateOrCreate(array $attributes, array $values = []): Model
     {
-        return Helpers::tap($this->firstOrCreate($attributes, $values), function ($instance) use ($values) {
+        return Helpers::tap($this->firstOrCreate($attributes, $values), static function ($instance) use ($values) {
             if (! $instance->wasRecentlyCreated) {
                 $instance->fill($values)->save();
             }
@@ -252,7 +252,7 @@ abstract class HasOneOrManyThrough extends Relation
      */
     public function firstOrFail(array $columns = ['*']): mixed
     {
-        if (! is_null($model = $this->first($columns))) {
+        if (null !== ($model = $this->first($columns))) {
             return $model;
         }
 
@@ -264,9 +264,9 @@ abstract class HasOneOrManyThrough extends Relation
      *
      * @template TValue
      *
-     * @param  (Closure(): TValue)|list<string>  $columns
-     * @param  (Closure(): TValue)|null  $callback
-     * 
+     * @param (Closure(): TValue)|list<string> $columns
+     * @param (Closure(): TValue)|null         $callback
+     *
      * @return TRelatedModel|TValue
      */
     public function firstOr(array|Closure $columns = ['*'], ?Closure $callback = null)
@@ -287,7 +287,7 @@ abstract class HasOneOrManyThrough extends Relation
     /**
      * Trouve un modèle lié par sa clé primaire.
      *
-     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel|null)
+     * @return ($id is (Arrayable<array-key, mixed>|list<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel|null)
      */
     public function find(mixed $id, array $columns = ['*'])
     {
@@ -296,9 +296,9 @@ abstract class HasOneOrManyThrough extends Relation
         }
 
         return $this->where(
-            $this->getRelated()->getQualifiedKeyName(), 
-            '=', 
-            $id
+            $this->getRelated()->getQualifiedKeyName(),
+            '=',
+            $id,
         )->first($columns);
     }
 
@@ -313,9 +313,9 @@ abstract class HasOneOrManyThrough extends Relation
     public function findSole(mixed $id, array $columns = ['*'])
     {
         return $this->where(
-            $this->getRelated()->getQualifiedKeyName(), 
-            '=', 
-            $id
+            $this->getRelated()->getQualifiedKeyName(),
+            '=',
+            $id,
         )->sole($columns);
     }
 
@@ -333,15 +333,15 @@ abstract class HasOneOrManyThrough extends Relation
         }
 
         return $this->whereIn(
-            $this->getRelated()->getQualifiedKeyName(), 
-            $ids
+            $this->getRelated()->getQualifiedKeyName(),
+            $ids,
         )->get($columns);
     }
 
     /**
      * Trouve un modèle lié par sa clé primaire ou lance une exception.
      *
-     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel)
+     * @return ($id is (Arrayable<array-key, mixed>|list<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel)
      *
      * @throws ModelNotFoundException<TRelatedModel>
      */
@@ -359,7 +359,7 @@ abstract class HasOneOrManyThrough extends Relation
             return $result;
         }
 
-        throw (new ModelNotFoundException)->setModel(get_class($this->related), $id);
+        throw (new ModelNotFoundException())->setModel(get_class($this->related), $id);
     }
 
     /**
@@ -367,8 +367,9 @@ abstract class HasOneOrManyThrough extends Relation
      *
      * @template TValue
      *
-     * @param (Closure(): TValue)|list<string>|string  $columns
-     * @param (Closure(): TValue)|null  $callback
+     * @param (Closure(): TValue)|list<string>|string $columns
+     * @param (Closure(): TValue)|null                $callback
+     *
      * @return (
      *     $id is (Arrayable<array-key, mixed>|array<mixed>)
      *     ? Collection<int, TRelatedModel>|TValue
@@ -398,7 +399,7 @@ abstract class HasOneOrManyThrough extends Relation
         return $callback();
     }
 
-    /** 
+    /**
      * {@inheritDoc}
      */
     public function get(array $columns = ['*']): Collection
@@ -415,7 +416,7 @@ abstract class HasOneOrManyThrough extends Relation
         }
 
         return $this->query->applyAfterQueryCallbacks(
-            $this->related->newCollection($models)
+            $this->related->newCollection($models),
         );
     }
 
@@ -454,11 +455,11 @@ abstract class HasOneOrManyThrough extends Relation
      */
     protected function shouldSelect(array $columns = ['*']): array
     {
-        if ($columns == ['*']) {
+        if ($columns === ['*']) {
             $columns = [$this->related->qualifyColumn('*')];
         }
 
-        return array_merge($columns, [$this->getQualifiedFirstKeyName().' as blitz_through_key']);
+        return array_merge($columns, [$this->getQualifiedFirstKeyName() . ' as blitz_through_key']);
     }
 
     /**
@@ -498,9 +499,9 @@ abstract class HasOneOrManyThrough extends Relation
      */
     public function eachById(callable $callback, int $count = 1000, ?string $column = null, ?string $alias = null): bool
     {
-        $column = $column ?? $this->getRelated()->getQualifiedKeyName();
+        $column ??= $this->getRelated()->getQualifiedKeyName();
 
-        $alias = $alias ?? $this->getRelated()->getKeyName();
+        $alias ??= $this->getRelated()->getKeyName();
 
         return $this->prepareQueryBuilder()->eachById($callback, $count, $column, $alias);
     }
@@ -577,11 +578,11 @@ abstract class HasOneOrManyThrough extends Relation
         $builder = $this->query->applyScopes();
 
         return $builder->select(
-            $this->shouldSelect($builder->getQuery()->columns !== [] ? [] : $columns)
+            $this->shouldSelect($builder->getQuery()->columns !== [] ? [] : $columns),
         );
     }
 
-    /** 
+    /**
      * {@inheritDoc}
      */
     public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
@@ -597,22 +598,25 @@ abstract class HasOneOrManyThrough extends Relation
         $this->performJoin($query);
 
         return $query->select($columns)->whereColumn(
-            $this->getQualifiedLocalKeyName(), '=', $this->getQualifiedFirstKeyName()
+            $this->getQualifiedLocalKeyName(),
+            '=',
+            $this->getQualifiedFirstKeyName(),
         );
     }
 
     /**
      * Ajoute les contraintes pour une requête de relation sur la même table.
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  Builder<TDeclaringModel>  $parentQuery
+     * @param Builder<TRelatedModel>   $query
+     * @param Builder<TDeclaringModel> $parentQuery
+     *
      * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQueryForSelfRelation(Builder $query, Builder $parentQuery, array $columns = ['*'])
     {
-        $query->from($query->getModel()->getTable().' as '.$hash = $this->getRelationCountHash());
+        $query->from($query->getModel()->getTable() . ' as ' . $hash = $this->getRelationCountHash());
 
-        $query->join($this->throughParent->getTable(), $this->getQualifiedParentKeyName(), '=', $hash.'.'.$this->secondKey);
+        $query->join($this->throughParent->getTable(), $this->getQualifiedParentKeyName(), '=', $hash . '.' . $this->secondKey);
 
         if ($this->throughParentSoftDeletes()) {
             $query->whereNull($this->throughParent->getQualifiedDeletedAtColumn());
@@ -621,36 +625,40 @@ abstract class HasOneOrManyThrough extends Relation
         $query->getModel()->setTable($hash);
 
         return $query->select($columns)->whereColumn(
-            $parentQuery->getQuery()->from.'.'.$this->localKey, '=', $this->getQualifiedFirstKeyName()
+            $parentQuery->getQuery()->from . '.' . $this->localKey,
+            '=',
+            $this->getQualifiedFirstKeyName(),
         );
     }
 
     /**
      * Ajoute les contraintes pour une requête de relation sur la même table que le parent through.
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  Builder<TDeclaringModel>  $parentQuery
-     * @param  array|mixed  $columns
-     * 
+     * @param Builder<TRelatedModel>   $query
+     * @param Builder<TDeclaringModel> $parentQuery
+     * @param array|mixed              $columns
+     *
      * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQueryForThroughSelfRelation(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
-        $table = $this->throughParent->getTable().' as '.$hash = $this->getRelationCountHash();
+        $table = $this->throughParent->getTable() . ' as ' . $hash = $this->getRelationCountHash();
 
-        $query->join($table, $hash.'.'.$this->secondLocalKey, '=', $this->getQualifiedFarKeyName());
+        $query->join($table, $hash . '.' . $this->secondLocalKey, '=', $this->getQualifiedFarKeyName());
 
         if ($this->throughParentSoftDeletes()) {
             $query->whereNull($hash . '.' . $this->throughParent->getDeletedAtColumn());
         }
 
         return $query->select($columns)->whereColumn(
-            $parentQuery->getQuery()->from . '.'.$this->localKey, '=', $hash.'.'.$this->firstKey
+            $parentQuery->getQuery()->from . '.' . $this->localKey,
+            '=',
+            $hash . '.' . $this->firstKey,
         );
     }
 
     /**
-     * Obtient la clé étrangère qualifiée sur le modèle lié. 
+     * Obtient la clé étrangère qualifiée sur le modèle lié.
      */
     public function getQualifiedFarKeyName(): string
     {

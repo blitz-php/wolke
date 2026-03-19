@@ -28,7 +28,7 @@ class ClassMorphViolationException extends RuntimeException
      */
     public function __construct(object $model)
     {
-        $class = get_class($model);
+        $class = $model::class;
 
         parent::__construct("Aucune carte morph définie pour le modèle [{$class}].");
 

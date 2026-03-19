@@ -45,12 +45,12 @@ use ReflectionMethod;
 /**
  * @template TModel of Model
  *
- * @property-read HigherOrderBuilderProxy|$this $orWhere
- * @property-read HigherOrderBuilderProxy|$this $whereNot
- * @property-read HigherOrderBuilderProxy|$this $orWhereNot
+ * @property-read $this|HigherOrderBuilderProxy $orWhere
+ * @property-read $this|HigherOrderBuilderProxy $orWhereNot
+ * @property-read $this|HigherOrderBuilderProxy $whereNot
  *
  * @mixin BaseBuilder
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Builder</a>
  */
 class Builder
@@ -154,7 +154,7 @@ class Builder
 
     /**
      * Les rappels qui doivent être invoqués lors du clonage.
-     * 
+     *
      * @var list<Closure(static): void>
      */
     protected array $onCloneCallbacks = [];
@@ -198,7 +198,7 @@ class Builder
     public function withoutGlobalScope(Scope|string $scope): static
     {
         if (! is_string($scope)) {
-            $scope = get_class($scope);
+            $scope = $scope::class;
         }
 
         unset($this->scopes[$scope]);
@@ -230,7 +230,7 @@ class Builder
     public function withoutGlobalScopesExcept(array $scopes = []): static
     {
         $this->withoutGlobalScopes(
-            array_diff(array_keys($this->scopes), $scopes)
+            array_diff(array_keys($this->scopes), $scopes),
         );
 
         return $this;
@@ -291,25 +291,25 @@ class Builder
     /**
      * Exclut les modèles donnés des résultats de la requête.
      *
-     * @param  iterable|mixed  $models
+     * @param iterable|mixed $models
      */
     public function except($models): static
     {
         return $this->whereKeyNot(
             $models instanceof Model
                 ? $models->getKey()
-                : Collection::wrap($models)->modelKeys()
+                : Collection::wrap($models)->modelKeys(),
         );
     }
 
     /**
      * Ajoute une clause "where" basique à la requête.
-     * 
-     * @param  (\Closure(static): mixed)|string|array|Expression  $column
+     *
+     * @param array|(Closure(static): mixed)|Expression|string $column
      */
     public function where(array|Closure|Expression|string $column, mixed $operator = null, mixed $value = null, string $boolean = 'and'): static
     {
-        if ($column instanceof Closure && is_null($operator)) {
+        if ($column instanceof Closure && null === $operator) {
             $column($query = $this->model->newQueryWithoutRelationships());
 
             $this->eagerLoad = array_merge($this->eagerLoad, $query->getEagerLoads());
@@ -325,8 +325,8 @@ class Builder
     /**
      * Ajoute une clause where de base à la requête et retourne le premier résultat.
      *
-     * @param  (Closure(static): mixed)|string|array|Expression  $column
-     * 
+     * @param array|(Closure(static): mixed)|Expression|string $column
+     *
      * @return TModel|null
      */
     public function firstWhere(array|Closure|Expression|string $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
@@ -336,13 +336,15 @@ class Builder
 
     /**
      * Ajoute une clause "or where" à la requête.
-     * 
-     * @param  (Closure(static): mixed)|array|string|Expression  $column
+     *
+     * @param array|(Closure(static): mixed)|Expression|string $column
      */
     public function orWhere(array|Closure|Expression|string $column, Closure|string|null $operator = null, mixed $value = null): static
     {
         [$value, $operator] = $this->prepareValueAndOperator(
-            $value, $operator, func_num_args() === 2
+            $value,
+            $operator,
+            func_num_args() === 2,
         );
 
         return $this->where($column, $operator, $value, 'or');
@@ -350,8 +352,8 @@ class Builder
 
     /**
      * Ajoute une clause "where not" de base à la requête.
-     * 
-     * @param  (Closure(static): mixed)|array|string|Expression  $column
+     *
+     * @param array|(Closure(static): mixed)|Expression|string $column
      */
     public function whereNot(array|Closure|Expression|string $column, mixed $value = null, string $boolean = 'and'): static
     {
@@ -360,8 +362,8 @@ class Builder
 
     /**
      * Ajoute une clause "or where not" de base à la requête.
-     * 
-     * @param  (Closure(static): mixed)|array|string|Expression  $column
+     *
+     * @param array|(Closure(static): mixed)|Expression|string $column
      */
     public function orWhereNot(array|Closure|Expression|string $column, mixed $value = null): static
     {
@@ -398,7 +400,7 @@ class Builder
 
     /**
      * Crée une collection de modèles à partir de tableaux simples.
-     * 
+     *
      * @return Collection<int, TModel>
      */
     public function hydrate(array $items): Collection
@@ -419,7 +421,7 @@ class Builder
     /**
      * Insère dans la base de données après avoir fusionné les attributs par défaut du modèle, défini les horodatages et casté les valeurs.
      *
-     * @param  array<int, array<string, mixed>>  $values
+     * @param array<int, array<string, mixed>> $values
      */
     public function fillAndInsert(array $values): bool
     {
@@ -429,7 +431,7 @@ class Builder
     /**
      * Insère (en ignorant les erreurs) dans la base de données après avoir fusionné les attributs par défaut du modèle, défini les horodatages et casté les valeurs.
      *
-     * @param  array<int, array<string, mixed>>  $values
+     * @param array<int, array<string, mixed>> $values
      */
     public function fillAndInsertOrIgnore(array $values): int
     {
@@ -439,7 +441,7 @@ class Builder
     /**
      * Insère un enregistrement dans la base de données et obtient son ID après avoir fusionné les attributs par défaut du modèle, défini les horodatages et casté les valeurs.
      *
-     * @param  array<string, mixed>  $values
+     * @param array<string, mixed> $values
      */
     public function fillAndInsertGetId(array $values): int
     {
@@ -449,8 +451,8 @@ class Builder
     /**
      * Enrichit les valeurs données en fusionnant les attributs par défaut du modèle, en ajoutant les horodatages et en castant les valeurs.
      *
-     * @param  array<int, array<string, mixed>>  $values
-     * 
+     * @param array<int, array<string, mixed>> $values
+     *
      * @return array<int, array<string, mixed>>
      */
     public function fillForInsert(array $values)
@@ -467,7 +469,7 @@ class Builder
             foreach ($values as $key => $rowValues) {
                 $values[$key] = Helpers::tap(
                     $this->newModelInstance($rowValues),
-                    fn ($model) => $model->setUniqueIds()
+                    static fn ($model) => $model->setUniqueIds(),
                 )->getAttributes();
             }
         });
@@ -477,20 +479,20 @@ class Builder
 
     /**
      * Crée une collection de modèles à partir d'une requête brute.
-     * 
+     *
      * @return Collection<int, TModel>
      */
     public function fromQuery(string $query, array $bindings = []): Collection
     {
         return $this->hydrate(
-            $this->query->db()->query($query, $bindings)->resultObject()
+            $this->query->db()->query($query, $bindings)->resultObject(),
         );
     }
 
     /**
      * Trouve un modèle par sa clé primaire.
      *
-     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel|null)
+     * @return ($id is (Arrayable<array-key, mixed>|list<mixed>) ? Collection<int, TModel> : TModel|null)
      */
     public function find(mixed $id, array $columns = ['*'])
     {
@@ -516,7 +518,7 @@ class Builder
 
     /**
      * Trouve plusieurs modèles par leurs clés primaires.
-     * 
+     *
      * @return Collection<int, TModel>
      */
     public function findMany(array|Arrayable $ids, array $columns = ['*']): Collection
@@ -533,7 +535,7 @@ class Builder
     /**
      * Trouve un modèle par sa clé primaire ou lance une exception.
      *
-     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel)
+     * @return ($id is (Arrayable<array-key, mixed>|list<mixed>) ? Collection<int, TModel> : TModel)
      *
      * @throws ModelNotFoundException
      */
@@ -547,7 +549,7 @@ class Builder
             if (count($result) !== count(array_unique($id))) {
                 throw (new ModelNotFoundException())->setModel(
                     get_class($this->model),
-                    array_diff($id, $result->modelKeys())
+                    array_diff($id, $result->modelKeys()),
                 );
             }
 
@@ -557,7 +559,7 @@ class Builder
         if (null === $result) {
             throw (new ModelNotFoundException())->setModel(
                 get_class($this->model),
-                $id
+                $id,
             );
         }
 
@@ -567,7 +569,7 @@ class Builder
     /**
      * Trouve un modèle par sa clé primaire ou retourne une nouvelle instance de modèle.
      *
-     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TModel> : TModel)
+     * @return ($id is (Arrayable<array-key, mixed>|list<mixed>) ? Collection<int, TModel> : TModel)
      */
     public function findOrNew(mixed $id, array $columns = ['*'])
     {
@@ -583,9 +585,9 @@ class Builder
      *
      * @template TValue
      *
-     * @param  (Closure(): TValue)|list<string>|string  $columns
-     * @param  (Closure(): TValue)|null  $callback
-     * 
+     * @param (Closure(): TValue)|list<string>|string $columns
+     * @param (Closure(): TValue)|null                $callback
+     *
      * @return (
      *     $id is (Arrayable<array-key, mixed>|array<mixed>)
      *     ? Collection<int, TModel>
@@ -624,11 +626,11 @@ class Builder
     /**
      * Obtient le premier enregistrement correspondant aux attributs ou le crée.
      *
-     * @param  (Closure(): array)|array  $values
-     * 
+     * @param array|(Closure(): array) $values
+     *
      * @return TModel
      */
-    public function firstOrCreate(array $attributes = [], Closure|array $values = [])
+    public function firstOrCreate(array $attributes = [], array|Closure $values = [])
     {
         if (null !== ($instance = (clone $this)->where($attributes)->first())) {
             return $instance;
@@ -640,11 +642,11 @@ class Builder
     /**
      * Tente de créer l'enregistrement. Si une violation de contrainte unique se produit, tente de trouver l'enregistrement correspondant.
      *
-     * @param  (Closure(): array)|array  $values
-     * 
+     * @param array|(Closure(): array) $values
+     *
      * @return TModel
      */
-    public function createOrFirst(array $attributes = [], Closure|array $values = [])
+    public function createOrFirst(array $attributes = [], array|Closure $values = [])
     {
         try {
             return $this->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, Helpers::value($values))));
@@ -674,7 +676,7 @@ class Builder
      */
     public function incrementOrCreate(array $attributes, string $column = 'count', float|int $default = 1, float|int $step = 1, array $extra = [])
     {
-        return Helpers::tap($this->firstOrCreate($attributes, [$column => $default]), function ($instance) use ($column, $step, $extra) {
+        return Helpers::tap($this->firstOrCreate($attributes, [$column => $default]), static function ($instance) use ($column, $step, $extra) {
             if (! $instance->wasRecentlyCreated) {
                 $instance->increment($column, $step, $extra);
             }
@@ -702,9 +704,9 @@ class Builder
      *
      * @template TValue
      *
-     * @param  (Closure(): TValue)|list<string>  $columns
-     * @param  (Closure(): TValue)|null  $callback
-     * 
+     * @param (Closure(): TValue)|list<string> $columns
+     * @param (Closure(): TValue)|null         $callback
+     *
      * @return TModel|TValue
      */
     public function firstOr(array|Closure $columns = ['*'], ?Closure $callback = null)
@@ -742,7 +744,7 @@ class Builder
     /**
      * Obtient la valeur d'une seule colonne à partir du premier résultat d'une requête.
      */
-    public function value(string|Expression $column): mixed
+    public function value(Expression|string $column): mixed
     {
         if ($result = $this->first([$column])) {
             $column = $column instanceof Expression ? $column->getValue() : $column;
@@ -759,7 +761,7 @@ class Builder
      * @throws ModelNotFoundException<TModel>
      * @throws MultipleRecordsFoundException
      */
-    public function soleValue(string|Expression $column): mixed
+    public function soleValue(Expression|string $column): mixed
     {
         $column = $column instanceof Expression ? $column->getValue() : $column;
 
@@ -771,7 +773,7 @@ class Builder
      *
      * @throws ModelNotFoundException<Model>
      */
-    public function valueOrFail(string|Expression $column): mixed
+    public function valueOrFail(Expression|string $column): mixed
     {
         $column = $column instanceof Expression ? $column->getValue() : $column;
 
@@ -780,7 +782,7 @@ class Builder
 
     /**
      * Exécute la requête en tant qu'instruction "select".
-     * 
+     *
      * @return list<TModel>
      */
     public function all(array|string $columns = ['*']): array
@@ -805,7 +807,7 @@ class Builder
         }
 
         return $this->applyAfterQueryCallbacks(
-            $builder->getModel()->newCollection($models)
+            $builder->getModel()->newCollection($models),
         );
     }
 
@@ -817,15 +819,15 @@ class Builder
     public function getModels(array|string $columns = []): array
     {
         return $this->model->hydrate(
-            $this->query->from($this->model->getTable())->select($columns)->result()
+            $this->query->from($this->model->getTable())->select($columns)->result(),
         )->all();
     }
 
     /**
      * Charge avec empressement les relations pour les modèles.
-     * 
-     * @param  list<TModel>  $models
-     * 
+     *
+     * @param list<TModel> $models
+     *
      * @return list<TModel>
      */
     public function eagerLoadRelations(array $models): array
@@ -862,13 +864,13 @@ class Builder
         return $relation->match(
             $relation->initRelation($models, $name),
             $relation->getEager(),
-            $name
+            $name,
         );
     }
 
     /**
      * Obtient l'instance de relation pour le nom de relation donné.
-     * 
+     *
      * @return Relation<Model, TModel, *>
      */
     public function getRelation(string $name): Relation
@@ -926,7 +928,7 @@ class Builder
     /**
      * Enregistre une fermeture à invoquer après l'exécution de la requête.
      *
-     * @param Closure(mixed): mixed  $callback
+     * @param Closure(mixed): mixed $callback
      */
     public function afterQuery(Closure $callback): static
     {
@@ -962,7 +964,7 @@ class Builder
 
                 return $this->applyAfterQueryCallbacks($this->newModelInstance()->newCollection([$model]))->first();
             })
-            ->reject(fn ($model) => is_null($model));
+            ->reject(static fn ($model) => null === $model);
     }
 
     /**
@@ -977,10 +979,10 @@ class Builder
 
     /**
      * Obtient un tableau avec les valeurs d'une colonne donnée.
-     * 
+     *
      * @return IterableCollection<array-key, mixed>
      */
-    public function pluck(string|Expression $column, ?string $key = null): IterableCollection
+    public function pluck(Expression|string $column, ?string $key = null): IterableCollection
     {
         $column = $column instanceof Expression ? $column->getValue() : $column;
 
@@ -991,16 +993,14 @@ class Builder
         // Si le modèle a un mutateur pour la colonne demandée, nous parcourrons
         // les résultats et muterons les valeurs afin que la version mutée de ces
         // colonnes soit retournée comme vous vous y attendriez de ces modèles Wolke.
-        if (! $this->model->hasAnyGetMutator($column) &&
-            ! $this->model->hasCast($column) &&
-            ! in_array($column, $this->model->getDates())) {
+        if (! $this->model->hasAnyGetMutator($column)
+            && ! $this->model->hasCast($column)
+            && ! in_array($column, $this->model->getDates(), true)) {
             return $this->applyAfterQueryCallbacks($results);
         }
 
         return $this->applyAfterQueryCallbacks(
-            $results->map(function ($value) use ($column) {
-                return $this->model->newFromBuilder([$column => $value])->{$column};
-            })
+            $results->map(fn ($value) => $this->model->newFromBuilder([$column => $value])->{$column}),
         );
     }
 
@@ -1070,7 +1070,7 @@ class Builder
             $this->enforceOrderBy();
         }
 
-        $reverseDirection = function ($order) {
+        $reverseDirection = static function ($order) {
             if (! isset($order['direction'])) {
                 return $order;
             }
@@ -1087,7 +1087,7 @@ class Builder
         $orders = $this->query->orders;
 
         return (new IterableCollection($orders))
-            ->filter(fn ($order) => Arr::has($order, 'direction'))
+            ->filter(static fn ($order) => Arr::has($order, 'direction'))
             ->values();
     }
 
@@ -1159,7 +1159,7 @@ class Builder
         return $this->toBase()->upsert(
             $this->addTimestampsToUpsertValues($this->addUniqueIdsToUpsertValues($values)),
             (array) $uniqueBy,
-            $this->addUpdatedAtToUpsertColumns($update)
+            $this->addUpdatedAtToUpsertColumns($update),
         );
     }
 
@@ -1451,17 +1451,17 @@ class Builder
         // les reconstruire comme des requêtes imbriquées en découpant les groupes de where dans
         // leurs propres sections. C'est pour éviter toute logique d'ordre confuse.
         $allWheres = $query->wheres;
-        
+
         Invader::make($query)->wheres = [];
 
         $this->groupWhereSliceForScope(
             $query,
-            array_slice($allWheres, 0, $originalWhereCount)
+            array_slice($allWheres, 0, $originalWhereCount),
         );
 
         $this->groupWhereSliceForScope(
             $query,
-            array_slice($allWheres, $originalWhereCount)
+            array_slice($allWheres, $originalWhereCount),
         );
     }
 
@@ -1475,12 +1475,12 @@ class Builder
         // Ici, nous vérifierons si le sous-ensemble donné de clauses where contient des booléens "or"
         // et dans ce cas, créons une expression where imbriquée. De cette façon,
         // nous n'ajoutons pas d'imbrication inutile, gardant ainsi la requête propre.
-        if ($whereBooleans->contains(fn ($logicalOperator) => str_contains($logicalOperator, 'or'))) {
+        if ($whereBooleans->contains(static fn ($logicalOperator) => str_contains($logicalOperator, 'or'))) {
             $wheres = $query->wheres;
 
             $wheres[] = $this->createNestedWhere(
                 $whereSlice,
-                str_replace(' not', '', $whereBooleans->first())
+                str_replace(' not', '', $whereBooleans->first()),
             );
             Invader::make($query)->wheres = $wheres;
         } else {
@@ -1525,7 +1525,7 @@ class Builder
     public function without(mixed $relations): static
     {
         $this->eagerLoad = array_diff_key($this->eagerLoad, array_flip(
-            is_string($relations) ? func_get_args() : $relations
+            is_string($relations) ? func_get_args() : $relations,
         ));
 
         return $this;
@@ -1533,7 +1533,7 @@ class Builder
 
     /**
      * Définit les relations qui doivent être chargées avec empressement tout en supprimant toute spécification de chargement empressé précédemment ajoutée.
-     * 
+     *
      * @param  array<array-key, array|(Closure(Relation<*,*,*>): mixed)|string>|string  $relations
      */
     public function withOnly($relations): static
@@ -1545,7 +1545,7 @@ class Builder
 
     /**
      * Crée une nouvelle instance du modèle en cours d'interrogation.
-     * 
+     *
      * @return TModel
      */
     public function newModelInstance(array $attributes = []): Model
@@ -1553,7 +1553,7 @@ class Builder
         $attributes = array_merge($this->pendingAttributes, $attributes);
 
         return $this->model->newInstance($attributes)->setConnection(
-            $this->query->getConnection()->getName()
+            $this->query->getConnection()->getName(),
         );
     }
 
@@ -1659,11 +1659,9 @@ class Builder
     protected function createSelectWithConstraint(string $name): array
     {
         return [explode(':', $name)[0], static function ($query) use ($name) {
-            $query->select(array_map(static function ($column) use ($query) {
-                return $query instanceof BelongsToMany
+            $query->select(array_map(static fn ($column) => $query instanceof BelongsToMany
                     ? $query->getRelated()->qualifyColumn($column)
-                    : $column;
-            }, explode(',', explode(':', $name)[1])));
+                    : $column, explode(',', explode(':', $name)[1])));
         }];
     }
 
@@ -1694,7 +1692,7 @@ class Builder
      *
      * Les paires clé/valeur données seront également ajoutées comme conditions where à la requête.
      */
-    public function withAttributes(Expression|array|string $attributes, mixed $value = null, bool $asConditions = true): static
+    public function withAttributes(array|Expression|string $attributes, mixed $value = null, bool $asConditions = true): static
     {
         if (! is_array($attributes)) {
             $attributes = [$attributes => $value];
@@ -1835,7 +1833,7 @@ class Builder
 
     /**
      * Obtient l'instance de modèle en cours d'interrogation.
-     * 
+     *
      * @return TModel
      */
     public function getModel(): Model
@@ -1848,8 +1846,8 @@ class Builder
      *
      * @template TModelNew of Model
      *
-     * @param  TModelNew  $model
-     * 
+     * @param TModelNew $model
+     *
      * @return static<TModelNew>
      */
     public function setModel(Model $model): static
@@ -1864,7 +1862,7 @@ class Builder
     /**
      * Qualifie le nom de colonne donné par la table du modèle.
      */
-    public function qualifyColumn(string|Expression $column): string
+    public function qualifyColumn(Expression|string $column): string
     {
         $column = $column instanceof Expression ? $column->getValue() : $column;
 
@@ -2011,7 +2009,7 @@ class Builder
     protected static function registerMixin(string $mixin, bool $replace): void
     {
         $methods = (new ReflectionClass($mixin))->getMethods(
-            ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED
+            ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED,
         );
 
         foreach ($methods as $method) {
@@ -2028,10 +2026,11 @@ class Builder
     {
         return clone $this;
     }
+
     /**
      * Enregistre une fermeture à invoquer lors d'un clone.
-     * 
-     * @var Closure(static): void $callback
+     *
+     * @var Closure(static): void
      */
     public function onClone(Closure $callback): static
     {

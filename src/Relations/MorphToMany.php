@@ -24,7 +24,7 @@ use BlitzPHP\Wolke\Model;
  * @template TAccessor of string = 'pivot'
  *
  * @extends BelongsToMany<TRelatedModel, TDeclaringModel, TPivotModel, TAccessor>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphToMany</a>
  */
 class MorphToMany extends BelongsToMany
@@ -42,10 +42,10 @@ class MorphToMany extends BelongsToMany
     /**
      * Crée une nouvelle instance de relation morph to many.
      *
-     * @param Builder<TRelatedModel>  $query
-     * @param TDeclaringModel  $parent
-     * @param bool $inverse Indique si nous connectons l'inverse de la relation.
-     *                      Cela affecte principalement la contrainte morphClass.
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
+     * @param bool                   $inverse Indique si nous connectons l'inverse de la relation.
+     *                                        Cela affecte principalement la contrainte morphClass.
      *
      * @return void
      */
@@ -59,7 +59,7 @@ class MorphToMany extends BelongsToMany
         string $parentKey,
         string $relatedKey,
         ?string $relationName = null,
-        protected bool $inverse = false
+        protected bool $inverse = false,
     ) {
         $this->morphType  = $name . '_type';
         $this->morphClass = $inverse ? $query->getModel()->getMorphClass() : $parent->getMorphClass();
@@ -72,7 +72,7 @@ class MorphToMany extends BelongsToMany
             $relatedPivotKey,
             $parentKey,
             $relatedKey,
-            $relationName
+            $relationName,
         );
     }
 
@@ -106,7 +106,7 @@ class MorphToMany extends BelongsToMany
         return Arr::add(
             parent::baseAttachRecord($id, $timed),
             $this->morphType,
-            $this->morphClass
+            $this->morphClass,
         );
     }
 
@@ -119,7 +119,7 @@ class MorphToMany extends BelongsToMany
     {
         return parent::getRelationExistenceQuery($query, $parentQuery, $columns)->where(
             $this->qualifyPivotColumn($this->morphType),
-            $this->morphClass
+            $this->morphClass,
         );
     }
 
@@ -130,12 +130,10 @@ class MorphToMany extends BelongsToMany
      */
     protected function getCurrentlyAttachedPivotsForIds(mixed $ids = null): IterableCollection
     {
-        return parent::getCurrentlyAttachedPivotsForIds($ids)->map(function ($record) {
-            return $record instanceof MorphPivot
+        return parent::getCurrentlyAttachedPivotsForIds($ids)->map(fn ($record) => $record instanceof MorphPivot
                 ? $record->setMorphType($this->morphType)
                     ->setMorphClass($this->morphClass)
-                : $record;
-        });
+                : $record);
     }
 
     /**
@@ -148,7 +146,7 @@ class MorphToMany extends BelongsToMany
 
     /**
      * Crée une nouvelle instance de modèle pivot.
-     * 
+     *
      * @return TPivotModel
      */
     public function newPivot(array $attributes = [], bool $exists = false): Pivot
@@ -181,7 +179,7 @@ class MorphToMany extends BelongsToMany
             $this->morphType,
             ...$this->pivotColumns,
         ]))
-            ->map(fn ($column) => $this->qualifyPivotColumn($column).' as pivot_' . $column)
+            ->map(fn ($column) => $this->qualifyPivotColumn($column) . ' as pivot_' . $column)
             ->unique()
             ->all();
     }

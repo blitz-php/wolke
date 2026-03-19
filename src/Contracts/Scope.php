@@ -24,8 +24,8 @@ interface Scope
      *
      * @template TModel of Model
      *
-     * @param Builder<TModel>  $builder
-     * @param TModel $model
+     * @param Builder<TModel> $builder
+     * @param TModel          $model
      */
     public function apply(Builder $builder, Model $model): void;
 }

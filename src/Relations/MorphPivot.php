@@ -40,7 +40,8 @@ class MorphPivot extends Pivot
     /**
      * Définit les clés pour une requête de sauvegarde de mise à jour.
      *
-     * @param  Builder<static>  $query
+     * @param Builder<static> $query
+     *
      * @return Builder<static>
      */
     protected function setKeysForSaveQuery(Builder $query): Builder
@@ -53,7 +54,8 @@ class MorphPivot extends Pivot
     /**
      * Définit les clés pour une requête de sélection.
      *
-     * @param  Builder<static>  $query
+     * @param Builder<static> $query
+     *
      * @return Builder<static>
      */
     protected function setKeysForSelectQuery(Builder $query): Builder
@@ -109,8 +111,8 @@ class MorphPivot extends Pivot
 
     /**
      * Définit la classe morph pour le pivot.
-     * 
-     * @param  class-string  $morphClass
+     *
+     * @param class-string $morphClass
      */
     public function setMorphClass(string $morphClass): static
     {
@@ -135,7 +137,7 @@ class MorphPivot extends Pivot
             $this->relatedKey,
             $this->getAttribute($this->relatedKey),
             $this->morphType,
-            $this->morphClass
+            $this->morphClass,
         );
     }
 
@@ -143,7 +145,7 @@ class MorphPivot extends Pivot
      * Obtient une nouvelle requête pour restaurer un ou plusieurs modèles par leurs IDs de file d'attente.
      *
      * @param list<int>|list<string>|string $ids
-     * 
+     *
      * @return Builder<static>
      */
     public function newQueryForRestoration($ids): Builder

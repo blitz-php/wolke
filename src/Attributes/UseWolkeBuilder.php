@@ -12,6 +12,7 @@
 namespace BlitzPHP\Wolke\Attributes;
 
 use Attribute;
+use BlitzPHP\Wolke\Builder;
 
 #[Attribute(Attribute::TARGET_CLASS)]
 class UseWolkeBuilder
@@ -19,7 +20,7 @@ class UseWolkeBuilder
     /**
      * Crée une nouvelle instance d'attribut.
      *
-     * @param class-string<\BlitzPHP\Wolke\Builder> $builderClass Le query builder à utiliser
+     * @param class-string<Builder> $builderClass Le query builder à utiliser
      */
     public function __construct(public string $builderClass)
     {

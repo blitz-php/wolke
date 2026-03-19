@@ -27,7 +27,7 @@ class MissingAttributeException extends OutOfBoundsException
         parent::__construct(sprintf(
             'L\'attribut [%s] n\'existe pas ou n\'a pas été récupéré pour le modèle [%s].',
             $key,
-            get_class($model)
+            $model::class,
         ));
     }
 }

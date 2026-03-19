@@ -31,7 +31,7 @@ use JsonSerializable;
  * @implements ArrayAccess<TKey, TValue>
  * @implements IteratorAggregate<TKey, TValue>
  * @implements LengthAwarePaginatorContract<TKey, TValue>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\LengthAwarePaginator</a>
  */
 class LengthAwarePaginator extends AbstractPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, LengthAwarePaginatorContract
@@ -44,9 +44,9 @@ class LengthAwarePaginator extends AbstractPaginator implements Arrayable, Array
     /**
      * Crée une nouvelle instance de paginateur.
      *
-     * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $items
-     * @param int $total Le nombre total d'éléments avant le découpage.
-     * @param  array{path: string, query: array, fragment: ?string, pageName: string}  $options
+     * @param Arrayable<TKey, TValue>|Collection<TKey, TValue>|iterable<TKey, TValue>|null $items
+     * @param int                                                                          $total   Le nombre total d'éléments avant le découpage.
+     * @param array{path: string, query: array, fragment: ?string, pageName: string}       $options
      */
     public function __construct(mixed $items, protected int $total, int $perPage, ?int $currentPage = null, array $options = [])
     {

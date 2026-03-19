@@ -11,6 +11,7 @@
 
 namespace BlitzPHP\Wolke\Exceptions;
 
+use Illuminate\Http\Resources\Json\JsonResource;
 use RuntimeException;
 
 /**
@@ -25,13 +26,13 @@ class JsonEncodingException extends RuntimeException
      */
     public static function forModel(object $model, string $message)
     {
-        return new static('Erreur d\'encodage du modèle [' . get_class($model) . '] avec l\'ID [' . $model->getKey() . '] en JSON : ' . $message);
+        return new static('Erreur d\'encodage du modèle [' . $model::class . '] avec l\'ID [' . $model->getKey() . '] en JSON : ' . $message);
     }
 
     /**
      * Crée une nouvelle exception d'encodage JSON pour la ressource.
      *
-     * @param \Illuminate\Http\Resources\Json\JsonResource $resource
+     * @param JsonResource $resource
      *
      * @return static
      */
@@ -39,7 +40,7 @@ class JsonEncodingException extends RuntimeException
     {
         $model = $resource->resource;
 
-        return new static('Erreur d\'encodage de la ressource [' . get_class($resource) . '] avec le modèle [' . get_class($model) . '] avec l\'ID [' . $model->getKey() . '] en JSON : ' . $message);
+        return new static('Erreur d\'encodage de la ressource [' . $resource::class . '] avec le modèle [' . $model::class . '] avec l\'ID [' . $model->getKey() . '] en JSON : ' . $message);
     }
 
     /**
@@ -49,7 +50,7 @@ class JsonEncodingException extends RuntimeException
      */
     public static function forAttribute(object $model, mixed $key, string $message)
     {
-        $class = get_class($model);
+        $class = $model::class;
 
         return new static("Impossible d'encoder l'attribut [{$key}] pour le modèle [{$class}] en JSON : {$message}.");
     }

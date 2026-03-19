@@ -42,8 +42,8 @@ trait CanBeOneOfMany
 
     /**
      * Ajoute des contraintes pour la sous-requête de jointure interne pour les relations one of many.
-	 * 
-	 * @param Builder<*>  $query
+     *
+     * @param Builder<*>  $query
      * @param array|string|null $aggregate
      */
     abstract public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void;
@@ -70,7 +70,7 @@ trait CanBeOneOfMany
         $this->isOneOfMany = true;
 
         $this->relationName = $relation ?: $this->getDefaultOneOfManyJoinAlias(
-            $this->guessRelationship()
+            $this->guessRelationship(),
         );
 
         $keyName = $this->query->getModel()->getKeyName();
@@ -140,9 +140,9 @@ trait CanBeOneOfMany
     public function latestOfMany(array|string|null $column = 'id', ?string $relation = null): static
     {
         return $this->ofMany(
-            Collection::wrap($column)->mapWithKeys(static fn($column) => [$column => 'MAX'])->all(), 
-            'MAX', 
-            $relation
+            Collection::wrap($column)->mapWithKeys(static fn ($column) => [$column => 'MAX'])->all(),
+            'MAX',
+            $relation,
         );
     }
 
@@ -152,9 +152,9 @@ trait CanBeOneOfMany
     public function oldestOfMany(array|string|null $column = 'id', ?string $relation = null): self
     {
         return $this->ofMany(
-            Collection::wrap($column)->mapWithKeys(static fn($column) => [$column => 'MIN'])->all(), 
-            'MIN', 
-            $relation
+            Collection::wrap($column)->mapWithKeys(static fn ($column) => [$column => 'MIN'])->all(),
+            'MIN',
+            $relation,
         );
     }
 
@@ -172,7 +172,7 @@ trait CanBeOneOfMany
      * Obtient une nouvelle requête pour le modèle lié, regroupant la requête par la colonne donnée, souvent la clé étrangère de la relation.
      *
      * @param list<string>|null $columns
-     * 
+     *
      * @return Builder<*>
      */
     protected function newOneOfManySubQuery(array|string $groupBy, ?array $columns = null, ?string $aggregate = null): Builder

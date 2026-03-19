@@ -88,6 +88,6 @@ class AsEnumCollection implements Castable
      */
     public static function of(string $class): string
     {
-        return static::class.':'.$class;
+        return static::class . ':' . $class;
     }
 }

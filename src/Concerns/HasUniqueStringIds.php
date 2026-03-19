@@ -56,7 +56,7 @@ trait HasUniqueStringIds
         if ($field && in_array($field, $this->uniqueIds(), true) && ! $this->isValidUniqueId($value)) {
             $this->handleInvalidUniqueId($value, $field);
         }
-            
+
         if (! $field && in_array($this->getRouteKeyName(), $this->uniqueIds(), true) && ! $this->isValidUniqueId($value)) {
             $this->handleInvalidUniqueId($value, $field);
         }
@@ -90,7 +90,7 @@ trait HasUniqueStringIds
 
     /**
      * Lance une exception pour l'identifiant unique invalide donné.
-     * 
+     *
      * @return never
      *
      * @throws ModelNotFoundException

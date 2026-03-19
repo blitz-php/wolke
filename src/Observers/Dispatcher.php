@@ -166,7 +166,7 @@ class Dispatcher implements DispatcherContract
         // charge utile pour le gestionnaire, ce qui rend les événements basés sur des objets assez simples.
         [$event, $payload] = $this->parseEventAndPayload(
             $event,
-            $payload
+            $payload,
         );
 
         $responses = [];
@@ -200,7 +200,7 @@ class Dispatcher implements DispatcherContract
     protected function parseEventAndPayload(mixed $event, mixed $payload): array
     {
         if (is_object($event)) {
-            [$payload, $event] = [[$event], get_class($event)];
+            [$payload, $event] = [[$event], $event::class];
         }
 
         return [$event, Arr::wrap($payload)];
@@ -215,7 +215,7 @@ class Dispatcher implements DispatcherContract
 
         $listeners = array_merge(
             $listeners,
-            $this->wildcardsCache[$eventName] ?? $this->getWildcardListeners($eventName)
+            $this->wildcardsCache[$eventName] ?? $this->getWildcardListeners($eventName),
         );
 
         return class_exists($eventName, false)

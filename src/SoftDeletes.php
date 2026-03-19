@@ -18,9 +18,9 @@ use BlitzPHP\Utilities\Iterable\Collection as IterableCollection;
  * @method static Builder<static> withTrashed(bool $withTrashed = true)
  * @method static Builder<static> onlyTrashed()
  * @method static Builder<static> withoutTrashed()
- * @method static static restoreOrCreate(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
- * @method static static createOrRestore(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
- * 
+ * @method static static          restoreOrCreate(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
+ * @method static static          createOrRestore(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\SoftDeletes</a>
  */
 trait SoftDeletes
@@ -79,7 +79,7 @@ trait SoftDeletes
     /**
      * Détruit les modèles pour les IDs donnés.
      *
-     * @param  IterableCollection|array|int|string  $ids
+     * @param array|int|IterableCollection|string $ids
      */
     public static function forceDestroy($ids): int
     {
@@ -100,7 +100,7 @@ trait SoftDeletes
         // Nous allons en fait récupérer les modèles de la table de base de données et appeler delete sur
         // chacun d'eux individuellement afin que leurs événements soient déclenchés correctement avec
         // un ensemble correct d'attributs au cas où les développeurs voudraient vérifier cela.
-        $key = ($instance = new static)->getKeyName();
+        $key = ($instance = new static())->getKeyName();
 
         $count = 0;
 
@@ -199,8 +199,8 @@ trait SoftDeletes
 
     /**
      * Enregistre un rappel d'événement de modèle "softDeleted" avec le répartiteur.
-     * 
-     * @param callable|class-string  $callback
+     *
+     * @param callable|class-string $callback
      */
     public static function softDeleted(callable|string $callback)
     {
@@ -209,8 +209,8 @@ trait SoftDeletes
 
     /**
      * Enregistre un rappel d'événement de modèle "restoring" avec le répartiteur.
-     * 
-     * @param callable|class-string  $callback
+     *
+     * @param callable|class-string $callback
      */
     public static function restoring(callable|string $callback): void
     {
@@ -219,8 +219,8 @@ trait SoftDeletes
 
     /**
      * Enregistre un rappel d'événement de modèle "restored" avec le répartiteur.
-     * 
-     * @param callable|class-string  $callback
+     *
+     * @param callable|class-string $callback
      */
     public static function restored(callable|string $callback): void
     {
@@ -229,8 +229,8 @@ trait SoftDeletes
 
     /**
      * Enregistre un rappel d'événement de modèle "forceDeleting" avec le répartiteur.
-     * 
-     * @param callable|class-string  $callback
+     *
+     * @param callable|class-string $callback
      */
     public static function forceDeleting(callable|string $callback): void
     {
@@ -239,8 +239,8 @@ trait SoftDeletes
 
     /**
      * Enregistre un rappel d'événement de modèle "forceDeleted" avec le répartiteur.
-     * 
-     * @param callable|class-string  $callback
+     *
+     * @param callable|class-string $callback
      */
     public static function forceDeleted(callable|string $callback): void
     {

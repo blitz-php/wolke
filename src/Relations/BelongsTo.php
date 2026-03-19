@@ -24,7 +24,7 @@ use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
  * @template TDeclaringModel of Model
  *
  * @extends Relation<TRelatedModel, TDeclaringModel, ?TRelatedModel>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\BelongsTo</a>
  */
 class BelongsTo extends Relation
@@ -43,11 +43,11 @@ class BelongsTo extends Relation
     /**
      * Crée une nouvelle instance de relation belongs to.
      *
-     * @param Builder<TRelatedModel>  $query
-     * @param TDeclaringModel  $child
-     * @param string $foreignKey    La clé étrangère du modèle parent.
-     * @param ?string $ownerKey      La clé associée sur le modèle parent.
-     * @param string $relationName   Le nom de la relation.
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $child
+     * @param string                 $foreignKey   La clé étrangère du modèle parent.
+     * @param ?string                $ownerKey     La clé associée sur le modèle parent.
+     * @param string                 $relationName Le nom de la relation.
      */
     public function __construct(Builder $query, Model $child, protected string $foreignKey, protected ?string $ownerKey, protected string $relationName)
     {
@@ -104,7 +104,7 @@ class BelongsTo extends Relation
     /**
      * Rassemble les clés d'un tableau de modèles liés.
      *
-     * @param  array<int, TDeclaringModel>  $models
+     * @param array<int, TDeclaringModel> $models
      */
     protected function getEagerModelKeys(array $models): array
     {
@@ -169,7 +169,8 @@ class BelongsTo extends Relation
     /**
      * Associe l'instance de modèle au parent donné.
      *
-     * @param  TRelatedModel|int|string|null  $model
+     * @param int|string|TRelatedModel|null $model
+     *
      * @return TDeclaringModel
      */
     public function associate($model): Model
@@ -231,22 +232,22 @@ class BelongsTo extends Relation
         return $query->select($columns)->whereColumn(
             $this->getQualifiedForeignKeyName(),
             '=',
-            $query->qualifyColumn($this->ownerKey)
+            $query->qualifyColumn($this->ownerKey),
         );
     }
 
     /**
      * Ajoute les contraintes pour une requête de relation sur la même table.
      *
-     * @param Builder<TRelatedModel> $query
+     * @param Builder<TRelatedModel>   $query
      * @param Builder<TDeclaringModel> $parentQuery
-     * 
+     *
      * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQueryForSelfRelation(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
     {
         $query->select($columns)->from(
-            $query->getModel()->getTable() . ' as ' . $hash = $this->getRelationCountHash()
+            $query->getModel()->getTable() . ' as ' . $hash = $this->getRelationCountHash(),
         );
 
         $query->getModel()->setTable($hash);
@@ -254,7 +255,7 @@ class BelongsTo extends Relation
         return $query->whereColumn(
             $hash . '.' . $this->ownerKey,
             '=',
-            $this->getQualifiedForeignKeyName()
+            $this->getQualifiedForeignKeyName(),
         );
     }
 
@@ -270,8 +271,8 @@ class BelongsTo extends Relation
     /**
      * Crée une nouvelle instance liée pour le modèle donné.
      *
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param TDeclaringModel $parent
+     *
      * @return TRelatedModel
      */
     protected function newRelatedInstanceFor(Model $parent): Model
@@ -332,8 +333,8 @@ class BelongsTo extends Relation
     /**
      * Obtient la valeur de la clé associée du modèle.
      *
-     * @param  TRelatedModel  $model
-     * 
+     * @param TRelatedModel $model
+     *
      * @return int|string
      */
     protected function getRelatedKeyFrom(Model $model): mixed

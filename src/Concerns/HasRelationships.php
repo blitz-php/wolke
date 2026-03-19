@@ -74,7 +74,7 @@ trait HasRelationships
 
     /**
      * Obtient le résolveur de relation dynamique s'il est défini ou hérité, ou retourne null.
-     * 
+     *
      * @template TRelatedModel of Model
      *
      * @param class-string<TRelatedModel> $class
@@ -99,7 +99,7 @@ trait HasRelationships
     {
         static::$relationResolvers = array_replace_recursive(
             static::$relationResolvers,
-            [static::class => [$name => $callback]]
+            [static::class => [$name => $callback]],
         );
     }
 
@@ -122,7 +122,7 @@ trait HasRelationships
         }
 
         $this->relationAutoloadCallback = $callback;
-        $this->relationAutoloadContext = $context;
+        $this->relationAutoloadContext  = $context;
 
         foreach ($this->relations as $key => $value) {
             $this->propagateRelationAutoloadCallbackToRelation($key, $value);
@@ -150,9 +150,9 @@ trait HasRelationships
      */
     protected function invokeRelationAutoloadCallbackFor(string $key, array $tuples): void
     {
-        $tuples = array_merge([[$key, get_class($this)]], $tuples);
+        $tuples = array_merge([[$key, static::class]], $tuples);
 
-        call_user_func($this->relationAutoloadCallback, $tuples);
+        ($this->relationAutoloadCallback)($tuples);
     }
 
     /**
@@ -185,7 +185,7 @@ trait HasRelationships
      * @template TRelatedModel of Model
      *
      * @param class-string<TRelatedModel> $related
-     * 
+     *
      * @return HasOne<TRelatedModel, $this>
      */
     public function hasOne(string $related, ?string $foreignKey = null, ?string $localKey = null): HasOne
@@ -205,9 +205,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
+     *
      * @return HasOne<TRelatedModel, TDeclaringModel>
      */
     protected function newHasOne(Builder $query, Model $parent, string $foreignKey, string $localKey): HasOne
@@ -221,9 +221,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TIntermediateModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * @param  class-string<TIntermediateModel>  $through
-     * 
+     * @param class-string<TRelatedModel>      $related
+     * @param class-string<TIntermediateModel> $through
+     *
      * @return HasOneThrough<TRelatedModel, TIntermediateModel, $this>
      */
     public function hasOneThrough(string $related, string $through, ?string $firstKey = null, ?string $secondKey = null, ?string $localKey = null, ?string $secondLocalKey = null): HasOneThrough
@@ -241,7 +241,7 @@ trait HasRelationships
             $firstKey,
             $secondKey,
             $localKey ?: $this->getKeyName(),
-            $secondLocalKey ?: $through->getKeyName()
+            $secondLocalKey ?: $through->getKeyName(),
         );
     }
 
@@ -252,10 +252,10 @@ trait HasRelationships
      * @template TIntermediateModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $farParent
-     * @param  TIntermediateModel  $throughParent
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $farParent
+     * @param TIntermediateModel     $throughParent
+     *
      * @return HasOneThrough<TRelatedModel, TIntermediateModel, TDeclaringModel>
      */
     protected function newHasOneThrough(Builder $query, Model $farParent, Model $throughParent, string $firstKey, string $secondKey, string $localKey, string $secondLocalKey): HasOneThrough
@@ -268,8 +268,8 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * 
+     * @param class-string<TRelatedModel> $related
+     *
      * @return MorphOne<TRelatedModel, $this>
      */
     public function morphOne(string $related, string $name, ?string $type = null, ?string $id = null, ?string $localKey = null): MorphOne
@@ -289,9 +289,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
+     *
      * @return MorphOne<TRelatedModel, TDeclaringModel>
      */
     protected function newMorphOne(Builder $query, Model $parent, string $type, string $id, string $localKey): MorphOne
@@ -304,8 +304,8 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * 
+     * @param class-string<TRelatedModel> $related
+     *
      * @return BelongsTo<TRelatedModel, $this>
      */
     public function belongsTo(string $related, ?string $foreignKey = null, ?string $ownerKey = null, ?string $relation = null): BelongsTo
@@ -336,7 +336,7 @@ trait HasRelationships
             $this,
             $foreignKey,
             $ownerKey,
-            $relation
+            $relation,
         );
     }
 
@@ -346,9 +346,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $child
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $child
+     *
      * @return BelongsTo<TRelatedModel, TDeclaringModel>
      */
     protected function newBelongsTo(Builder $query, Model $child, string $foreignKey, string $ownerKey, string $relation): BelongsTo
@@ -358,7 +358,7 @@ trait HasRelationships
 
     /**
      * Définit une relation polymorphe inverse un-à-un ou plusieurs.
-     * 
+     *
      * @return MorphTo<Model, $this>
      */
     public function morphTo(?string $name = null, ?string $type = null, ?string $id = null, ?string $ownerKey = null): MorphTo
@@ -371,7 +371,7 @@ trait HasRelationships
         [$type, $id] = $this->getMorphs(
             Text::snake($name),
             $type,
-            $id
+            $id,
         );
 
         // Si la valeur du type est nulle, il est probablement sûr de supposer que nous chargeons avec empressement
@@ -384,7 +384,7 @@ trait HasRelationships
 
     /**
      * Définit une relation polymorphe inverse un-à-un ou plusieurs avec chargement empressé.
-     * 
+     *
      * @return MorphTo<Model, $this>
      */
     protected function morphEagerTo(string $name, string $type, string $id, string $ownerKey): MorphTo
@@ -395,19 +395,19 @@ trait HasRelationships
             $id,
             $ownerKey,
             $type,
-            $name
+            $name,
         );
     }
 
     /**
      * Définit une relation polymorphe inverse un-à-un ou plusieurs avec instance.
-     * 
+     *
      * @return MorphTo<Model, $this>
      */
     protected function morphInstanceTo(string $target, string $name, string $type, string $id, string $ownerKey): MorphTo
     {
         $instance = $this->newRelatedInstance(
-            static::getActualClassNameForMorph($target)
+            static::getActualClassNameForMorph($target),
         );
 
         return $this->newMorphTo(
@@ -416,7 +416,7 @@ trait HasRelationships
             $id,
             $ownerKey ?? $instance->getKeyName(),
             $type,
-            $name
+            $name,
         );
     }
 
@@ -426,9 +426,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
+     *
      * @return MorphTo<TRelatedModel, TDeclaringModel>
      */
     protected function newMorphTo(Builder $query, Model $parent, string $foreignKey, string $ownerKey, string $type, string $relation): MorphTo
@@ -459,11 +459,13 @@ trait HasRelationships
      *
      * @template TIntermediateModel of Model
      *
-     * @param  string|HasMany<TIntermediateModel, covariant $this>|HasOne<TIntermediateModel, covariant $this>  $relationship
-     * @return ( 
+     * @param HasMany<TIntermediateModel, covariant $this>|HasOne<TIntermediateModel, covariant $this>|string $relationship
+     * @param mixed                                                                                           $relationship
+     *
+     * @return (
      *     $relationship is string
      *     ? PendingHasThroughRelationship<Model, $this>
-     *     : ( 
+     *     : (
      *          $relationship is HasMany<TIntermediateModel, $this>
      *          ? PendingHasThroughRelationship<TIntermediateModel, $this, HasMany<TIntermediateModel, $this>>
      *          : PendingHasThroughRelationship<TIntermediateModel, $this, HasOne<TIntermediateModel, $this>>
@@ -484,8 +486,8 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * 
+     * @param class-string<TRelatedModel> $related
+     *
      * @return HasMany<TRelatedModel, $this>
      */
     public function hasMany(string $related, ?string $foreignKey = null, ?string $localKey = null): HasMany
@@ -500,7 +502,7 @@ trait HasRelationships
             $instance->newQuery(),
             $this,
             $instance->qualifyColumn($foreignKey),
-            $localKey
+            $localKey,
         );
     }
 
@@ -510,9 +512,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
+     *
      * @return HasMany<TRelatedModel, TDeclaringModel>
      */
     protected function newHasMany(Builder $query, Model $parent, string $foreignKey, string $localKey): HasMany
@@ -526,9 +528,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TIntermediateModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * @param  class-string<TIntermediateModel>  $through
-     * 
+     * @param class-string<TRelatedModel>      $related
+     * @param class-string<TIntermediateModel> $through
+     *
      * @return HasManyThrough<TRelatedModel, TIntermediateModel, $this>
      */
     public function hasManyThrough(string $related, string $through, ?string $firstKey = null, ?string $secondKey = null, ?string $localKey = null, ?string $secondLocalKey = null): HasManyThrough
@@ -546,7 +548,7 @@ trait HasRelationships
             $firstKey,
             $secondKey,
             $localKey ?: $this->getKeyName(),
-            $secondLocalKey ?: $through->getKeyName()
+            $secondLocalKey ?: $through->getKeyName(),
         );
     }
 
@@ -557,10 +559,10 @@ trait HasRelationships
      * @template TIntermediateModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $farParent
-     * @param  TIntermediateModel  $throughParent
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $farParent
+     * @param TIntermediateModel     $throughParent
+     *
      * @return HasManyThrough<TRelatedModel, TIntermediateModel, TDeclaringModel>
      */
     protected function newHasManyThrough(Builder $query, Model $farParent, Model $throughParent, string $firstKey, string $secondKey, string $localKey, string $secondLocalKey): HasManyThrough
@@ -573,8 +575,8 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * 
+     * @param class-string<TRelatedModel> $related
+     *
      * @return MorphMany<TRelatedModel, $this>
      */
     public function morphMany(string $related, string $name, ?string $type = null, ?string $id = null, ?string $localKey = null): MorphMany
@@ -593,7 +595,7 @@ trait HasRelationships
             $this,
             $instance->qualifyColumn($type),
             $instance->qualifyColumn($id),
-            $localKey
+            $localKey,
         );
     }
 
@@ -603,9 +605,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
+     *
      * @return MorphMany<TRelatedModel, TDeclaringModel>
      */
     protected function newMorphMany(Builder $query, Model $parent, string $type, string $id, string $localKey): MorphMany
@@ -618,9 +620,9 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * @param  string|class-string<Model>|null  $table
-     * 
+     * @param class-string<TRelatedModel>     $related
+     * @param class-string<Model>|string|null $table
+     *
      * @return BelongsToMany<TRelatedModel, $this, Pivot>
      */
     public function belongsToMany(
@@ -630,7 +632,7 @@ trait HasRelationships
         ?string $relatedPivotKey = null,
         ?string $parentKey = null,
         ?string $relatedKey = null,
-        ?string $relation = null
+        ?string $relation = null,
     ): BelongsToMany {
         // Si aucun nom de relation n'a été passé, nous allons récupérer les traces pour obtenir le
         // nom de la fonction appelante. Nous utiliserons ce nom de fonction comme
@@ -663,7 +665,7 @@ trait HasRelationships
             $relatedPivotKey,
             $parentKey ?: $this->getKeyName(),
             $relatedKey ?: $instance->getKeyName(),
-            $relation
+            $relation,
         );
     }
 
@@ -673,10 +675,10 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $parent
-     * @param  string|class-string<Model>  $table
-     * 
+     * @param Builder<TRelatedModel>     $query
+     * @param TDeclaringModel            $parent
+     * @param class-string<Model>|string $table
+     *
      * @return BelongsToMany<TRelatedModel, TDeclaringModel, Pivot>
      */
     protected function newBelongsToMany(
@@ -687,7 +689,7 @@ trait HasRelationships
         string $relatedPivotKey,
         string $parentKey,
         string $relatedKey,
-        ?string $relationName = null
+        ?string $relationName = null,
     ): BelongsToMany {
         return new BelongsToMany($query, $parent, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey, $relationName);
     }
@@ -697,8 +699,8 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * 
+     * @param class-string<TRelatedModel> $related
+     *
      * @return MorphToMany<TRelatedModel, $this>
      */
     public function morphToMany(
@@ -710,7 +712,7 @@ trait HasRelationships
         ?string $parentKey = null,
         ?string $relatedKey = null,
         ?string $relation = null,
-        bool $inverse = false
+        bool $inverse = false,
     ): MorphToMany {
         $relation = $relation ?: $this->guessBelongsToManyRelation();
 
@@ -744,7 +746,7 @@ trait HasRelationships
             $parentKey ?: $this->getKeyName(),
             $relatedKey ?: $instance->getKeyName(),
             $relation,
-            $inverse
+            $inverse,
         );
     }
 
@@ -754,9 +756,9 @@ trait HasRelationships
      * @template TRelatedModel of Model
      * @template TDeclaringModel of Model
      *
-     * @param  Builder<TRelatedModel>  $query
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
+     *
      * @return MorphToMany<TRelatedModel, TDeclaringModel>
      */
     protected function newMorphToMany(
@@ -769,7 +771,7 @@ trait HasRelationships
         string $parentKey,
         string $relatedKey,
         ?string $relationName = null,
-        bool $inverse = false
+        bool $inverse = false,
     ): MorphToMany {
         return new MorphToMany(
             $query,
@@ -781,7 +783,7 @@ trait HasRelationships
             $parentKey,
             $relatedKey,
             $relationName,
-            $inverse
+            $inverse,
         );
     }
 
@@ -790,8 +792,8 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $related
-     * 
+     * @param class-string<TRelatedModel> $related
+     *
      * @return MorphToMany<TRelatedModel, $this>
      */
     public function morphedByMany(
@@ -802,7 +804,7 @@ trait HasRelationships
         ?string $relatedPivotKey = null,
         ?string $parentKey = null,
         ?string $relatedKey = null,
-        ?string $relation = null
+        ?string $relation = null,
     ): MorphToMany {
         $foreignPivotKey = $foreignPivotKey ?: $this->getForeignKey();
 
@@ -820,7 +822,7 @@ trait HasRelationships
             $parentKey,
             $relatedKey,
             $relation,
-            true
+            true,
         );
     }
 
@@ -832,7 +834,7 @@ trait HasRelationships
         $caller = Arr::first(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), static fn ($trace) => ! in_array(
             $trace['function'],
             array_merge(static::$manyMethods, ['guessBelongsToManyRelation']),
-            true
+            true,
         ));
 
         return null !== $caller ? $caller['function'] : null;
@@ -931,8 +933,8 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $class
-     * 
+     * @param class-string<TRelatedModel> $class
+     *
      * @return TRelatedModel
      */
     protected function newRelatedInstance(string $class): object
@@ -949,8 +951,8 @@ trait HasRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  class-string<TRelatedModel>  $class
-     * 
+     * @param class-string<TRelatedModel> $class
+     *
      * @return TRelatedModel
      */
     protected function newRelatedThroughInstance(string $class): object

@@ -24,8 +24,7 @@ class AsFluent implements Castable
      */
     public static function castUsing(array $arguments)
     {
-        return new class implements CastsAttributes
-        {
+        return new class () implements CastsAttributes {
             public function get($model, $key, $value, $attributes): mixed
             {
                 return isset($value) ? new Fluent(Json::decode($value)) : null;

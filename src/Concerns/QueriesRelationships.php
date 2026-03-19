@@ -28,11 +28,12 @@ use BlitzPHP\Wolke\Relations\MorphTo;
 use BlitzPHP\Wolke\Relations\Relation;
 use Closure;
 use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\QueriesRelationships</a>
- * 
- * @mixin Builder 
+ *
+ * @mixin Builder
  */
 trait QueriesRelationships
 {
@@ -42,9 +43,9 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|null  $callback
-     * 
-     * @throws \RuntimeException
+     * @param (Closure(Builder<TRelatedModel>): mixed)|null $callback
+     *
+     * @throws RuntimeException
      */
     public function has(Relation|string $relation, string $operator = '>=', Expression|int $count = 1, string $boolean = 'and', ?Closure $callback = null): static
     {
@@ -84,7 +85,7 @@ trait QueriesRelationships
             $relation,
             $operator,
             $count,
-            $boolean
+            $boolean,
         );
     }
 
@@ -129,7 +130,7 @@ trait QueriesRelationships
 
     /**
      * Ajoute une condition de comptage/existence de relation à la requête avec un "ou".
-     * 
+     *
      * @param Relation<*, *, *>|string  $relation
      */
     public function orHas(Relation|string $relation, string $operator = '>=', Expression|int $count = 1): static
@@ -143,7 +144,7 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|null  $callback
+     * @param (Closure(Builder<TRelatedModel>): mixed)|null $callback
      */
     public function doesntHave(Relation|string $relation, string $boolean = 'and', ?Closure $callback = null): static
     {
@@ -152,7 +153,7 @@ trait QueriesRelationships
 
     /**
      * Ajoute une condition de comptage/existence de relation à la requête avec un "ou".
-     * 
+     *
      * @param  Relation<*, *, *>|string  $relation
      */
     public function orDoesntHave(Relation|string $relation): static
@@ -166,7 +167,7 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|null  $callback
+     * @param (Closure(Builder<TRelatedModel>): mixed)|null $callback
      */
     public function whereHas(Relation|string $relation, ?Closure $callback = null, string $operator = '>=', Expression|int $count = 1): static
     {
@@ -192,7 +193,7 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|null  $callback
+     * @param (Closure(Builder<TRelatedModel>): mixed)|null $callback
      */
     public function orWhereHas(Relation|string $relation, ?Closure $callback = null, string $operator = '>=', Expression|int $count = 1): static
     {
@@ -205,7 +206,7 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|null  $callback
+     * @param (Closure(Builder<TRelatedModel>): mixed)|null $callback
      */
     public function whereDoesntHave(Relation|string $relation, ?Closure $callback = null): static
     {
@@ -218,7 +219,7 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|null  $callback
+     * @param (Closure(Builder<TRelatedModel>): mixed)|null $callback
      */
     public function orWhereDoesntHave(string $relation, ?Closure $callback = null): static
     {
@@ -230,9 +231,9 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null  $callback
+     * @param MorphTo<TRelatedModel, *>|string                      $relation
+     * @param array<int, string>|string                             $types
+     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null $callback
      */
     public function hasMorph(MorphTo|string $relation, array|string $types, string $operator = '>=', Expression|int $count = 1, string $boolean = 'and', ?Closure $callback = null): static
     {
@@ -251,7 +252,7 @@ trait QueriesRelationships
         if ($types === ['*']) {
             $types = $this->model->newModelQuery()->distinct()->pluck($relation->getMorphType())
                 ->filter()
-                ->map(fn ($item) => Helpers::enumValue($item))
+                ->map(static fn ($item) => Helpers::enumValue($item))
                 ->all();
         }
 
@@ -277,7 +278,7 @@ trait QueriesRelationships
                 });
             }
 
-            $query->when($checkMorphNull, fn (self $query) => $query->orWhereMorphedTo($relation, null));
+            $query->when($checkMorphNull, static fn (self $query) => $query->orWhereMorphedTo($relation, null));
         }, null, null, $boolean);
     }
 
@@ -288,8 +289,8 @@ trait QueriesRelationships
      * @template TDeclaringModel of Model
      *
      * @param  MorphTo<*, TDeclaringModel>  $relation
-     * @param  class-string<TRelatedModel>  $type
-     * 
+     * @param class-string<TRelatedModel> $type
+     *
      * @return BelongsTo<TRelatedModel, TDeclaringModel>
      */
     protected function getBelongsToRelation(MorphTo $relation, string $type): BelongsTo
@@ -297,7 +298,7 @@ trait QueriesRelationships
         $belongsTo = Relation::noConstraints(fn () => $this->model->belongsTo(
             $type,
             $relation->getForeignKeyName(),
-            $relation->getOwnerKeyName()
+            $relation->getOwnerKeyName(),
         ));
 
         $belongsTo->getQuery()->mergeConstraintsFrom($relation->getQuery());
@@ -309,7 +310,7 @@ trait QueriesRelationships
      * Ajoute une condition de comptage/existence de relation polymorphe à la requête avec un "ou".
      *
      * @param MorphTo<*, *>|string  $relation
-     * @param string|array<int, string>  $types
+     * @param array<int, string>|string $types
      */
     public function orHasMorph(MorphTo|string $relation, array|string $types, string $operator = '>=', Expression|int $count = 1): static
     {
@@ -321,9 +322,9 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null  $callback
+     * @param MorphTo<TRelatedModel, *>|string                      $relation
+     * @param array<int, string>|string                             $types
+     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null $callback
      */
     public function doesntHaveMorph(MorphTo|string $relation, array|string $types, string $boolean = 'and', ?Closure $callback = null): static
     {
@@ -334,7 +335,7 @@ trait QueriesRelationships
      * Ajoute une condition de comptage/existence de relation polymorphe à la requête avec un "ou".
      *
      * @param MorphTo<*, *>|string  $relation
-     * @param string|array<int, string>  $types
+     * @param array<int, string>|string $types
      */
     public function orDoesntHaveMorph(MorphTo|string $relation, array|string $types): static
     {
@@ -346,9 +347,9 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null  $callback
+     * @param MorphTo<TRelatedModel, *>|string                      $relation
+     * @param array<int, string>|string                             $types
+     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null $callback
      */
     public function whereHasMorph(MorphTo|string $relation, array|string $types, ?Closure $callback = null, string $operator = '>=', Expression|int $count = 1): static
     {
@@ -360,9 +361,9 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null  $callback
+     * @param MorphTo<TRelatedModel, *>|string                      $relation
+     * @param array<int, string>|string                             $types
+     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null $callback
      */
     public function orWhereHasMorph(MorphTo|string $relation, array|string $types, ?Closure $callback = null, string $operator = '>=', Expression|int $count = 1): static
     {
@@ -374,9 +375,9 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null  $callback
+     * @param MorphTo<TRelatedModel, *>|string                      $relation
+     * @param array<int, string>|string                             $types
+     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null $callback
      */
     public function whereDoesntHaveMorph(MorphTo|string $relation, array|string $types, ?Closure $callback = null): static
     {
@@ -388,9 +389,9 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null  $callback
+     * @param MorphTo<TRelatedModel, *>|string                      $relation
+     * @param array<int, string>|string                             $types
+     * @param (Closure(Builder<TRelatedModel>, string): mixed)|null $callback
      */
     public function orWhereDoesntHaveMorph(MorphTo|string $relation, array|string $types, ?Closure $callback = null)
     {
@@ -403,7 +404,7 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|string|array|Expression $column
+     * @param array|(Closure(Builder<TRelatedModel>): mixed)|Expression|string $column
      */
     public function whereRelation(Relation|string $relation, $column, mixed $operator = null, mixed $value = null): static
     {
@@ -420,25 +421,25 @@ trait QueriesRelationships
      * Ajoute une clause where de base à une requête de relation et charge la relation avec les mêmes conditions.
      *
      * @param Relation<*, *, *>|string  $relation
-     * @param  Closure|string|array|Expression  $column
+     * @param array|Closure|Expression|string $column
      */
     public function withWhereRelation(Relation|string $relation, $column, mixed $operator = null, mixed $value = null): static
     {
         return $this->whereRelation($relation, $column, $operator, $value)
             ->with([
-                $relation => fn ($query) => $column instanceof Closure
+                $relation => static fn ($query) => $column instanceof Closure
                     ? $column($query)
                     : $query->where($column, $operator, $value),
             ]);
     }
-    
+
     /**
      * Ajoute une clause "ou where" à une requête de relation.
      *
      * @template TRelatedModel of Model
      *
      * @param Relation<TRelatedModel, *, *>|string  $relation
-     * @param (Closure(Builder<TRelatedModel>): mixed)|string|array|Expression  $column
+     * @param array|(Closure(Builder<TRelatedModel>): mixed)|Expression|string $column
      */
     public function orWhereRelation(Relation|string $relation, $column, mixed $operator = null, mixed $value = null): static
     {
@@ -457,11 +458,11 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|string|array|Expression  $column
+     * @param array|(Closure(Builder<TRelatedModel>): mixed)|Expression|string $column
      */
     public function whereDoesntHaveRelation(Relation|string $relation, $column, mixed $operator = null, mixed $value = null): static
     {
-        return $this->whereDoesntHave($relation, function ($query) use ($column, $operator, $value) {
+        return $this->whereDoesntHave($relation, static function ($query) use ($column, $operator, $value) {
             if ($column instanceof Closure) {
                 $column($query);
             } else {
@@ -476,11 +477,11 @@ trait QueriesRelationships
      * @template TRelatedModel of Model
      *
      * @param  Relation<TRelatedModel, *, *>|string  $relation
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|string|array|Expression  $column
+     * @param array|(Closure(Builder<TRelatedModel>): mixed)|Expression|string $column
      */
     public function orWhereDoesntHaveRelation(Relation|string $relation, $column, mixed $operator = null, mixed $value = null): static
     {
-        return $this->orWhereDoesntHave($relation, function ($query) use ($column, $operator, $value) {
+        return $this->orWhereDoesntHave($relation, static function ($query) use ($column, $operator, $value) {
             if ($column instanceof Closure) {
                 $column($query);
             } else {
@@ -494,9 +495,9 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>): mixed)|string|array|Expression  $column
+     * @param MorphTo<TRelatedModel, *>|string                                 $relation
+     * @param array<int, string>|string                                        $types
+     * @param array|(Closure(Builder<TRelatedModel>): mixed)|Expression|string $column
      */
     public function whereMorphRelation(MorphTo|string $relation, array|string $types, $column, mixed $operator = null, mixed $value = null): static
     {
@@ -510,9 +511,9 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>): mixed)|string|array|Expression  $column
+     * @param MorphTo<TRelatedModel, *>|string                                 $relation
+     * @param array<int, string>|string                                        $types
+     * @param array|(Closure(Builder<TRelatedModel>): mixed)|Expression|string $column
      */
     public function orWhereMorphRelation(MorphTo|string $relation, array|string $types, $column, mixed $operator = null, mixed $value = null): static
     {
@@ -526,13 +527,13 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param MorphTo<TRelatedModel, *>|string  $relation
-     * @param string|array<int, string>  $types
-     * @param (Closure(Builder<TRelatedModel>): mixed)|string|array|Expression  $column
+     * @param MorphTo<TRelatedModel, *>|string                                 $relation
+     * @param array<int, string>|string                                        $types
+     * @param array|(Closure(Builder<TRelatedModel>): mixed)|Expression|string $column
      */
     public function whereMorphDoesntHaveRelation(MorphTo|string $relation, array|string $types, $column, mixed $operator = null, mixed $value = null): static
     {
-        return $this->whereDoesntHaveMorph($relation, $types, function ($query) use ($column, $operator, $value) {
+        return $this->whereDoesntHaveMorph($relation, $types, static function ($query) use ($column, $operator, $value) {
             $query->where($column, $operator, $value);
         });
     }
@@ -542,13 +543,13 @@ trait QueriesRelationships
      *
      * @template TRelatedModel of Model
      *
-     * @param  MorphTo<TRelatedModel, *>|string  $relation
-     * @param  string|array<int, string>  $types
-     * @param  (Closure(Builder<TRelatedModel>): mixed)|string|array|Expression  $column
+     * @param MorphTo<TRelatedModel, *>|string                                 $relation
+     * @param array<int, string>|string                                        $types
+     * @param array|(Closure(Builder<TRelatedModel>): mixed)|Expression|string $column
      */
     public function orWhereMorphDoesntHaveRelation(MorphTo|string $relation, array|string $types, $column, mixed $operator = null, mixed $value = null): static
     {
-        return $this->orWhereDoesntHaveMorph($relation, $types, function ($query) use ($column, $operator, $value) {
+        return $this->orWhereDoesntHaveMorph($relation, $types, static function ($query) use ($column, $operator, $value) {
             $query->where($column, $operator, $value);
         });
     }
@@ -557,11 +558,11 @@ trait QueriesRelationships
      * Ajoute une condition de relation morph-to à la requête.
      *
      * @param MorphTo<*, *>|string  $relation
-     * @param Model|iterable<int, Model>|string|null  $model
+     * @param iterable<int, Model>|Model|string|null $model
      *
      * @throws InvalidArgumentException
      */
-    public function whereMorphedTo(MorphTo|string $relation, Model|iterable|string|null $model, string $boolean = 'and'): static
+    public function whereMorphedTo(MorphTo|string $relation, iterable|Model|string|null $model, string $boolean = 'and'): static
     {
         if (is_string($relation)) {
             $relation = $this->getRelationWithoutConstraints($relation);
@@ -586,10 +587,10 @@ trait QueriesRelationships
         if ($models->isEmpty()) {
             throw new InvalidArgumentException('La collection donnée à la méthode whereMorphedTo ne peut pas être vide.');
         }
-        
-        return $this->where(function ($query) use ($relation, $models) {
-            $models->groupBy(fn ($model) => $model->getMorphClass())->each(function ($models) use ($query, $relation) {
-                $query->orWhere(function ($query) use ($relation, $models) {
+
+        return $this->where(static function ($query) use ($relation, $models) {
+            $models->groupBy(static fn ($model) => $model->getMorphClass())->each(static function ($models) use ($query, $relation) {
+                $query->orWhere(static function ($query) use ($relation, $models) {
                     $query->where($relation->qualifyColumn($relation->getMorphType()), $models->first()->getMorphClass())
                         ->whereIn($relation->qualifyColumn($relation->getForeignKeyName()), $models->map->getKey());
                 });
@@ -601,11 +602,11 @@ trait QueriesRelationships
      * Ajoute une condition de relation morph-to négative à la requête.
      *
      * @param MorphTo<*, *>|string  $relation
-     * @param Model|iterable<int, Model>|string  $model
+     * @param iterable<int, Model>|Model|string $model
      *
      * @throws InvalidArgumentException
      */
-    public function whereNotMorphedTo(MorphTo|string $relation, Model|iterable|string $model, string $boolean = 'and'): static
+    public function whereNotMorphedTo(MorphTo|string $relation, iterable|Model|string $model, string $boolean = 'and'): static
     {
         if (is_string($relation)) {
             $relation = $this->getRelationWithoutConstraints($relation);
@@ -618,8 +619,9 @@ trait QueriesRelationships
                 $model = array_search($model, $morphMap, true);
             }
 
-            return $this->whereNot(fn ($query) => $query->whereNullSafeEquals(
-                $relation->qualifyColumn($relation->getMorphType()), $model
+            return $this->whereNot(static fn ($query) => $query->whereNullSafeEquals(
+                $relation->qualifyColumn($relation->getMorphType()),
+                $model,
             ), null, null, $boolean);
         }
 
@@ -629,9 +631,9 @@ trait QueriesRelationships
             throw new InvalidArgumentException('La collection donnée à la méthode whereNotMorphedTo ne peut pas être vide.');
         }
 
-        return $this->whereNot(function ($query) use ($relation, $models) {
-            $models->groupBy(fn ($model) => $model->getMorphClass())->each(function ($models) use ($query, $relation) {
-                $query->orWhere(function ($query) use ($relation, $models) {
+        return $this->whereNot(static function ($query) use ($relation, $models) {
+            $models->groupBy(static fn ($model) => $model->getMorphClass())->each(static function ($models) use ($query, $relation) {
+                $query->orWhere(static function ($query) use ($relation, $models) {
                     $query->whereNullSafeEquals($relation->qualifyColumn($relation->getMorphType()), $models->first()->getMorphClass())
                         ->whereIn($relation->qualifyColumn($relation->getForeignKeyName()), $models->map->getKey());
                 });
@@ -643,9 +645,9 @@ trait QueriesRelationships
      * Ajoute une condition de relation morph-to à la requête avec une clause "ou where".
      *
      * @param MorphTo<*, *>|string  $relation
-     * @param Model|iterable<int, Model>|string|null  $model
+     * @param iterable<int, Model>|Model|string|null $model
      */
-    public function orWhereMorphedTo(MorphTo|string $relation, Model|iterable|string|null $model): static
+    public function orWhereMorphedTo(MorphTo|string $relation, iterable|Model|string|null $model): static
     {
         return $this->whereMorphedTo($relation, $model, 'or');
     }
@@ -654,9 +656,9 @@ trait QueriesRelationships
      * Ajoute une condition de relation morph-to négative à la requête avec une clause "ou where".
      *
      * @param MorphTo<*, *>|string  $relation
-     * @param Model|iterable<int, Model>|string  $model
+     * @param iterable<int, Model>|Model|string $model
      */
-    public function orWhereNotMorphedTo(MorphTo|string $relation, Model|iterable|string $model): static
+    public function orWhereNotMorphedTo(MorphTo|string $relation, iterable|Model|string $model): static
     {
         return $this->whereNotMorphedTo($relation, $model, 'or');
     }
@@ -708,7 +710,7 @@ trait QueriesRelationships
     /**
      * Ajoute une clause where de relation "BelongsTo" avec un "ou" à la requête.
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     public function orWhereBelongsTo(Model $related, ?string $relationshipName = null): static
     {
@@ -749,7 +751,7 @@ trait QueriesRelationships
         $this->has(
             $relationshipName,
             boolean: $boolean,
-            callback: fn (Builder $query) => $query->whereKey($relatedCollection->pluck($related->getKeyName())),
+            callback: static fn (Builder $query) => $query->whereKey($relatedCollection->pluck($related->getKeyName())),
         );
 
         return $this;
@@ -760,7 +762,7 @@ trait QueriesRelationships
      *
      * @param Collection<int, Model>|Model $related
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     public function orWhereAttachedTo(Collection|Model $related, ?string $relationshipName = null): static
     {
@@ -816,7 +818,7 @@ trait QueriesRelationships
             $query = $relation->getRelationExistenceQuery(
                 $relation->getRelated()->newQuery(),
                 $this,
-                new Expression($expression)
+                new Expression($expression),
             );
 
             $query->callScope($constraints);
@@ -832,9 +834,9 @@ trait QueriesRelationships
             $fields = $query->columns;
 
             if (count($fields) > 1) {
-                $invader = Invader::make($query);
+                $invader          = Invader::make($query);
                 $invader->columns = [$fields[0]];
-                $invader->wheres = [];
+                $invader->wheres  = [];
                 $query->bindings->set([], 'select');
             }
 
@@ -845,19 +847,19 @@ trait QueriesRelationships
                 preg_replace(
                     '/[^[:alnum:][:space:]_]/u',
                     '',
-                    sprintf('%s %s %s', $name, $function, strtolower((string) $column))
-                )
+                    sprintf('%s %s %s', $name, $function, strtolower((string) $column)),
+                ),
             );
 
             if ($function === 'exists') {
                 $this->selectRaw(
                     sprintf('exists(%s) as %s', $query->toSql(), $alias),
-                    $query->getBindings()
+                    $query->getBindings(),
                 )->withCasts([$alias => 'bool']);
             } else {
                 $this->selectSubquery(
                     $function ? $query : $query->limit(1),
-                    $alias
+                    $alias,
                 );
             }
         }
@@ -955,17 +957,17 @@ trait QueriesRelationships
             ? $this->requalifyWhereTables(
                 $from->getQuery()->wheres,
                 $from->getQuery()->getTable(),
-                $this->getModel()->getTable()
+                $this->getModel()->getTable(),
             ) : $from->getQuery()->wheres;
 
         // Ici, nous avons une autre requête dont nous voulons fusionner les contraintes where. Nous copierons
         // toutes les contraintes where de la requête ainsi que supprimerons toutes les portées globales que la
         // requête pourrait avoir supprimées. Ensuite, nous nous retournerons nous-mêmes avec la fusion terminée.
         return $this->withoutGlobalScopes(
-            $from->removedScopes()
+            $from->removedScopes(),
         )->mergeWheres(
             $wheres,
-            $whereBindings
+            $whereBindings,
         );
     }
 
@@ -974,12 +976,12 @@ trait QueriesRelationships
      */
     protected function requalifyWhereTables(array $wheres, string $from, string $to): array
     {
-        return (new BaseCollection($wheres))->map(static fn ($where) 
-            => (new BaseCollection($where))->map(static fn ($value) 
-                => is_string($value) && str_starts_with($value, $from . '.')
+        return (new BaseCollection($wheres))->map(
+            static fn ($where) => (new BaseCollection($where))->map(
+                static fn ($value) => is_string($value) && str_starts_with($value, $from . '.')
                     ? $to . '.' . Text::afterLast($value, '.')
-                    : $value
-            )
+                    : $value,
+            ),
         )->toArray();
     }
 
@@ -994,13 +996,13 @@ trait QueriesRelationships
             new Expression('(' . $query->toSql() . ')'),
             $operator,
             is_numeric($count) ? new Expression($count) : $count,
-            $boolean
+            $boolean,
         );
     }
 
     /**
      * Obtient l'instance de requête de base "has relation".
-     * 
+     *
      * @return Relation<*, *, *>
      */
     protected function getRelationWithoutConstraints(string $relation): Relation

@@ -12,8 +12,8 @@
 namespace BlitzPHP\Wolke\Relations;
 
 use BlitzPHP\Database\Builder\BaseBuilder;
-use BlitzPHP\Database\Query\Expression;
 use BlitzPHP\Database\Exceptions\MultipleRecordsFoundException;
+use BlitzPHP\Database\Query\Expression;
 use BlitzPHP\Traits\Macroable;
 use BlitzPHP\Traits\Support\ForwardsCalls;
 use BlitzPHP\Utilities\Iterable\Arr;
@@ -30,7 +30,7 @@ use Closure;
  * @template TResult
  *
  * @mixin \BlitzPHP\Wolke\Builder
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\Relation</a>
  */
 abstract class Relation
@@ -58,7 +58,7 @@ abstract class Relation
 
     /**
      * Un tableau pour mapper les noms de classe à leurs noms morph dans la base de données.
-     * 
+     *
      * @var array<string, class-string<Model>>
      */
     public static array $morphMap = [];
@@ -88,11 +88,11 @@ abstract class Relation
 
     /**
      * Exécute un rappel avec les contraintes désactivées sur la relation.
-     * 
+     *
      * @template TReturn of mixed
      *
-     * @param  Closure(): TReturn  $callback
-     * 
+     * @param Closure(): TReturn $callback
+     *
      * @return TReturn
      */
     public static function noConstraints(Closure $callback): mixed
@@ -118,26 +118,26 @@ abstract class Relation
 
     /**
      * Définit les contraintes pour un chargement empressé de la relation.
-     * 
-     * @param list<TDeclaringModel>  $models
+     *
+     * @param list<TDeclaringModel> $models
      */
     abstract public function addEagerConstraints(array $models): void;
 
     /**
      * Initialise la relation sur un ensemble de modèles.
      *
-     * @param list<TDeclaringModel>  $models
-     * 
+     * @param list<TDeclaringModel> $models
+     *
      * @return list<TDeclaringModel>
      */
     abstract public function initRelation(array $models, string $relation): array;
 
     /**
      * Fait correspondre les résultats chargés avec empressement à leurs parents.
-     * 
-     * @param  list<TDeclaringModel>  $models
-     * @param  Collection<int, TRelatedModel>  $results
-     * 
+     *
+     * @param list<TDeclaringModel>          $models
+     * @param Collection<int, TRelatedModel> $results
+     *
      * @return list<TDeclaringModel>
      */
     abstract public function match(array $models, Collection $results, string $relation): array;
@@ -165,7 +165,7 @@ abstract class Relation
      * Exécute la requête et obtient le premier résultat s'il est le seul enregistrement correspondant.
      *
      * @return TRelatedModel
-     * 
+     *
      * @throws ModelNotFoundException
      * @throws MultipleRecordsFoundException
      */
@@ -188,7 +188,7 @@ abstract class Relation
 
     /**
      * Exécute la requête en tant qu'instruction "select".
-     * 
+     *
      * @return Collection<int, TRelatedModel>
      */
     public function get(array $columns = ['*']): Collection
@@ -223,9 +223,9 @@ abstract class Relation
     /**
      * Ajoute les contraintes pour une requête de comptage de relation.
      *
-     * @param Builder<TRelatedModel>  $query
-     * @param Builder<TDeclaringModel>  $parentQuery
-     * 
+     * @param Builder<TRelatedModel>   $query
+     * @param Builder<TDeclaringModel> $parentQuery
+     *
      * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceCountQuery(Builder $query, Builder $parentQuery): Builder
@@ -233,7 +233,7 @@ abstract class Relation
         return $this->getRelationExistenceQuery(
             $query,
             $parentQuery,
-            new Expression('count(*)')
+            new Expression('count(*)'),
         );
         // )->setBindings([], 'select');
     }
@@ -243,9 +243,9 @@ abstract class Relation
      *
      * Essentiellement, ces requêtes comparent les noms de colonnes comme whereColumn.
      *
-     * @param Builder<TRelatedModel>  $query
-     * @param Builder<TDeclaringModel>  $parentQuery
-     * 
+     * @param Builder<TRelatedModel>   $query
+     * @param Builder<TDeclaringModel> $parentQuery
+     *
      * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
@@ -253,7 +253,7 @@ abstract class Relation
         return $query->select($columns)->whereColumn(
             $this->getQualifiedParentKeyName(),
             '=',
-            $this->getExistenceCompareKey()
+            $this->getExistenceCompareKey(),
         );
     }
 
@@ -267,9 +267,9 @@ abstract class Relation
 
     /**
      * Obtient toutes les clés primaires d'un tableau de modèles.
-     * 
+     *
      * @param list<TDeclaringModel> $models
-     * 
+     *
      * @return list<int|string|null>
      */
     protected function getKeys(array $models, ?string $key = null): array
@@ -284,7 +284,7 @@ abstract class Relation
 
     /**
      * Obtient le constructeur de requête qui contiendra les contraintes de relation.
-     * 
+     *
      * @return Builder<TRelatedModel>
      */
     protected function getRelationQuery(): Builder
@@ -294,7 +294,7 @@ abstract class Relation
 
     /**
      * Obtient la requête sous-jacente pour la relation.
-     * 
+     *
      * @return Builder<TRelatedModel>
      */
     public function getQuery(): Builder
@@ -372,8 +372,8 @@ abstract class Relation
 
     /**
      * Ajoute une contrainte whereIn avec empressement pour l'ensemble donné de clés de modèle à charger.
-     * 
-     * @param Builder<TRelatedModel>|null  $query
+     *
+     * @param Builder<TRelatedModel>|null $query
      */
     protected function whereInEager(string $whereIn, string $key, array $modelKeys, ?Builder $query = null): void
     {
@@ -413,7 +413,7 @@ abstract class Relation
 
     /**
      * Définit la carte morph pour les relations polymorphes et exige que tous les modèles morph soient explicitement mappés.
-     * 
+     *
      * @param array<array-key, class-string<Model>> $map
      */
     public static function enforceMorphMap(array $map, bool $merge = true): array
@@ -427,7 +427,7 @@ abstract class Relation
      * Définit ou obtient la carte morph pour les relations polymorphes.
      *
      * @param array<array-key, class-string<Model>>|null $map
-     * 
+     *
      * @return array<string, class-string<Model>>
      */
     public static function morphMap(?array $map = null, bool $merge = true): array
@@ -445,8 +445,8 @@ abstract class Relation
     /**
      * Construit un tableau indexé par table à partir des noms de classe de modèles.
      *
-     * @param  array<array-key, class-string<Model>>|null  $models
-     * 
+     * @param array<array-key, class-string<Model>>|null $models
+     *
      * @return array<string, class-string<Model>>|null
      */
     protected static function buildMorphMapFromModels(?array $models = null): ?array
@@ -460,7 +460,7 @@ abstract class Relation
 
     /**
      * Obtient le modèle associé à un type polymorphe personnalisé.
-     * 
+     *
      * @return class-string<Model>|null
      */
     public static function getMorphedModel(string $alias): ?string
@@ -471,8 +471,8 @@ abstract class Relation
     /**
      * Obtient l'alias associé à une classe polymorphe personnalisée.
      *
-     * @param  class-string<Model>  $className
-     * 
+     * @param class-string<Model> $className
+     *
      * @return int|string
      */
     public static function getMorphAlias(string $className)

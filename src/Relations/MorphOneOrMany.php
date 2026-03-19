@@ -23,7 +23,7 @@ use BlitzPHP\Wolke\Model;
  * @template TResult
  *
  * @extends HasOneOrMany<TRelatedModel, TDeclaringModel, TResult>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphOneOrMany</a>
  */
 abstract class MorphOneOrMany extends HasOneOrMany
@@ -42,9 +42,9 @@ abstract class MorphOneOrMany extends HasOneOrMany
 
     /**
      * Crée une nouvelle instance de relation morph one or many.
-     * 
-     * @param Builder<TRelatedModel>  $query
-     * @param TDeclaringModel  $parent
+     *
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
      */
     public function __construct(Builder $query, Model $parent, string $type, string $id, string $localKey)
     {
@@ -80,8 +80,6 @@ abstract class MorphOneOrMany extends HasOneOrMany
     /**
      * Crée une nouvelle instance du modèle lié. Permet l'assignation en masse.
      *
-     * @param  array  $attributes
-     * 
      * @return TRelatedModel
      */
     public function forceCreate(array $attributes = []): Model
@@ -94,8 +92,8 @@ abstract class MorphOneOrMany extends HasOneOrMany
 
     /**
      * Définit l'ID étranger et le type pour la création d'un modèle lié.
-     * 
-     * @param  TRelatedModel  $model
+     *
+     * @param TRelatedModel $model
      */
     protected function setForeignAttributesForCreate(Model $model): void
     {
@@ -139,7 +137,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     {
         return parent::getRelationExistenceQuery($query, $parentQuery, $columns)->where(
             $query->qualifyColumn($this->getMorphType()),
-            $this->morphClass
+            $this->morphClass,
         );
     }
 
@@ -172,7 +170,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
     /**
      * Obtient les relations inverses possibles pour le modèle parent.
      *
-     * @return array<non-empty-string>
+     * @return list<non-empty-string>
      */
     protected function getPossibleInverseRelations(): array
     {

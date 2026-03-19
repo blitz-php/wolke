@@ -16,7 +16,7 @@ use ReflectionClass;
 
 /**
  * @template TCollection of Collection
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\HasCollection</a>
  */
 trait HasCollection
@@ -31,8 +31,8 @@ trait HasCollection
     /**
      * Crée une nouvelle instance de Collection Eloquent.
      *
-     * @param  array<array-key, Model>  $models
-     * 
+     * @param array<array-key, Model> $models
+     *
      * @return TCollection
      */
     public function newCollection(array $models = [])

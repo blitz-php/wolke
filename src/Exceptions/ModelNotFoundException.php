@@ -16,7 +16,7 @@ use BlitzPHP\Utilities\Iterable\Arr;
 
 /**
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\ModelNotFoundException</a>
- * 
+ *
  * @template TModel of \BlitzPHP\Wolke\Model
  */
 class ModelNotFoundException extends RecordsNotFoundException
@@ -38,8 +38,8 @@ class ModelNotFoundException extends RecordsNotFoundException
     /**
      * Définit le modèle Eloquent concerné et les IDs d'instance.
      *
-     * @param  class-string<TModel>  $model
-     * @param  list<int|string>|int|string  $ids
+     * @param class-string<TModel>        $model
+     * @param int|list<int|string>|string $ids
      */
     public function setModel(string $model, array|int|string $ids = []): self
     {

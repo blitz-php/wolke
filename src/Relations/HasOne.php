@@ -26,9 +26,8 @@ use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
  * @template TDeclaringModel of Model
  *
  * @extends HasOneOrMany<TRelatedModel, TDeclaringModel, ?TRelatedModel>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasOne</a>
- * 
  */
 class HasOne extends HasOneOrMany implements SupportsPartialRelations
 {
@@ -82,9 +81,9 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
 
     /**
      * Ajoute des contraintes pour la sous-requête de jointure interne pour les relations one of many.
-     * 
-     * @param Builder<TRelatedModel>  $query
-     * @param null|string|string[] $aggregate
+     *
+     * @param Builder<TRelatedModel>   $query
+     * @param list<string>|string|null $aggregate
      */
     public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void
     {
@@ -110,8 +109,8 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
     /**
      * Crée une nouvelle instance liée pour le modèle donné.
      *
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param TDeclaringModel $parent
+     *
      * @return TRelatedModel
      */
     public function newRelatedInstanceFor(Model $parent): Model
@@ -125,8 +124,8 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
     /**
      * Obtient la valeur de la clé étrangère du modèle.
      *
-     * @param TRelatedModel  $model
-     * 
+     * @param TRelatedModel $model
+     *
      * @return int|string
      */
     protected function getRelatedKeyFrom(Model $model): mixed

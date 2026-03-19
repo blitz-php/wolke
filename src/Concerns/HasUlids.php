@@ -27,6 +27,7 @@ trait HasUlids
     {
         return strtolower(Text::ulid());
     }
+
     /**
      * Détermine si la clé donnée est valide.
      */

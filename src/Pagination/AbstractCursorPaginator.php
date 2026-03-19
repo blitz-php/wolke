@@ -32,7 +32,7 @@ use Stringable;
  * @template-covariant TValue
  *
  * @mixin Collection<TKey, TValue>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\AbstractCursorPaginator</a>
  */
 abstract class AbstractCursorPaginator implements Stringable
@@ -206,12 +206,12 @@ abstract class AbstractCursorPaginator implements Stringable
                 }
                 if ($item instanceof ArrayAccess || is_array($item)) {
                     return $this->ensureParameterIsPrimitive(
-                        $item[$parameterName] ?? $item[Text::afterLast($parameterName, '.')]
+                        $item[$parameterName] ?? $item[Text::afterLast($parameterName, '.')],
                     );
                 }
                 if (is_object($item)) {
                     return $this->ensureParameterIsPrimitive(
-                        $item->{$parameterName} ?? $item->{Text::afterLast($parameterName, '.')}
+                        $item->{$parameterName} ?? $item->{Text::afterLast($parameterName, '.')},
                     );
                 }
 
@@ -229,7 +229,7 @@ abstract class AbstractCursorPaginator implements Stringable
         foreach ($item->getRelations() as $relation) {
             if ($relation instanceof Pivot && $relation->getTable() === $table) {
                 return $this->ensureParameterIsPrimitive(
-                    $relation->getAttribute(Text::afterLast($parameterName, '.'))
+                    $relation->getAttribute(Text::afterLast($parameterName, '.')),
                 );
             }
         }
@@ -360,8 +360,8 @@ abstract class AbstractCursorPaginator implements Stringable
      *
      * @template TThroughValue
      *
-     * @param  callable(TValue, TKey): TThroughValue  $callback
-     * 
+     * @param callable(TValue, TKey): TThroughValue $callback
+     *
      * @phpstan-this-out static<TKey, TThroughValue>
      */
     public function through(callable $callback): static
@@ -507,8 +507,8 @@ abstract class AbstractCursorPaginator implements Stringable
      * @template TSetKey of array-key
      * @template TSetValue
      *
-     * @param Collection<TSetKey, TSetValue>  $collection
-     * 
+     * @param Collection<TSetKey, TSetValue> $collection
+     *
      * @phpstan-this-out static<TSetKey, TSetValue>
      */
     public function setCollection(Collection $collection): static

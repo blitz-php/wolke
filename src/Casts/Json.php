@@ -35,8 +35,8 @@ class Json
      */
     public static function encode(mixed $value, int $flags = 0): mixed
     {
-        return isset(static::$encoder) 
-            ? (static::$encoder)($value, $flags) 
+        return isset(static::$encoder)
+            ? (static::$encoder)($value, $flags)
             : json_encode($value, $flags);
     }
 

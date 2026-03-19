@@ -32,7 +32,7 @@ class LazyLoadingViolationException extends RuntimeException
      */
     public function __construct(object $model, public string $relation)
     {
-        $class = get_class($model);
+        $class = $model::class;
 
         parent::__construct("Tentative de chargement paresseux de [{$relation}] sur le modèle [{$class}] mais le chargement paresseux est désactivé.");
 

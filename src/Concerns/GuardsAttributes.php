@@ -37,7 +37,7 @@ trait GuardsAttributes
 
     /**
      * Les colonnes réelles qui existent dans la base de données et qui peuvent être protégées.
-     * 
+     *
      * @var array<class-string,list<string>>
      */
     protected static array $guardableColumns = [];
@@ -225,7 +225,8 @@ trait GuardsAttributes
     /**
      * Obtient les attributs fillable d'un tableau donné.
      *
-     * @param  array<string, mixed>  $attributes
+     * @param array<string, mixed> $attributes
+     *
      * @return array<string, mixed>
      */
     protected function fillableFromArray(array $attributes): array

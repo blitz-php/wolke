@@ -50,11 +50,9 @@ trait SupportsInverseRelations
         }
 
         if ($this->inverseRelationship === null && $relation) {
-            $this->query->afterQuery(function ($result) {
-                return $this->inverseRelationship
+            $this->query->afterQuery(fn ($result) => $this->inverseRelationship
                     ? $this->applyInverseRelationToCollection($result, $this->getParent())
-                    : $result;
-            });
+                    : $result);
         }
 
         $this->inverseRelationship = $relation;
@@ -69,14 +67,14 @@ trait SupportsInverseRelations
     {
         return Arr::first(
             $this->getPossibleInverseRelations(),
-            fn ($relation) => $relation && $this->getModel()->isRelation($relation)
+            fn ($relation) => $relation && $this->getModel()->isRelation($relation),
         );
     }
 
     /**
      * Obtient les relations inverses possibles pour le modèle parent.
      *
-     * @return array<non-empty-string>
+     * @return list<non-empty-string>
      */
     protected function getPossibleInverseRelations(): array
     {

@@ -13,6 +13,7 @@ namespace BlitzPHP\Wolke\Pagination;
 
 use BlitzPHP\Contracts\Container\ContainerInterface;
 use BlitzPHP\Contracts\View\RendererInterface;
+use BlitzPHP\Http\Request;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -25,14 +26,14 @@ class PaginationState
      */
     public static function resolveUsing(ContainerInterface $container): void
     {
-        /** @var \BlitzPHP\Http\Request */
+        /** @var Request */
         $request = $container->get(ServerRequestInterface::class);
-        
-        Paginator::viewFactoryResolver(fn () => $container->get(RendererInterface::class));
-       
-        Paginator::currentPathResolver(fn () => $request->fullUrl());
-       
-        Paginator::currentPageResolver(function ($pageName) use($request) {
+
+        Paginator::viewFactoryResolver(static fn () => $container->get(RendererInterface::class));
+
+        Paginator::currentPathResolver(static fn () => $request->fullUrl());
+
+        Paginator::currentPageResolver(static function ($pageName) use ($request) {
             $page = $request->input($pageName);
 
             if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {

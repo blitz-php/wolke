@@ -36,15 +36,15 @@ class Listener implements EventListenerInterface
         $event->on('app:init', function () {
             Model::setConnectionResolver($this->container->get(ConnectionResolverInterface::class));
             PaginationState::resolveUsing($this->container);
-            
+
             $this->bootObservables($this->container->get(LocatorInterface::class));
         });
     }
-            
+
     private function bootObservables(LocatorInterface $locator)
     {
         Model::setEventDispatcher(new Dispatcher());
-        
+
         foreach ($locator->listFiles('Observers/') as $file) {
             $className = $locator->getClassname($file);
 

@@ -20,7 +20,7 @@ interface SerializesCastableAttributes
 {
     /**
      * Sérialise l'attribut lors de la conversion du modèle en tableau.
-     * 
+     *
      * @param array<string, mixed> $attributes
      */
     public function serialize(Model $model, string $key, mixed $value, array $attributes): mixed;

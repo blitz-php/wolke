@@ -46,7 +46,7 @@ trait HasGlobalScopes
             $attributes->push(...$trait->getAttributes(ScopedBy::class, ReflectionAttribute::IS_INSTANCEOF));
         }
 
-        return $attributes->map(fn ($attribute) => $attribute->getArguments())
+        return $attributes->map(static fn ($attribute) => $attribute->getArguments())
             ->flatten()
             ->all();
     }
@@ -54,8 +54,8 @@ trait HasGlobalScopes
     /**
      * Enregistre une nouvelle portée globale sur le modèle.
      *
-     * @param Scope|(Closure(Builder<static>): mixed)|string  $scope
-     * @param Scope|(Closure(Builder<static>): mixed)|null  $implementation
+     * @param (Closure(Builder<static>): mixed)|Scope|string $scope
+     * @param (Closure(Builder<static>): mixed)|Scope|null   $implementation
      *
      * @throws InvalidArgumentException
      */
@@ -68,7 +68,7 @@ trait HasGlobalScopes
             return static::$globalScopes[static::class][spl_object_hash($scope)] = $scope;
         }
         if ($scope instanceof Scope) {
-            return static::$globalScopes[static::class][get_class($scope)] = $scope;
+            return static::$globalScopes[static::class][$scope::class] = $scope;
         }
         if (is_string($scope) && class_exists($scope) && is_subclass_of($scope, Scope::class)) {
             return static::$globalScopes[static::class][$scope] = new $scope();
@@ -102,7 +102,7 @@ trait HasGlobalScopes
     /**
      * Obtient une portée globale enregistrée avec le modèle.
      *
-     * @return Scope|(Closure(Builder<static>): mixed)|null
+     * @return (Closure(Builder<static>): mixed)|Scope|null
      */
     public static function getGlobalScope(Scope|string $scope)
     {
@@ -112,7 +112,7 @@ trait HasGlobalScopes
 
         return Arr::get(
             static::$globalScopes,
-            static::class . '.' . get_class($scope)
+            static::class . '.' . $scope::class,
         );
     }
 

@@ -31,8 +31,8 @@ class SoftDeletingScope implements Scope
      *
      * @template TModel of Model
      *
-     * @param Builder<TModel>  $builder
-     * @param TModel  $model
+     * @param Builder<TModel> $builder
+     * @param TModel          $model
      */
     public function apply(Builder $builder, Model $model): void
     {
@@ -41,7 +41,7 @@ class SoftDeletingScope implements Scope
 
     /**
      * Étend le constructeur de requête avec les fonctions nécessaires.
-     * 
+     *
      * @param Builder<*> $builder
      */
     public function extend(Builder $builder): void
@@ -61,7 +61,7 @@ class SoftDeletingScope implements Scope
 
     /**
      * Obtient la colonne "deleted at" pour le constructeur.
-     * 
+     *
      * @param Builder<*> $builder
      */
     protected function getDeletedAtColumn(Builder $builder): string
@@ -75,7 +75,7 @@ class SoftDeletingScope implements Scope
 
     /**
      * Ajoute l'extension restore au constructeur.
-     * 
+     *
      * @param Builder<*> $builder
      */
     protected function addRestore(Builder $builder): void
@@ -89,7 +89,7 @@ class SoftDeletingScope implements Scope
 
     /**
      * Ajoute l'extension restore-or-create au constructeur.
-     * 
+     *
      * @param Builder<*> $builder
      */
     protected function addRestoreOrCreate(Builder $builder): void
@@ -105,7 +105,7 @@ class SoftDeletingScope implements Scope
 
     /**
      * Ajoute l'extension create-or-restore au constructeur.
-     * 
+     *
      * @param Builder<*> $builder
      */
     protected function addCreateOrRestore(Builder $builder): void
@@ -121,7 +121,7 @@ class SoftDeletingScope implements Scope
 
     /**
      * Ajoute l'extension with-trashed au constructeur.
-     * 
+     *
      * @param Builder<*> $builder
      */
     protected function addWithTrashed(Builder $builder): void
@@ -137,7 +137,7 @@ class SoftDeletingScope implements Scope
 
     /**
      * Ajoute l'extension without-trashed au constructeur.
-     * 
+     *
      * @param Builder<*> $builder
      */
     protected function addWithoutTrashed(Builder $builder): void
@@ -146,7 +146,7 @@ class SoftDeletingScope implements Scope
             $model = $builder->getModel();
 
             $builder->withoutGlobalScope($this)->whereNull(
-                $model->getQualifiedDeletedAtColumn()
+                $model->getQualifiedDeletedAtColumn(),
             );
 
             return $builder;
@@ -155,7 +155,7 @@ class SoftDeletingScope implements Scope
 
     /**
      * Ajoute l'extension only-trashed au constructeur.
-     * 
+     *
      * @param Builder<*> $builder
      */
     protected function addOnlyTrashed(Builder $builder): void
@@ -164,7 +164,7 @@ class SoftDeletingScope implements Scope
             $model = $builder->getModel();
 
             $builder->withoutGlobalScope($this)->whereNotNull(
-                $model->getQualifiedDeletedAtColumn()
+                $model->getQualifiedDeletedAtColumn(),
             );
 
             return $builder;

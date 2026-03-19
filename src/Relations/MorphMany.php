@@ -20,14 +20,14 @@ use BlitzPHP\Wolke\Model;
  * @template TDeclaringModel of Model
  *
  * @extends MorphOneOrMany<TRelatedModel, TDeclaringModel, Collection<int, TRelatedModel>>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphMany</a>
  */
 class MorphMany extends MorphOneOrMany
 {
     /**
      * Convertit la relation en une relation "morph one".
-     * 
+     *
      * @return MorphOne<TRelatedModel, TDeclaringModel>
      */
     public function one(): MorphOne
@@ -38,13 +38,13 @@ class MorphMany extends MorphOneOrMany
                 $this->getParent(),
                 $this->morphType,
                 $this->foreignKey,
-                $this->localKey
+                $this->localKey,
             ),
             function ($morphOne) {
                 if ($inverse = $this->getInverseRelationship()) {
                     $morphOne->inverse($inverse);
                 }
-            }
+            },
         ));
     }
 

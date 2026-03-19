@@ -13,7 +13,7 @@ namespace BlitzPHP\Wolke\Contracts;
 
 /**
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Pagination\LengthAwarePaginator</a>
- * 
+ *
  * @template TKey of array-key
  *
  * @template-covariant TValue

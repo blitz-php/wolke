@@ -22,7 +22,7 @@ use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
 
 /**
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasOneThrough</a>
- * 
+ *
  * @template TRelatedModel of Model
  * @template TIntermediateModel of Model
  * @template TDeclaringModel of Model
@@ -71,13 +71,13 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
         // correspondance très pratique et facile à travailler. Ensuite, nous les retournerons.
         foreach ($models as $model) {
             $key = $this->getDictionaryKey($model->getAttribute($this->localKey));
-            
+
             if ($key !== null && isset($dictionary[$key])) {
                 $value = $dictionary[$key];
-                
+
                 $model->setRelation(
                     $relation,
-                    reset($value)
+                    reset($value),
                 );
             }
         }
@@ -85,7 +85,7 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
         return $models;
     }
 
-    /** 
+    /**
      * {@inheritDoc}
      */
     public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
@@ -97,8 +97,8 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
         return parent::getRelationExistenceQuery($query, $parentQuery, $columns);
     }
 
-    /** 
-     * {@inheritDoc} 
+    /**
+     * {@inheritDoc}
      */
     public function addOneOfManySubQueryConstraints(Builder $query, $column = null, $aggregate = null): void
     {
@@ -110,16 +110,16 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
         }
     }
 
-    /** 
-     * {@inheritDoc} 
+    /**
+     * {@inheritDoc}
      */
     public function getOneOfManySubQuerySelectColumns(): array
     {
         return [$this->getQualifiedFirstKeyName()];
     }
 
-    /** 
-     * {@inheritDoc} 
+    /**
+     * {@inheritDoc}
      */
     public function addOneOfManyJoinSubQueryConstraints(JoinClause $join): void
     {
@@ -129,8 +129,8 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
     /**
      * Crée une nouvelle instance liée pour le modèle donné.
      *
-     * @param  TDeclaringModel  $parent
-     * 
+     * @param TDeclaringModel $parent
+     *
      * @return TRelatedModel
      */
     public function newRelatedInstanceFor(Model $parent): Model
@@ -138,15 +138,15 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
         return $this->related->newInstance();
     }
 
-    /** 
-     * {@inheritDoc} 
+    /**
+     * {@inheritDoc}
      */
     protected function getRelatedKeyFrom(Model $model): mixed
     {
         return $model->getAttribute($this->getForeignKeyName());
     }
 
-    /** 
+    /**
      * {@inheritDoc}
      */
     public function getParentKey(): mixed

@@ -15,7 +15,7 @@ use BlitzPHP\Wolke\Model;
 
 /**
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Database\Eloquent\CastsAttributes</a>
- * 
+ *
  * @template TGet
  * @template TSet
  */

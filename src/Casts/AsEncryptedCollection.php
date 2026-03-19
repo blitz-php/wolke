@@ -83,15 +83,15 @@ class AsEncryptedCollection implements Castable
     /**
      * Spécifie la collection pour le cast.
      *
-     * @param class-string $class La classe de collection à utiliser
-     * @param array{class-string, string}|class-string|null $map Le mappage à appliquer
+     * @param class-string                                  $class La classe de collection à utiliser
+     * @param array{class-string, string}|class-string|null $map   Le mappage à appliquer
      */
     public static function using(string $class, array|string|null $map = null): string
     {
         if (is_array($map) && is_callable($map)) {
-            $map = $map[0].'@'.$map[1];
+            $map = $map[0] . '@' . $map[1];
         }
 
-        return static::class.':'.implode(',', [$class, $map]);
+        return static::class . ':' . implode(',', [$class, $map]);
     }
 }

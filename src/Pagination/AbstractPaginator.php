@@ -25,7 +25,7 @@ use Closure;
  * @template-covariant TValue
  *
  * @mixin Collection<TKey, TValue>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\AbstractPaginator</a>
  */
 abstract class AbstractPaginator
@@ -303,7 +303,7 @@ abstract class AbstractPaginator
      *
      * @template TMapValue
      *
-     * @param  callable(TValue, TKey): TMapValue  $callback
+     * @param callable(TValue, TKey): TMapValue $callback
      *
      * @phpstan-this-out static<TKey, TMapValue>
      */
@@ -450,7 +450,7 @@ abstract class AbstractPaginator
 
     /**
      * Résout la chaîne de requête ou retourne la valeur par défaut.
-     * 
+     *
      * @return string
      */
     public static function resolveQueryString(array|string|null $default = null)
@@ -516,7 +516,7 @@ abstract class AbstractPaginator
      */
     public static function useBootstrap(int $version = 5): void
     {
-        match($version) {
+        match ($version) {
             3       => static::useBootstrapThree(),
             4       => static::useBootstrapFour(),
             default => static::useBootstrapFive(),
@@ -597,7 +597,7 @@ abstract class AbstractPaginator
     /**
      * Définit la collection sous-jacente du paginateur.
      *
-     * @param Collection<TKey, TValue>  $collection
+     * @param Collection<TKey, TValue> $collection
      */
     public function setCollection(Collection $collection): static
     {

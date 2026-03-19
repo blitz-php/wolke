@@ -15,7 +15,7 @@ use BlitzPHP\Wolke\Pagination\Cursor;
 
 /**
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Contracts\Pagination\CursorPaginator</a>
- * 
+ *
  * @template TKey of array-key
  *
  * @template-covariant TValue

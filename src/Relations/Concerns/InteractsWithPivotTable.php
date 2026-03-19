@@ -41,7 +41,7 @@ trait InteractsWithPivotTable
         // et en supprimant toutes ces lignes de cette table de jointure "intermédiaire".
         $detach = array_values(array_intersect(
             $this->newPivotQuery()->values($this->relatedPivotKey),
-            array_keys($records)
+            array_keys($records),
         ));
 
         if (count($detach) > 0) {
@@ -77,8 +77,8 @@ trait InteractsWithPivotTable
     /**
      * Synchronise les tables intermédiaires avec une liste d'IDs sans détacher.
      *
-     * @param IterableCollection|Model|array|int|string $ids
-     * 
+     * @param array|int|IterableCollection|Model|string $ids
+     *
      * @return array{attached: array, detached: array, updated: array}
      */
     public function syncWithoutDetaching($ids): array
@@ -89,8 +89,8 @@ trait InteractsWithPivotTable
     /**
      * Synchronise les tables intermédiaires avec une liste d'IDs ou une collection de modèles.
      *
-     * @param IterableCollection|Model|array|int|string $ids
-     * 
+     * @param array|int|IterableCollection|Model|string $ids
+     *
      * @return array{attached: array, detached: array, updated: array}
      */
     public function sync($ids, bool $detaching = true): array
@@ -104,7 +104,7 @@ trait InteractsWithPivotTable
         if ($records === [] && ! $detaching) {
             return $changes;
         }
-        
+
         // Nous devons d'abord attacher tous les modèles associés qui ne sont pas actuellement
         // dans cette table de jointure. Nous parcourrons les IDs donnés, en vérifiant
         // s'ils existent dans le tableau des IDs actuels, et sinon nous insérerons.
@@ -129,7 +129,7 @@ trait InteractsWithPivotTable
         // une tonne d'opérations de touch jusqu'à ce que nous ayons totalement fini de synchroniser les enregistrements.
         $changes = array_merge(
             $changes,
-            $this->attachNew($records, $current, false)
+            $this->attachNew($records, $current, false),
         );
 
         // Une fois que nous avons fini d'attacher ou de détacher les enregistrements, nous verrons si nous
@@ -147,15 +147,15 @@ trait InteractsWithPivotTable
     /**
      * Synchronise les tables intermédiaires avec une liste d'IDs ou une collection de modèles avec les valeurs pivot données.
      *
-     * @param IterableCollection|Model|array|int|string $ids
-     * 
+     * @param array|int|IterableCollection|Model|string $ids
+     *
      * @return array{attached: array, detached: array, updated: array}
      */
     public function syncWithPivotValues($ids, array $values, bool $detaching = true): array
     {
         return $this->sync(
             (new IterableCollection($this->parseIds($ids)))->mapWithKeys(static fn ($id) => [$id => $values]),
-            $detaching
+            $detaching,
         );
     }
 
@@ -222,7 +222,7 @@ trait InteractsWithPivotTable
         }
 
         $updated = $this->newPivotStatementForId($id)->update(
-            $this->castAttributes($attributes)
+            $this->castAttributes($attributes),
         );
 
         if ($touch) {
@@ -265,7 +265,7 @@ trait InteractsWithPivotTable
             // fonction retournera. Nous pouvons analyser les IDs avant d'insérer les enregistrements.
             $this->newPivotStatement()->bulkInsert($this->formatAttachRecords(
                 $this->parseIds($id),
-                $attributes
+                $attributes,
             ));
         }
 
@@ -281,7 +281,7 @@ trait InteractsWithPivotTable
     {
         $records = $this->formatAttachRecords(
             $this->parseIds($id),
-            $attributes
+            $attributes,
         );
 
         foreach ($records as $record) {
@@ -307,7 +307,7 @@ trait InteractsWithPivotTable
                 $key,
                 $value,
                 $attributes,
-                $hasTimestamps
+                $hasTimestamps,
             );
         }
 
@@ -323,7 +323,7 @@ trait InteractsWithPivotTable
 
         return array_merge(
             $this->baseAttachRecord($id, $hasTimestamps),
-            $this->castAttributes($attributes)
+            $this->castAttributes($attributes),
         );
     }
 
@@ -459,7 +459,8 @@ trait InteractsWithPivotTable
     {
         return $this->newPivotQuery()
             ->when($ids !== null, fn ($query) => $query->whereIn(
-                $this->getQualifiedRelatedPivotKeyName(), $this->parseIds($ids)
+                $this->getQualifiedRelatedPivotKeyName(),
+                $this->parseIds($ids),
             ))
             ->collect()
             ->map(function ($record) {
@@ -485,7 +486,7 @@ trait InteractsWithPivotTable
             $attributes,
             $this->table,
             $exists,
-            $this->using
+            $this->using,
         );
 
         return $pivot
@@ -515,8 +516,8 @@ trait InteractsWithPivotTable
     public function newPivotStatementForId(mixed $id): BaseBuilder
     {
         return $this->newPivotQuery()->whereIn(
-            $this->getQualifiedRelatedPivotKeyName(), 
-            $this->parseIds($id)
+            $this->getQualifiedRelatedPivotKeyName(),
+            $this->parseIds($id),
         );
     }
 
@@ -540,8 +541,8 @@ trait InteractsWithPivotTable
         }
 
         return $query->where(
-            $this->getQualifiedForeignPivotKeyName(), 
-            $this->parent->{$this->parentKey}
+            $this->getQualifiedForeignPivotKeyName(),
+            $this->parent->{$this->parentKey},
         );
     }
 
@@ -554,7 +555,7 @@ trait InteractsWithPivotTable
     {
         $this->pivotColumns = array_merge(
             $this->pivotColumns,
-            is_array($columns) ? $columns : func_get_args()
+            is_array($columns) ? $columns : func_get_args(),
         );
 
         return $this;
@@ -605,7 +606,7 @@ trait InteractsWithPivotTable
     {
         return $this->getTypeSwapValue(
             $this->related->getKeyType(),
-            $key
+            $key,
         );
     }
 

@@ -28,9 +28,9 @@ use InvalidArgumentException;
 
 /**
  * @template TValue of Model|object|static
- * 
+ *
  * @mixin \BlitzPHP\Wolke\Builder
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Concerns\BuildsQueries</a>
  */
 trait BuildsQueries
@@ -69,12 +69,12 @@ trait BuildsQueries
      */
     public function addWhereExistsQuery(BaseBuilder $query, string $boolean = 'and', bool $not = false): static
     {
-        $wheres = $this->query->wheres;
+        $wheres   = $this->query->wheres;
         $wheres[] = ['type' => 'exists'] + compact('query', 'boolean', 'not');
 
         Invader::make($this->query)->wheres = $wheres;
         $this->query->bindings->merge($query->bindings);
-        
+
         return $this;
     }
 
@@ -166,8 +166,8 @@ trait BuildsQueries
             $this->query->bindings->set([], 'union');
 
             $addCursorConditions = function (self $builder, $previousColumn, $originalColumn, $i) use (&$addCursorConditions, $cursor, $orders) {
-                $unionBuilders = $builder->query->unions !== [] 
-                    ? (new Collection($builder->query->unions))->pluck('query') 
+                $unionBuilders = $builder->query->unions !== []
+                    ? (new Collection($builder->query->unions))->pluck('query')
                     : new Collection();
 
                 if (null !== $previousColumn) {
@@ -176,14 +176,14 @@ trait BuildsQueries
                     $builder->where(
                         Text::contains($originalColumn, ['(', ')']) ? new Expression($originalColumn) : $originalColumn,
                         '=',
-                        $cursor->parameter($previousColumn)
+                        $cursor->parameter($previousColumn),
                     );
 
                     $unionBuilders->each(function ($unionBuilder) use ($previousColumn, $cursor) {
                         $unionBuilder->where(
                             $this->getOriginalColumnNameForCursorPagination($unionBuilder, $previousColumn),
                             '=',
-                            $cursor->parameter($previousColumn)
+                            $cursor->parameter($previousColumn),
                         );
 
                         $this->query->bindings->addMany($unionBuilder->bindings->getOrdered('where'), 'union');
@@ -198,7 +198,7 @@ trait BuildsQueries
                     $secondBuilder->where(
                         Text::contains($originalColumn, ['(', ')']) ? new Expression($originalColumn) : $originalColumn,
                         $direction === 'asc' ? '>' : '<',
-                        $cursor->parameter($column)
+                        $cursor->parameter($column),
                     );
 
                     if ($i < $orders->count() - 1) {
@@ -208,14 +208,14 @@ trait BuildsQueries
                     }
 
                     $unionBuilders->each(function ($unionBuilder) use ($column, $direction, $cursor, $i, $orders, $addCursorConditions, $originalColumn) {
-                        $unionWheres = $unionBuilder->bindings->getOrdered('where');
+                        $unionWheres    = $unionBuilder->bindings->getOrdered('where');
                         $originalColumn = $this->getOriginalColumnNameForCursorPagination($unionBuilder, $column);
-                        
+
                         $unionBuilder->where(function ($unionBuilder) use ($column, $direction, $cursor, $i, $orders, $addCursorConditions, $originalColumn, $unionWheres) {
                             $unionBuilder->where(
                                 $originalColumn,
                                 $direction === 'asc' ? '>' : '<',
-                                $cursor->parameter($column)
+                                $cursor->parameter($column),
                             );
 
                             if ($i < $orders->count() - 1) {
@@ -248,8 +248,8 @@ trait BuildsQueries
      */
     protected function getOriginalColumnNameForCursorPagination(BaseBuilder|Builder $builder, string $parameter): string
     {
-        $columns = $builder instanceof Builder 
-            ? $builder->getQuery()->columns 
+        $columns = $builder instanceof Builder
+            ? $builder->getQuery()->columns
             : $builder->columns;
 
         foreach ($columns as $column) {

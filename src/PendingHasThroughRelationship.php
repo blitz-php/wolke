@@ -23,7 +23,7 @@ use BlitzPHP\Wolke\Relations\MorphOneOrMany;
  * @template TIntermediateModel of Model
  * @template TDeclaringModel of Model
  * @template TLocalRelationship of HasOneOrMany<TIntermediateModel, TDeclaringModel>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\PendingHasThroughRelationship</a>
  */
 class PendingHasThroughRelationship
@@ -43,8 +43,8 @@ class PendingHasThroughRelationship
      *
      * @template TRelatedModel of Model
      *
-     * @param  string|(callable(TIntermediateModel): (HasOne<TRelatedModel, TIntermediateModel>|HasMany<TRelatedModel, TIntermediateModel>|MorphOneOrMany<TRelatedModel, TIntermediateModel>))  $callback
-     * 
+     * @param (callable(TIntermediateModel): (HasMany<TRelatedModel, TIntermediateModel>|HasOne<TRelatedModel, TIntermediateModel>|MorphOneOrMany<TRelatedModel, TIntermediateModel>))|string $callback
+     *
      * @return (
      *     $callback is string
      *     ? HasManyThrough<Model, TIntermediateModel, TDeclaringModel>|HasOneThrough<Model, TIntermediateModel, TDeclaringModel>
@@ -106,7 +106,7 @@ class PendingHasThroughRelationship
         throw new BadMethodCallException(sprintf(
             'Appel à la méthode non définie %s::%s()',
             static::class,
-            $method
+            $method,
         ));
     }
 }

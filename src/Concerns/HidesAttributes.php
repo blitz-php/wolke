@@ -21,21 +21,21 @@ trait HidesAttributes
 {
     /**
      * Les attributs qui doivent être cachés pour la sérialisation.
-     * 
+     *
      * @var list<string>
      */
     protected array $hidden = [];
 
     /**
      * Les attributs qui doivent être visibles dans la sérialisation.
-     * 
+     *
      * @var list<string>
      */
     protected array $visible = [];
 
     /**
      * Obtient les attributs cachés pour le modèle.
-     * 
+     *
      * @return list<string>
      */
     public function getHidden(): array
@@ -45,7 +45,7 @@ trait HidesAttributes
 
     /**
      * Définit les attributs cachés pour le modèle.
-     * 
+     *
      * @param list<string> $hidden
      */
     public function setHidden(array $hidden): static
@@ -58,7 +58,7 @@ trait HidesAttributes
     /**
      * Fusionne de nouveaux attributs cachés avec les attributs cachés existants sur le modèle.
      *
-     * @param  list<string>  $hidden
+     * @param list<string> $hidden
      */
     public function mergeHidden(array $hidden): static
     {
@@ -69,7 +69,7 @@ trait HidesAttributes
 
     /**
      * Obtient les attributs visibles pour le modèle.
-     * 
+     *
      * @return list<string>
      */
     public function getVisible(): array
@@ -79,7 +79,7 @@ trait HidesAttributes
 
     /**
      * Définit les attributs visibles pour le modèle.
-     * 
+     *
      * @param list<string> $visible
      */
     public function setVisible(array $visible): static
@@ -92,7 +92,7 @@ trait HidesAttributes
     /**
      * Fusionne de nouveaux attributs visibles avec les attributs visibles existants sur le modèle.
      *
-     * @param  list<string>  $visible
+     * @param list<string> $visible
      */
     public function mergeVisible(array $visible): static
     {
@@ -104,7 +104,7 @@ trait HidesAttributes
     /**
      * Rend les attributs donnés, typiquement cachés, visibles.
      *
-     * @param  list<string>|string|null  $attributes
+     * @param list<string>|string|null $attributes
      */
     public function makeVisible(array|string|null $attributes): static
     {
@@ -122,7 +122,7 @@ trait HidesAttributes
     /**
      * Rend les attributs donnés, typiquement cachés, visibles si le test de vérité donné réussit.
      *
-     * @param  list<string>|string|null  $attributes
+     * @param list<string>|string|null $attributes
      */
     public function makeVisibleIf(bool|Closure $condition, array|string|null $attributes): static
     {
@@ -132,13 +132,13 @@ trait HidesAttributes
     /**
      * Rend les attributs donnés, typiquement visibles, cachés.
      *
-     * @param  list<string>|string|null  $attributes
+     * @param list<string>|string|null $attributes
      */
     public function makeHidden($attributes): static
     {
         $this->hidden = array_values(array_unique(array_merge(
             $this->hidden,
-            is_array($attributes) ? $attributes : func_get_args()
+            is_array($attributes) ? $attributes : func_get_args(),
         )));
 
         return $this;
@@ -147,7 +147,7 @@ trait HidesAttributes
     /**
      * Rend les attributs donnés, typiquement visibles, cachés si le test de vérité donné réussit.
      *
-     * @param  list<string>|string|null  $attributes
+     * @param list<string>|string|null $attributes
      */
     public function makeHiddenIf(bool|Closure $condition, array|string|null $attributes): static
     {

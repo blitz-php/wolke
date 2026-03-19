@@ -23,7 +23,7 @@ use BlitzPHP\Wolke\Model;
  * @template TDeclaringModel of Model
  *
  * @extends HasOneOrManyThrough<TRelatedModel, TIntermediateModel, TDeclaringModel, Collection<int, TRelatedModel>>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasManyThrough</a>
  */
 class HasManyThrough extends HasOneOrManyThrough
@@ -36,7 +36,7 @@ class HasManyThrough extends HasOneOrManyThrough
     public function one(): HasOneThrough
     {
         return HasOneThrough::noConstraints(fn () => new HasOneThrough(
-            Helpers::tap($this->getQuery(), fn (Builder $query) => Invader::make($query->getQuery())->joins = []),
+            Helpers::tap($this->getQuery(), static fn (Builder $query) => Invader::make($query->getQuery())->joins = []),
             $this->farParent,
             $this->throughParent,
             $this->getFirstKeyName(),
@@ -70,11 +70,11 @@ class HasManyThrough extends HasOneOrManyThrough
         // correspondance très pratique et facile à travailler. Ensuite, nous les retournerons.
         foreach ($models as $model) {
             $key = $this->getDictionaryKey($model->getAttribute($this->localKey));
-            
+
             if ($key !== null && isset($dictionary[$key])) {
                 $model->setRelation(
                     $relation,
-                    $this->related->newCollection($dictionary[$key])
+                    $this->related->newCollection($dictionary[$key]),
                 );
             }
         }

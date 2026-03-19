@@ -27,7 +27,7 @@ use Closure;
  * @template TResult
  *
  * @extends Relation<TRelatedModel, TDeclaringModel, TResult>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasOneOrMany</a>
  */
 abstract class HasOneOrMany extends Relation
@@ -38,10 +38,10 @@ abstract class HasOneOrMany extends Relation
     /**
      * Crée une nouvelle instance de relation has one ou many.
      *
-     * @param Builder<TRelatedModel>  $query
-     * @param TDeclaringModel  $parent
-     * @param string $foreignKey La clé étrangère du modèle parent.
-     * @param string $localKey   La clé locale du modèle parent.
+     * @param Builder<TRelatedModel> $query
+     * @param TDeclaringModel        $parent
+     * @param string                 $foreignKey La clé étrangère du modèle parent.
+     * @param string                 $localKey   La clé locale du modèle parent.
      */
     public function __construct(Builder $query, Model $parent, protected string $foreignKey, protected string $localKey)
     {
@@ -50,7 +50,7 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Crée et retourne une instance non sauvegardée du modèle lié.
-     * 
+     *
      * @return TRelatedModel
      */
     public function make(array $attributes = []): Model
@@ -63,7 +63,7 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Crée et retourne des instances non sauvegardées des modèles liés.
-     * 
+     *
      * @return Collection<int, TRelatedModel>
      */
     public function makeMany(iterable $records): Collection
@@ -102,16 +102,16 @@ abstract class HasOneOrMany extends Relation
             $whereIn,
             $this->foreignKey,
             $this->getKeys($models, $this->localKey),
-            $this->getRelationQuery()
+            $this->getRelationQuery(),
         );
     }
 
     /**
      * Fait correspondre les résultats chargés avec empressement à leurs parents uniques.
      *
-     * @param array<int, TDeclaringModel>  $models
-     * @param Collection<int, TRelatedModel>  $results
-     * 
+     * @param array<int, TDeclaringModel>    $models
+     * @param Collection<int, TRelatedModel> $results
+     *
      * @return array<int, TDeclaringModel>
      */
     public function matchOne(array $models, Collection $results, string $relation): array
@@ -122,9 +122,9 @@ abstract class HasOneOrMany extends Relation
     /**
      * Fait correspondre les résultats chargés avec empressement à leurs parents multiples.
      *
-     * @param array<int, TDeclaringModel>  $models
-     * @param Collection<int, TRelatedModel>  $results
-     * 
+     * @param array<int, TDeclaringModel>    $models
+     * @param Collection<int, TRelatedModel> $results
+     *
      * @return array<int, TDeclaringModel>
      */
     public function matchMany(array $models, Collection $results, string $relation): array
@@ -135,9 +135,9 @@ abstract class HasOneOrMany extends Relation
     /**
      * Fait correspondre les résultats chargés avec empressement à leurs parents multiples.
      *
-     * @param array<int, TDeclaringModel>  $models
-     * @param Collection<int, TRelatedModel>  $results
-     * 
+     * @param array<int, TDeclaringModel>    $models
+     * @param Collection<int, TRelatedModel> $results
+     *
      * @return array<int, TDeclaringModel>
      */
     protected function matchOneOrMany(array $models, Collection $results, string $relation, string $type): array
@@ -177,10 +177,10 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Construit un dictionnaire de modèles indexé par la clé étrangère de la relation.
-     * 
-     * @param Collection<int, TRelatedModel>  $results
-     * 
-     * @return array<array<array-key, TRelatedModel>>
+     *
+     * @param Collection<int, TRelatedModel> $results
+     *
+     * @return list<array<array-key, TRelatedModel>>
      */
     protected function buildDictionary(Collection $results): array
     {
@@ -206,7 +206,7 @@ abstract class HasOneOrMany extends Relation
     /**
      * Trouve un modèle par sa clé primaire ou retourne une nouvelle instance du modèle lié.
      *
-     * @return ($id is (Arrayable<array-key, mixed>|array<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel)
+     * @return ($id is (Arrayable<array-key, mixed>|list<mixed>) ? Collection<int, TRelatedModel> : TRelatedModel)
      */
     public function findOrNew(mixed $id, array $columns = ['*'])
     {
@@ -221,7 +221,7 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Obtient le premier modèle lié correspondant aux attributs ou l'instancie.
-     * 
+     *
      * @return TRelatedModel
      */
     public function firstOrNew(array $attributes = [], array $values = []): Model
@@ -237,9 +237,9 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Obtient le premier enregistrement lié correspondant aux attributs ou le crée.
-     * 
-     * @param  (Closure(): array)|array  $values
-     * 
+     *
+     * @param array|(Closure(): array) $values
+     *
      * @return TRelatedModel
      */
     public function firstOrCreate(array $attributes = [], array|Closure $values = []): Model
@@ -253,9 +253,9 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Tente de créer l'enregistrement. Si une violation de contrainte unique se produit, tente de trouver l'enregistrement correspondant.
-     * 
-     * @param  (Closure(): array)|array  $values
-     * 
+     *
+     * @param array|(Closure(): array) $values
+     *
      * @return TRelatedModel
      */
     public function createOrFirst(array $attributes = [], array|Closure $values = []): Model
@@ -269,7 +269,7 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Crée ou met à jour un enregistrement lié correspondant aux attributs, et le remplit avec des valeurs.
-     * 
+     *
      * @return TRelatedModel
      */
     public function updateOrCreate(array $attributes, array $values = []): Model
@@ -300,9 +300,9 @@ abstract class HasOneOrMany extends Relation
     /**
      * Attache une instance de modèle au modèle parent.
      *
-     * @param  TRelatedModel  $model
-     * 
-     * @return TRelatedModel|false
+     * @param TRelatedModel $model
+     *
+     * @return false|TRelatedModel
      */
     public function save(Model $model)
     {
@@ -314,9 +314,9 @@ abstract class HasOneOrMany extends Relation
     /**
      * Attache une instance de modèle au modèle parent sans déclencher d'événements.
      *
-     * @param  TRelatedModel  $model
-     * 
-     * @return TRelatedModel|false
+     * @param TRelatedModel $model
+     *
+     * @return false|TRelatedModel
      */
     public function saveQuietly(Model $model)
     {
@@ -326,8 +326,8 @@ abstract class HasOneOrMany extends Relation
     /**
      * Attache une collection de modèles à l'instance parente.
      *
-     * @param  iterable<TRelatedModel>  $models
-     * 
+     * @param iterable<TRelatedModel> $models
+     *
      * @return iterable<TRelatedModel>
      */
     public function saveMany(iterable $models): iterable
@@ -342,8 +342,8 @@ abstract class HasOneOrMany extends Relation
     /**
      * Attache une collection de modèles à l'instance parente sans déclencher d'événements.
      *
-     * @param  iterable<TRelatedModel>  $models
-     * 
+     * @param iterable<TRelatedModel> $models
+     *
      * @return iterable<TRelatedModel>
      */
     public function saveManyQuietly(iterable $models): iterable
@@ -375,7 +375,7 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Crée une nouvelle instance du modèle lié. Permet l'assignation en masse.
-     * 
+     *
      * @return TRelatedModel
      */
     public function forceCreate(array $attributes = []): Model
@@ -387,7 +387,7 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Crée une nouvelle instance du modèle lié avec assignation en masse sans déclencher d'événements.
-     * 
+     *
      * @return TRelatedModel
      */
     public function forceCreateQuietly(array $attributes = []): Model
@@ -397,7 +397,7 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Crée une Collection de nouvelles instances du modèle lié.
-     * 
+     *
      * @return Collection<int, TRelatedModel>
      */
     public function createMany(iterable $records): Collection
@@ -413,7 +413,7 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Crée une Collection de nouvelles instances du modèle lié sans déclencher d'événements.
-     * 
+     *
      * @return Collection<int, TRelatedModel>
      */
     public function createManyQuietly(iterable $records): Collection
@@ -424,8 +424,6 @@ abstract class HasOneOrMany extends Relation
     /**
      * Crée une Collection de nouvelles instances du modèle lié, permettant l'assignation en masse.
      *
-     * @param  iterable  $records
-     * 
      * @return Collection<int, TRelatedModel>
      */
     public function forceCreateMany(iterable $records): Collection
@@ -451,8 +449,8 @@ abstract class HasOneOrMany extends Relation
 
     /**
      * Définit l'ID étranger pour la création d'un modèle lié.
-     * 
-     * @param  TRelatedModel  $model
+     *
+     * @param TRelatedModel $model
      */
     protected function setForeignAttributesForCreate(Model $model): void
     {
@@ -484,9 +482,9 @@ abstract class HasOneOrMany extends Relation
     /**
      * Ajoute les contraintes pour une requête de relation sur la même table.
      *
-     * @param Builder<TRelatedModel>  $query
-     * @param Builder<TDeclaringModel>  $parentQuery
-     * 
+     * @param Builder<TRelatedModel>   $query
+     * @param Builder<TDeclaringModel> $parentQuery
+     *
      * @return Builder<TRelatedModel>
      */
     public function getRelationExistenceQueryForSelfRelation(Builder $query, Builder $parentQuery, mixed $columns = ['*']): Builder
@@ -498,7 +496,7 @@ abstract class HasOneOrMany extends Relation
         return $query->select($columns)->whereColumn(
             $this->getQualifiedParentKeyName(),
             '=',
-            $hash . '.' . $this->getForeignKeyName()
+            $hash . '.' . $this->getForeignKeyName(),
         );
     }
 

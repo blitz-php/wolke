@@ -19,8 +19,8 @@ interface Castable
     /**
      * Obtient le nom de la classe de cast à utiliser lors du casting depuis/vers cette cible de cast.
      *
-     * @param  list<string>  $arguments
-     * 
+     * @param list<string> $arguments
+     *
      * @return CastsAttributes|CastsInboundAttributes|class-string<CastsAttributes|CastsInboundAttributes>
      */
     public static function castUsing(array $arguments);

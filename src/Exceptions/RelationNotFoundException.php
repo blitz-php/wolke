@@ -39,7 +39,7 @@ class RelationNotFoundException extends RuntimeException
      */
     public static function make(object $model, string $relation, ?string $type = null)
     {
-        $class = get_class($model);
+        $class = $model::class;
 
         $instance = new static(
             null === $type

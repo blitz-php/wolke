@@ -31,7 +31,7 @@ use JsonSerializable;
  * @implements ArrayAccess<TKey, TValue>
  * @implements IteratorAggregate<TKey, TValue>
  * @implements PaginatorContract<TKey, TValue>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\CursorPaginator</a>
  */
 class CursorPaginator extends AbstractCursorPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, PaginatorContract
@@ -39,8 +39,8 @@ class CursorPaginator extends AbstractCursorPaginator implements Arrayable, Arra
     /**
      * Crée une nouvelle instance de paginateur.
      *
-     * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $items
-     * @param  array{path: string, query: array, fragment: ?string, pageName: string}  $options
+     * @param Arrayable<TKey, TValue>|Collection<TKey, TValue>|iterable<TKey, TValue>|null $items
+     * @param array{path: string, query: array, fragment: ?string, pageName: string}       $options
      */
     public function __construct(mixed $items, int $perPage, ?Cursor $cursor = null, array $options = [])
     {

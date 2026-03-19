@@ -20,7 +20,7 @@ use BlitzPHP\Wolke\Model;
  * @template TDeclaringModel of Model
  *
  * @extends HasOneOrMany<TRelatedModel, TDeclaringModel, Collection<int, TRelatedModel>>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\HasMany</a>
  */
 class HasMany extends HasOneOrMany
@@ -37,13 +37,13 @@ class HasMany extends HasOneOrMany
                 $this->getQuery(),
                 $this->parent,
                 $this->foreignKey,
-                $this->localKey
+                $this->localKey,
             ),
             function ($hasOne) {
                 if ($inverse = $this->getInverseRelationship()) {
                     $hasOne->inverse($inverse);
                 }
-            }
+            },
         ));
     }
 

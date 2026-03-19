@@ -26,7 +26,7 @@ use BlitzPHP\Wolke\Relations\Concerns\SupportsDefaultModels;
  * @template TDeclaringModel of Model
  *
  * @extends MorphOneOrMany<TRelatedModel, TDeclaringModel, ?TRelatedModel>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Relations\MorphOne</a>
  */
 class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
@@ -81,9 +81,9 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
 
     /**
      * Ajoute des contraintes pour la sous-requête de jointure interne pour les relations one of many.
-	 * 
-	 * @param Builder<TRelatedModel>  $query
-     * @param array|string|null $aggregate
+     *
+     * @param Builder<TRelatedModel> $query
+     * @param array|string|null      $aggregate
      */
     public function addOneOfManySubQueryConstraints(Builder $query, ?string $column = null, $aggregate = null): void
     {
@@ -113,7 +113,7 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
      */
     public function newRelatedInstanceFor(Model $parent): Model
     {
-        return Helpers::tap($this->related->newInstance(), function($instance) use($parent) {
+        return Helpers::tap($this->related->newInstance(), function ($instance) use ($parent) {
             $instance->setAttribute($this->getForeignKeyName(), $parent->{$this->localKey})
                 ->setAttribute($this->getMorphType(), $this->morphClass);
 
@@ -124,8 +124,8 @@ class MorphOne extends MorphOneOrMany implements SupportsPartialRelations
     /**
      * Obtient la valeur de la clé étrangère du modèle.
      *
-     * @param  TRelatedModel  $model
-     * 
+     * @param TRelatedModel $model
+     *
      * @return int|string
      */
     protected function getRelatedKeyFrom(Model $model): mixed

@@ -31,7 +31,7 @@ use JsonSerializable;
  * @implements ArrayAccess<TKey, TValue>
  * @implements IteratorAggregate<TKey, TValue>
  * @implements PaginatorContract<TKey, TValue>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Pagination\Paginator</a>
  */
 class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, PaginatorContract
@@ -45,9 +45,9 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
 
     /**
      * Crée une nouvelle instance de paginateur.
-     * 
-     * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>  $items
-     * @param  array{path: string, query: array, fragment: ?string, pageName: string}  $options
+     *
+     * @param Arrayable<TKey, TValue>|Collection<TKey, TValue>|iterable<TKey, TValue> $items
+     * @param array{path: string, query: array, fragment: ?string, pageName: string}  $options
      */
     public function __construct(mixed $items, int $perPage, ?int $currentPage = null, array $options = [])
     {
@@ -76,8 +76,8 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
 
     /**
      * Définit les éléments pour le paginateur.
-     * 
-     * @param Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null $items
+     *
+     * @param Arrayable<TKey, TValue>|Collection<TKey, TValue>|iterable<TKey, TValue>|null $items
      */
     protected function setItems(mixed $items): void
     {

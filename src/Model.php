@@ -240,11 +240,11 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      * @var array<class-string<self>, bool>
      */
     protected static array $isSoftDeletable = [];
-    
+
     /**
      * Crée une nouvelle instance de modèle Wolke.
      *
-     * @param  array<string, mixed>  $attributes
+     * @param array<string, mixed> $attributes
      */
     public function __construct(array $attributes = [])
     {
@@ -313,14 +313,14 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
         $conventionalInitMethods = array_map(static fn ($trait) => 'initialize' . Helpers::classBasename($trait), $uses);
 
         foreach ((new ReflectionClass($class))->getMethods() as $method) {
-            if (! in_array($method->getName(), $booted) &&
-                $method->isStatic() && in_array($method->getName(), $conventionalBootMethods)) {
+            if (! in_array($method->getName(), $booted, true)
+                && $method->isStatic() && in_array($method->getName(), $conventionalBootMethods, true)) {
                 $method->invoke(null);
 
                 $booted[] = $method->getName();
             }
 
-            if (in_array($method->getName(), $conventionalInitMethods)) {
+            if (in_array($method->getName(), $conventionalInitMethods, true)) {
                 static::$traitInitializers[$class][] = $method->getName();
             }
         }
@@ -360,7 +360,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public static function clearBootedModels(): void
     {
-        static::$booted = [];
+        static::$booted          = [];
         static::$bootedCallbacks = [];
 
         static::$globalScopes = [];
@@ -436,8 +436,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Enregistre un rappel responsable de la gestion des violations de chargement paresseux.
-     * 
-     * @param  (callable(self, string))|null  $callback
+     *
+     * @param (callable(self, string))|null $callback
      */
     public static function handleLazyLoadingViolationUsing(?callable $callback): void
     {
@@ -454,8 +454,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Enregistre un rappel responsable de la gestion des violations d'attributs supprimés.
-     * 
-     * @param  (callable(self, array))|null  $callback
+     *
+     * @param (callable(self, array))|null $callback
      */
     public static function handleDiscardedAttributeViolationUsing(?callable $callback): void
     {
@@ -472,8 +472,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Enregistre un rappel responsable de la gestion des violations d'attributs manquants.
-     * 
-     * @param  (callable(self, string))|null  $callback
+     *
+     * @param (callable(self, string))|null $callback
      */
     public static function handleMissingAttributeViolationUsing(?callable $callback): void
     {
@@ -503,7 +503,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
                     throw new MassAssignmentException(sprintf(
                         'Ajoutez [%s] à la propriété $fillable pour permettre l\'affectation en masse sur [%s].',
                         $key,
-                        static::class
+                        static::class,
                     ));
                 }
             }
@@ -519,7 +519,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
                 throw new MassAssignmentException(sprintf(
                     'Ajoutez [%s] à la propriété $fillable pour permettre l\'affectation en masse sur [%s].',
                     implode(', ', $keys),
-                    static::class
+                    static::class,
                 ));
             }
         }
@@ -560,7 +560,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Crée une nouvelle instance du modèle donné.
      *
-     * @param  array<string, mixed>  $attributes
+     * @param array<string, mixed> $attributes
      */
     public function newInstance(array $attributes = [], bool $exists = false): static
     {
@@ -572,7 +572,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
         $model->exists = $exists;
 
         $model->setConnection(
-            $this->getConnectionName()
+            $this->getConnectionName(),
         );
 
         $model->setTable($this->getTable());
@@ -602,7 +602,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Commence une requête sur le modèle sur une connexion donnée.
-     * 
+     *
      * @return Builder<static>
      */
     public static function on(?string $connection = null): Builder
@@ -615,7 +615,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Commence une requête sur le modèle sur la connexion d'écriture.
-     * 
+     *
      * @return Builder<static>
      */
     public static function onWriteConnection(): BaseBuilder
@@ -626,26 +626,24 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Obtient tous les modèles de la base de données.
      *
-     * @param  array|string  $columns
-     *
      * @return Collection<int, static>
      */
     public static function all(array|string $columns = ['*']): Collection
     {
         return static::query()->get(
-            is_array($columns) ? $columns : func_get_args()
+            is_array($columns) ? $columns : func_get_args(),
         );
     }
 
     /**
      * Commence une requête sur un modèle avec chargement empressé.
-     * 
+     *
      * @return Builder<static>
      */
     public static function with(array|string $relations): Builder
     {
         return static::query()->with(
-            is_string($relations) ? func_get_args() : $relations
+            is_string($relations) ? func_get_args() : $relations,
         );
     }
 
@@ -655,7 +653,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     public function load(array|string $relations): static
     {
         $query = $this->newQueryWithoutRelationships()->with(
-            is_string($relations) ? func_get_args() : $relations
+            is_string($relations) ? func_get_args() : $relations,
         );
 
         $query->eagerLoadRelations([$this]);
@@ -864,8 +862,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Met à jour le modèle dans la base de données.
      *
-     * @param  array<string, mixed>  $attributes
-     * @param  array<string, mixed>  $options
+     * @param array<string, mixed> $attributes
+     * @param array<string, mixed> $options
      */
     public function update(array $attributes = [], array $options = []): bool
     {
@@ -879,8 +877,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Met à jour le modèle dans la base de données dans une transaction.
      *
-     * @param  array<string, mixed>  $attributes
-     * @param  array<string, mixed>  $options
+     * @param array<string, mixed> $attributes
+     * @param array<string, mixed> $options
      *
      * @throws Throwable
      */
@@ -896,8 +894,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Met à jour le modèle dans la base de données sans déclencher d'événements.
      *
-     * @param  array<string, mixed>  $attributes
-     * @param  array<string, mixed>  $options
+     * @param array<string, mixed> $attributes
+     * @param array<string, mixed> $options
      */
     public function updateQuietly(array $attributes = [], array $options = []): bool
     {
@@ -910,7 +908,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Incrémente la valeur d'une colonne d'un montant donné sans déclencher d'événements.
-     * 
+     *
      * @return false|float|int
      */
     protected function incrementQuietly(string $column, float|int $amount = 1, array $extra = [])
@@ -920,7 +918,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Décrémente la valeur d'une colonne d'un montant donné sans déclencher d'événements.
-     * 
+     *
      * @return false|float|int
      */
     protected function decrementQuietly(string $column, float|int $amount = 1, array $extra = [])
@@ -1086,8 +1084,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Définit les clés pour une requête de sélection.
      *
-     * @param  Builder<static>  $query
-     * 
+     * @param Builder<static> $query
+     *
      * @return Builder<static>
      */
     protected function setKeysForSelectQuery(Builder $query): Builder
@@ -1108,8 +1106,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Définit les clés pour une requête de sauvegarde de mise à jour.
      *
-     * @param  Builder<static>  $query
-     * 
+     * @param Builder<static> $query
+     *
      * @return Builder<static>
      */
     protected function setKeysForSaveQuery(Builder $query): Builder
@@ -1188,20 +1186,20 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Insère les attributs donnés et définit l'ID sur le modèle.
      *
-     * @param Builder<static>  $query
-     * @param array<string, mixed>  $attributes
+     * @param Builder<static>      $query
+     * @param array<string, mixed> $attributes
      */
     protected function insertAndSetId(Builder $query, array $attributes): void
     {
         $id = $query->insertGetId($attributes, $keyName = $this->getKeyName());
-   
+
         $this->setAttribute($keyName, $id);
     }
 
     /**
      * Détruit les modèles pour les IDs donnés.
      *
-     * @param array|IterableCollection|int|string $ids
+     * @param array|int|IterableCollection|string $ids
      */
     public static function destroy($ids): int
     {
@@ -1239,7 +1237,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      * Supprime le modèle de la base de données.
      *
      * @return bool|null
-     * 
+     *
      * @throws LogicException
      */
     public function delete()
@@ -1313,7 +1311,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      *
      * Cette méthode protège les développeurs de l'exécution de forceDestroy lorsque le trait est manquant.
      *
-     * @param IterableCollection|array|int|string  $ids
+     * @param array|int|IterableCollection|string $ids
      */
     public static function forceDestroy($ids): ?bool
     {
@@ -1422,7 +1420,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Crée un nouveau constructeur de requête Wolke pour le modèle.
-     * 
+     *
      * @return Builder<*>
      */
     public function newWolkeBuilder(BaseBuilder $query): Builder
@@ -1460,8 +1458,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
     /**
      * Crée une nouvelle instance de modèle pivot.
-     * 
-     * @param  array<string, mixed>  $attributes
+     *
+     * @param array<string, mixed> $attributes
      */
     public function newPivot(self $parent, array $attributes, string $table, bool $exists, ?string $using = null): Pivot
     {
@@ -1474,7 +1472,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function hasNamedScope(string $scope): bool
     {
-        return method_exists($this, 'scope' . ucfirst($scope)) 
+        return method_exists($this, 'scope' . ucfirst($scope))
             || static::isScopeMethodWithAttribute($scope);
     }
 
@@ -1486,7 +1484,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
         if ($this->isScopeMethodWithAttribute($scope)) {
             return $this->{$scope}(...$parameters);
         }
-        
+
         return $this->{'scope' . ucfirst($scope)}(...$parameters);
     }
 
@@ -1495,8 +1493,8 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     protected static function isScopeMethodWithAttribute(string $method): bool
     {
-        return method_exists(static::class, $method) &&
-            (new ReflectionMethod(static::class, $method))
+        return method_exists(static::class, $method)
+            && (new ReflectionMethod(static::class, $method))
                 ->getAttributes(LocalScope::class) !== [];
     }
 
@@ -1518,7 +1516,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function toJson(int $options = 0): string
     {
-         try {
+        try {
             $json = json_encode($this->jsonSerialize(), $options | JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
             throw JsonEncodingException::forModel($this, $e->getMessage());
@@ -1571,12 +1569,12 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
         $this->setRawAttributes(
             $this->setKeysForSelectQuery($this->newQueryWithoutScopes())
                 ->firstOrFail()
-                ->attributes
+                ->attributes,
         );
 
         $this->load((new IterableCollection($this->relations))->reject(
             static fn ($relation) => $relation instanceof Pivot
-                || (is_object($relation) && in_array(AsPivot::class, Helpers::classUsesRecursive($relation), true))
+                || (is_object($relation) && in_array(AsPivot::class, Helpers::classUsesRecursive($relation), true)),
         )->keys()->all());
 
         $this->syncOriginal();
@@ -1599,7 +1597,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
         $attributes = Arr::except(
             $this->getAttributes(),
-            $except ? array_unique(array_merge($except, $defaults)) : $defaults
+            $except ? array_unique(array_merge($except, $defaults)) : $defaults,
         );
 
         return Helpers::tap(new static(), function ($instance) use ($attributes) {
@@ -1809,13 +1807,13 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
 
                 if ($relation instanceof QueueableCollection) {
                     foreach ($relation->getQueueableRelations() as $collectionValue) {
-                        $relations[] = $key.'.'.$collectionValue;
+                        $relations[] = $key . '.' . $collectionValue;
                     }
                 }
 
                 if ($relation instanceof QueueableEntity) {
                     foreach ($relation->getQueueableRelations() as $entityValue) {
-                        $relations[] = $key.'.'.$entityValue;
+                        $relations[] = $key . '.' . $entityValue;
                     }
                 }
             }
@@ -1863,7 +1861,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public static function isSoftDeletable(): bool
     {
-        return static::$isSoftDeletable[static::class] ??= in_array(SoftDeletes::class, Helpers::classUsesRecursive(static::class));
+        return static::$isSoftDeletable[static::class] ??= in_array(SoftDeletes::class, Helpers::classUsesRecursive(static::class), true);
     }
 
     /**
@@ -1951,11 +1949,11 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      */
     public function offsetUnset(mixed $offset): void
     {
-         unset(
+        unset(
             $this->attributes[$offset],
             $this->relations[$offset],
             $this->attributeCastCache[$offset],
-            $this->classCastCache[$offset]
+            $this->classCastCache[$offset],
         );
     }
 
@@ -2002,7 +2000,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     public static function __callStatic(string $method, array $parameters = []): mixed
     {
         if (static::isScopeMethodWithAttribute($method)) {
-            return static::query()->$method(...$parameters);
+            return static::query()->{$method}(...$parameters);
         }
 
         return (new static())->{$method}(...$parameters);
@@ -2031,14 +2029,14 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Prépare l'objet pour la sérialisation.
      */
-    public function __sleep(): array
+    public function __serialize(): array
     {
         $this->mergeAttributesFromClassCasts();
 
-        $this->classCastCache     = [];
-        $this->attributeCastCache = [];
+        $this->classCastCache           = [];
+        $this->attributeCastCache       = [];
         $this->relationAutoloadCallback = null;
-        $this->relationAutoloadContext = null;
+        $this->relationAutoloadContext  = null;
 
         $keys = get_object_vars($this);
 
@@ -2056,7 +2054,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
     /**
      * Lorsqu'un modèle est désérialisé, vérifie s'il doit être démarré.
      */
-    public function __wakeup(): void
+    public function __unserialize(array $data): void
     {
         $this->bootIfNotBooted();
         $this->initializeTraits();

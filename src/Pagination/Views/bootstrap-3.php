@@ -1,7 +1,7 @@
 <?php if ($paginator->hasPages()): ?>
     <nav>
         <ul class="pagination">
-            <?php // Lien de la page précédente ?>
+            <?php // Lien de la page précédente?>
             <?php if ($paginator->onFirstPage()): ?>
                 <li class="disabled" aria-disabled="true" aria-label="<?= lang('Pagination.previous') ?>">
                     <span aria-hidden="true">&lsaquo;</span>
@@ -12,29 +12,29 @@
                 </li>
             <?php endif; ?>
 
-            <?php // Éléments de pagination ?>
+            <?php // Éléments de pagination?>
             <?php foreach ($elements as $element): ?>
-                <?php // Séparateur "Trois points" ?>
+                <?php // Séparateur "Trois points"?>
                 <?php if (is_string($element)): ?>
-                    <li class="disabled" aria-disabled="true"><span><?php echo $element; ?></span></li>
+                    <li class="disabled" aria-disabled="true"><span><?= $element; ?></span></li>
                 <?php endif; ?>
 
-                <?php // Tableau de liens ?>
+                <?php // Tableau de liens?>
                 <?php if (is_array($element)): ?>
                     <?php foreach ($element as $page => $url): ?>
-                        <?php if ($page == $paginator->currentPage()): ?>
-                            <li class="active" aria-current="page"><span><?php echo $page; ?></span></li>
+                        <?php if ($page === $paginator->currentPage()): ?>
+                            <li class="active" aria-current="page"><span><?= $page; ?></span></li>
                         <?php else: ?>
-                            <li><a href="<?php echo $url; ?>"><?php echo $page; ?></a></li>
+                            <li><a href="<?= $url; ?>"><?= $page; ?></a></li>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 <?php endif; ?>
             <?php endforeach; ?>
 
-            <?php // Lien de la page suivante ?>
+            <?php // Lien de la page suivante?>
             <?php if ($paginator->hasMorePages()): ?>
                 <li>
-                    <a href="<?php echo $paginator->nextPageUrl(); ?>" rel="next" aria-label="<?= lang('Pagination.next'); ?>">&rsaquo;</a>
+                    <a href="<?= $paginator->nextPageUrl(); ?>" rel="next" aria-label="<?= lang('Pagination.next'); ?>">&rsaquo;</a>
                 </li>
             <?php else: ?>
                 <li class="disabled" aria-disabled="true" aria-label="<?= lang('Pagination.next'); ?>">

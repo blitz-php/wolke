@@ -20,8 +20,8 @@ interface CastsInboundAttributes
 {
     /**
      * Transforme l'attribut vers ses valeurs sous-jacentes du modèle.
-     * 
-     * @param  array<string, mixed>  $attributes
+     *
+     * @param array<string, mixed> $attributes
      */
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed;
 }

@@ -30,7 +30,7 @@ use TModel;
  * @template TModel of \BlitzPHP\Wolke\Model
  *
  * @extends \BlitzPHP\Utilities\Iterable\Collection<TKey, TModel>
- * 
+ *
  * @credit <a href="http://laravel.com/">Laravel - Illuminate\Database\Eloquent\Collection</a>
  */
 class Collection extends IterableCollection implements QueueableCollection
@@ -44,7 +44,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @param TFindDefault $default
      *
-     * @return ($key is (Arrayable<array-key, mixed>|array<mixed>) ? static : TModel|TFindDefault)
+     * @return ($key is (Arrayable<array-key, mixed>|list<mixed>) ? static : TFindDefault|TModel)
      */
     public function find(mixed $key, mixed $default = null)
     {
@@ -81,11 +81,11 @@ class Collection extends IterableCollection implements QueueableCollection
         if (is_array($key) && count($result) === count(array_unique($key))) {
             return $result;
         }
-        if (! is_array($key) && ! is_null($result)) {
+        if (! is_array($key) && null !== $result) {
             return $result;
         }
 
-        $exception = new ModelNotFoundException;
+        $exception = new ModelNotFoundException();
 
         if (! $model = Helpers::head($this->items)) {
             throw $exception;
@@ -93,7 +93,7 @@ class Collection extends IterableCollection implements QueueableCollection
 
         $ids = is_array($key) ? array_diff($key, $result->modelKeys()) : $key;
 
-        $exception->setModel(get_class($model), $ids);
+        $exception->setModel($model::class, $ids);
 
         throw $exception;
     }
@@ -138,7 +138,7 @@ class Collection extends IterableCollection implements QueueableCollection
 
         $attributes = Arr::except(
             array_keys($models->first()->getAttributes()),
-            $models->first()->getKeyName()
+            $models->first()->getKeyName(),
         );
 
         $this->each(static function ($model) use ($models, $attributes) {
@@ -230,7 +230,7 @@ class Collection extends IterableCollection implements QueueableCollection
                 $segments = explode('.', explode(':', $key)[0]);
 
                 if (str_contains($key, ':')) {
-                    $segments[count($segments) - 1] .= ':'.explode(':', $key)[1];
+                    $segments[count($segments) - 1] .= ':' . explode(':', $key)[1];
                 }
 
                 $path = [];
@@ -259,11 +259,9 @@ class Collection extends IterableCollection implements QueueableCollection
     {
         [$relation, $class] = array_shift($tuples);
 
-        $this->filter(function ($model) use ($relation, $class) {
-            return ! is_null($model) &&
-                ! $model->relationLoaded($relation) &&
-                $model::class === $class;
-        })->load($relation);
+        $this->filter(static fn ($model) => null !== $model
+                && ! $model->relationLoaded($relation)
+                && $model::class === $class)->load($relation);
 
         if (empty($tuples)) {
             return;
@@ -280,8 +278,8 @@ class Collection extends IterableCollection implements QueueableCollection
 
     /**
      * Charge un chemin de relation s'il n'est pas déjà chargé avec empressement.
-     * 
-     * @param Collection<int, TModel>  $models
+     *
+     * @param Collection<int, TModel> $models
      */
     protected function loadMissingRelation(self $models, array $path): void
     {
@@ -317,7 +315,7 @@ class Collection extends IterableCollection implements QueueableCollection
     {
         $this->pluck($relation)
             ->filter()
-            ->groupBy(static fn ($model) => get_class($model))
+            ->groupBy(static fn ($model) => $model::class)
             ->each(static fn ($models, $className) => static::make($models)->load($relations[$className] ?? []));
 
         return $this;
@@ -332,7 +330,7 @@ class Collection extends IterableCollection implements QueueableCollection
     {
         $this->pluck($relation)
             ->filter()
-            ->groupBy(static fn ($model) => get_class($model))
+            ->groupBy(static fn ($model) => $model::class)
             ->each(static fn ($models, $className) => static::make($models)->loadCount($relations[$className] ?? []));
 
         return $this;
@@ -341,7 +339,7 @@ class Collection extends IterableCollection implements QueueableCollection
     /**
      * Détermine si une clé existe dans la collection.
      *
-     * @param  (callable(TModel, TKey): bool)|TModel|string|int  $key
+     * @param (callable(TModel, TKey): bool)|int|string|TModel $key
      */
     public function contains($key, mixed $operator = null, mixed $value = null): bool
     {
@@ -359,7 +357,7 @@ class Collection extends IterableCollection implements QueueableCollection
     /**
      * Détermine si une clé n'existe pas dans la collection.
      *
-     * @param  (callable(TModel, TKey): bool)|TModel|string|int  $key
+     * @param (callable(TModel, TKey): bool)|int|string|TModel $key
      */
     public function doesntContain($key, mixed $operator = null, mixed $value = null): bool
     {
@@ -559,7 +557,7 @@ class Collection extends IterableCollection implements QueueableCollection
     /**
      * Fusionne les attributs donnés, typiquement visibles, cachés sur toute la collection.
      *
-     * @param  array<array-key, string>|string  $attributes
+     * @param array<array-key, string>|string $attributes
      */
     public function mergeHidden(array|string $attributes): static
     {
@@ -589,7 +587,7 @@ class Collection extends IterableCollection implements QueueableCollection
     /**
      * Fusionne les attributs donnés, typiquement cachés, visibles sur toute la collection.
      *
-     * @param  array<array-key, string>|string  $attributes
+     * @param array<array-key, string>|string $attributes
      */
     public function mergeVisible(array|string $attributes): static
     {
@@ -619,7 +617,7 @@ class Collection extends IterableCollection implements QueueableCollection
     /**
      * Définit les ajouts sur chaque élément de la collection, écrasant les ajouts existants pour chacun.
      *
-     * @param  array<array-key, mixed>  $appends
+     * @param array<array-key, mixed> $appends
      */
     public function setAppends(array $appends): static
     {
@@ -726,7 +724,7 @@ class Collection extends IterableCollection implements QueueableCollection
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @param (callable(TModel, TKey): bool)|string|TModel $key
      *
      * @return IterableCollection<int<0, 1>, static<TKey, TModel>>
@@ -817,12 +815,12 @@ class Collection extends IterableCollection implements QueueableCollection
     {
         return method_exists($model, 'getQueueableClassName')
                 ? $model->getQueueableClassName()
-                : get_class($model);
+                : $model::class;
     }
 
     /**
      * Obtient les identifiants pour toutes les entités.
-     * 
+     *
      * @return list<mixed>
      */
     public function getQueueableIds(): array
@@ -838,7 +836,7 @@ class Collection extends IterableCollection implements QueueableCollection
 
     /**
      * Obtient les relations des entités mises en file d'attente.
-     * 
+     *
      * @return list<string>
      */
     public function getQueueableRelations(): array
@@ -896,7 +894,7 @@ class Collection extends IterableCollection implements QueueableCollection
             throw new LogicException('Impossible de créer une requête pour une collection vide.');
         }
 
-        $class = get_class($model);
+        $class = $model::class;
 
         if ($this->reject(static fn ($model) => $model instanceof $class)->isNotEmpty()) {
             throw new LogicException('Impossible de créer une requête pour une collection avec des types mixtes.');

@@ -11,6 +11,7 @@
 
 namespace BlitzPHP\Wolke\Contracts;
 
+use BlitzPHP\Wolke\Builder;
 use Closure;
 
 /**
@@ -33,7 +34,7 @@ interface SupportsPartialRelations
     /**
      * Obtient l'instance de constructeur de sous-requête de jointure interne one of many.
      *
-     * @return \BlitzPHP\Wolke\Builder|void
+     * @return Builder|void
      */
     public function getOneOfManySubQuery();
 }

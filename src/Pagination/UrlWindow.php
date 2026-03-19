@@ -111,7 +111,7 @@ class UrlWindow
     {
         $last = $this->paginator->getUrlRange(
             $this->lastPage() - ($window + ($onEachSide - 1)),
-            $this->lastPage()
+            $this->lastPage(),
         );
 
         return [
@@ -140,7 +140,7 @@ class UrlWindow
     {
         return $this->paginator->getUrlRange(
             $this->currentPage() - $onEachSide,
-            $this->currentPage() + $onEachSide
+            $this->currentPage() + $onEachSide,
         );
     }
 
@@ -159,7 +159,7 @@ class UrlWindow
     {
         return $this->paginator->getUrlRange(
             $this->lastPage() - 1,
-            $this->lastPage()
+            $this->lastPage(),
         );
     }
 
