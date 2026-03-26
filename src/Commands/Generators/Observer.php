@@ -23,37 +23,19 @@ class Observer extends Command
 {
     use GeneratorTrait;
 
-    /**
-     * @var string Groupe auquel appartient la commande
-     */
-    protected $group = 'Generateurs';
+    protected string $group = 'Generateurs';
 
-    /**
-     * @var string Nom de la commande
-     */
-    protected $name = 'make:observer';
+    protected string $name = 'make:observer';
 
-    /**
-     * @var string Description de la commande
-     */
-    protected $description = 'Génère un observateur d\'entité.';
+    protected string $description = 'Génère un observateur d\'entité.';
 
-    /**
-     * @var string
-     */
-    protected $service = 'Service de génération de code';
+    protected string $service = 'Service de génération de code';
 
-    /**
-     * @var array Arguments de la commande
-     */
-    protected $arguments = [
+    protected array $arguments = [
         'name' => "Le nom de la classe de l'observateur.",
     ];
 
-    /**
-     * @var array Options de la commande
-     */
-    protected $options = [
+    protected array $options = [
         '--observe'   => "Le nom de la classe de l'entité obsersée",
         '--namespace' => ["Définit l'espace de noms racine. Par défaut\u{a0}: \"APP_NAMESPACE\".", APP_NAMESPACE],
         '--force'     => 'Forcer à écraser le fichier existant.',

@@ -18,6 +18,7 @@ use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Contracts\Scope;
 use Closure;
 use InvalidArgumentException;
+use ReflectionAttribute;
 use ReflectionClass;
 
 /**
