@@ -2,10 +2,9 @@
 
 namespace {namespace};
 
-use BlitzPHP\Wolke\Entity;
+use {use};
 
-class {class} extends Entity
+class {class} extends {extends}
 {
-    protected $dates   = ['created_at', 'updated_at', 'deleted_at'];
-    protected $casts   = [];
+
 }
