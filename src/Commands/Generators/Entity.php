@@ -154,7 +154,7 @@ class Entity extends Command
             arguments: ['name' => "{$entity}Controller"],
             options  : array_filter([
                 '--entity'     => $this->option('resource') || $this->option('api') ? $entity : null,
-                '--api'        => $this->option('api'),
+                '--restful'    => $this->option('api'),
                 '--validation' => $this->option('validation') || $this->option('all'),
             ])
         );

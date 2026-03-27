@@ -1313,7 +1313,7 @@ class Model implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Queue
      *
      * @param array|int|IterableCollection|string $ids
      */
-    public static function forceDestroy($ids): ?bool
+    public static function forceDestroy($ids): int
     {
         return static::destroy($ids);
     }
