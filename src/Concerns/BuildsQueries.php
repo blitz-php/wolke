@@ -145,7 +145,7 @@ trait BuildsQueries
      */
     public function first(array|string $columns = ['*'])
     {
-        return $this->limit(1)->get($columns)->first();
+        return $this->limit(1)->select($columns)->first(static::class);
     }
 
     /**
