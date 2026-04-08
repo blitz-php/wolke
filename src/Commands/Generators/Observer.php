@@ -11,20 +11,15 @@
 
 namespace BlitzPHP\Wolke\Commands\Generators;
 
-use BlitzPHP\Cli\Console\Command;
-use BlitzPHP\Cli\Traits\GeneratorTrait;
+use BlitzPHP\Cli\Commands\Generators\GeneratorCommand;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\String\Text;
 
 /**
  * Génère un observateur d'entité.
  */
-class Observer extends Command
+class Observer extends GeneratorCommand
 {
-    use GeneratorTrait;
-
-    protected string $group = 'Generateurs';
-
     protected string $name = 'make:observer';
 
     protected string $description = 'Génère un observateur d\'entité.';
@@ -41,21 +36,19 @@ class Observer extends Command
         '--force'     => 'Forcer à écraser le fichier existant.',
     ];
 
+	protected string $component     = 'Observer';
+	protected string $directory     = 'Observers';
+	protected string $template      = 'observer.tpl.php';
+	protected string $templatePath  = __DIR__ . '/Views';
+	protected string $classNameLang = 'CLI.generator.className.observer';
+
     /**
      * {@inheritDoc}
      */
-    public function handle()
-    {
-        $this->component     = 'Observer';
-        $this->directory     = 'Observers';
-        $this->template      = 'observer.tpl.php';
-        $this->templatePath  = __DIR__ . '/Views';
-        $this->classNameLang = 'CLI.generator.className.observer';
-
-        $params = $this->parameters() + ['suffix' => true];
-
-        $this->generateClass($params);
-    }
+    public function process(array $parameters)
+	{
+		return parent::process($parameters + ['suffix' => true]);
+	}
 
     /**
      * {@inheritDoc}

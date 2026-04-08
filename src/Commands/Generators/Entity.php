@@ -11,8 +11,7 @@
 
 namespace BlitzPHP\Wolke\Commands\Generators;
 
-use BlitzPHP\Cli\Console\Command;
-use BlitzPHP\Cli\Traits\GeneratorTrait;
+use BlitzPHP\Cli\Commands\Generators\GeneratorCommand;
 use BlitzPHP\Utilities\Helpers;
 use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Utilities\String\Text;
@@ -20,12 +19,8 @@ use BlitzPHP\Utilities\String\Text;
 /**
  * Génère un fichier squelette d'entité.
  */
-class Entity extends Command
+class Entity extends GeneratorCommand
 {
-    use GeneratorTrait;
-
-    protected string $group = 'Generateurs';
-
     protected string $name = 'make:entity';
 
     protected string $description = 'Génère un nouveau fichier d\'entité.';
@@ -51,19 +46,17 @@ class Entity extends Command
         '--force'          => ["Créer la classe même si l'entité existe déjà"],
     ];
 
+	protected string $component     = 'Entity';
+	protected string $directory     = 'Entities';
+	protected string $template      = 'entity.tpl.php';
+	protected string $templatePath  = __DIR__ . '/Views';
+	protected string $classNameLang = 'CLI.generator.className.entity';
 
     /**
      * {@inheritDoc}
      */
     public function handle()
     {
-        $this->component    = 'Entity';
-        $this->directory    = 'Entities';
-        $this->template     = 'entity.tpl.php';
-        $this->templatePath = __DIR__ . '/Views';
-
-        $this->classNameLang = 'CLI.generator.className.entity';
-
         if ($this->option('all')) {
             $this->mergeOptions([
                 'seed'       => true,
