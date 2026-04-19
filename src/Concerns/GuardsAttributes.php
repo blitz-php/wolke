@@ -157,10 +157,18 @@ trait GuardsAttributes
             return true;
         }
 
+		$fillables = $this->getFillable();
+
+		// Si la propriété $fillable correspond à [*] alors pas la peine d'aller plus loin
+		// car le développeur autorise tous les attributs
+		if ($fillables === ['*']) {
+			return true;
+		}
+
         // Si la clé est dans le tableau "fillable", nous pouvons bien sûr supposer qu'il s'agit
         // d'un attribut fillable. Sinon, nous vérifierons le tableau guarded quand
         // nous aurons besoin de déterminer si l'attribut est sur la liste noire du modèle.
-        if (in_array($key, $this->getFillable(), true)) {
+        if (in_array($key, $fillables, true)) {
             return true;
         }
 
@@ -171,7 +179,7 @@ trait GuardsAttributes
             return false;
         }
 
-        return empty($this->getFillable())
+        return empty($fillables)
             && ! str_contains($key, '.')
             && ! str_starts_with($key, '_');
     }
@@ -231,8 +239,15 @@ trait GuardsAttributes
      */
     protected function fillableFromArray(array $attributes): array
     {
-        if (count($this->getFillable()) > 0 && ! static::$unguarded) {
-            return array_intersect_key($attributes, array_flip($this->getFillable()));
+		$fillables = $this->getFillable();
+		
+		// Lorsque le développeur autorise tous les attributs, pas la peine d'aller plus loin
+		if ($fillables === ['*']) {
+			return $attributes;
+		}
+
+        if (count($fillables) > 0 && ! static::$unguarded) {
+            return array_intersect_key($attributes, array_flip($fillables));
         }
 
         return $attributes;
