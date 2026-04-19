@@ -45,9 +45,19 @@ class Json
      */
     public static function decode(mixed $value, ?bool $associative = true): mixed
     {
-        return isset(static::$decoder)
-                ? (static::$decoder)($value, $associative)
-                : json_decode($value, $associative);
+		if (isset(static::$decoder)) {
+			return (static::$decoder)($value, $associative);
+		}
+
+		$count = 0;
+		while(is_string($value)) {
+			if (++$count > 2) {
+				break;
+			}
+			$value = json_decode($value, $associative);
+		}
+
+		return $value;
     }
 
     /**
