@@ -485,7 +485,7 @@ class Builder
     public function fromQuery(string $query, array $bindings = []): Collection
     {
         return $this->hydrate(
-            $this->query->db()->query($query, $bindings)->resultObject(),
+            $this->query->db()->query($query, $bindings)->resultArray(),
         );
     }
 
@@ -819,7 +819,7 @@ class Builder
     public function getModels(array|string $columns = []): array
     {
         return $this->model->hydrate(
-            $this->query->from($this->model->getTable())->select($columns)->result(),
+            $this->query->from($this->model->getTable())->select($columns)->result('array'),
         )->all();
     }
 
