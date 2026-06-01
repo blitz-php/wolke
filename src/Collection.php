@@ -399,7 +399,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @return IterableCollection<TKey, TMapValue>|static<TKey, TMapValue>
      */
-    public function map(callable $callback): static
+    public function map(callable $callback)
     {
         $result = parent::map($callback);
 
@@ -665,7 +665,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @return IterableCollection<array-key, int>
      */
-    public function countBy($countBy = null): static
+    public function countBy($countBy = null)
     {
         return $this->toBase()->countBy($countBy);
     }
@@ -685,7 +685,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @return IterableCollection<int, mixed>
      */
-    public function flatten(float|int $depth = INF): static
+    public function flatten(float|int $depth = INF)
     {
         return $this->toBase()->flatten($depth);
     }
@@ -695,7 +695,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @return IterableCollection<TModel, TKey>
      */
-    public function flip(): static
+    public function flip()
     {
         return $this->toBase()->flip();
     }
@@ -717,7 +717,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @return IterableCollection<int, TModel|TPadValue>
      */
-    public function pad(int $size, mixed $value): static
+    public function pad(int $size, mixed $value)
     {
         return $this->toBase()->pad($size, $value);
     }
@@ -741,7 +741,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @return IterableCollection<array-key, mixed>
      */
-    public function pluck($value, $key = null): static
+    public function pluck($value, $key = null)
     {
         return $this->toBase()->pluck($value, $key);
     }
@@ -755,7 +755,7 @@ class Collection extends IterableCollection implements QueueableCollection
      *
      * @return IterableCollection<int, IterableCollection<int, TModel|TZipValue>>
      */
-    public function zip($items): static
+    public function zip($items)
     {
         return $this->toBase()->zip(...func_get_args());
     }

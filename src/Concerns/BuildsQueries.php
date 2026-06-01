@@ -152,7 +152,7 @@ trait BuildsQueries
 			return null;
 		} 
 
-		return $this->newModelInstance($attributes);
+		return $this->model->unguarded(fn() => $this->newModelInstance($attributes));
     }
 
     /**
