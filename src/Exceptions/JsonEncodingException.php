@@ -11,7 +11,6 @@
 
 namespace BlitzPHP\Wolke\Exceptions;
 
-use Illuminate\Http\Resources\Json\JsonResource;
 use RuntimeException;
 
 /**
@@ -31,8 +30,6 @@ class JsonEncodingException extends RuntimeException
 
     /**
      * Crée une nouvelle exception d'encodage JSON pour la ressource.
-     *
-     * @param JsonResource $resource
      *
      * @return static
      */

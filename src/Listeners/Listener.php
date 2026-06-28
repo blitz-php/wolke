@@ -16,10 +16,10 @@ use BlitzPHP\Contracts\Container\ContainerInterface;
 use BlitzPHP\Contracts\Database\ConnectionResolverInterface;
 use BlitzPHP\Contracts\Event\EventListenerInterface;
 use BlitzPHP\Contracts\Event\EventManagerInterface;
+use BlitzPHP\Utilities\Pagination\PaginationState;
 use BlitzPHP\Wolke\Attributes\Observe;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Observers\Dispatcher;
-use BlitzPHP\Wolke\Pagination\PaginationState;
 use ReflectionClass;
 
 class Listener implements EventListenerInterface

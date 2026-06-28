@@ -17,13 +17,13 @@ use BlitzPHP\Database\Query\Expression;
 use BlitzPHP\Utilities\Invade\Invader;
 use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Utilities\Iterable\LazyCollection;
+use BlitzPHP\Utilities\Pagination\Cursor;
+use BlitzPHP\Utilities\Pagination\CursorPaginator;
+use BlitzPHP\Utilities\Pagination\LengthAwarePaginator;
 use BlitzPHP\Utilities\String\Text;
+use BlitzPHP\Utilities\Pagination\Paginator;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Model;
-use BlitzPHP\Wolke\Pagination\Cursor;
-use BlitzPHP\Wolke\Pagination\CursorPaginator;
-use BlitzPHP\Wolke\Pagination\LengthAwarePaginator;
-use BlitzPHP\Wolke\Pagination\Paginator;
 use InvalidArgumentException;
 use PDO;
 

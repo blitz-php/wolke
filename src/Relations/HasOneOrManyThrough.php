@@ -11,6 +11,9 @@
 
 namespace BlitzPHP\Wolke\Relations;
 
+use BlitzPHP\Contracts\Pagination\CursorPaginator;
+use BlitzPHP\Contracts\Pagination\LengthAwarePaginator;
+use BlitzPHP\Contracts\Pagination\Paginator;
 use BlitzPHP\Contracts\Support\Arrayable;
 use BlitzPHP\Database\Exceptions\MultipleRecordsFoundException;
 use BlitzPHP\Database\Exceptions\UniqueConstraintViolationException;
@@ -19,9 +22,6 @@ use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\LazyCollection;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Collection;
-use BlitzPHP\Wolke\Contracts\CursorPaginator;
-use BlitzPHP\Wolke\Contracts\LengthAwarePaginator;
-use BlitzPHP\Wolke\Contracts\Paginator;
 use BlitzPHP\Wolke\Exceptions\ModelNotFoundException;
 use BlitzPHP\Wolke\Model;
 use BlitzPHP\Wolke\Relations\Concerns\InteractsWithDictionary;
