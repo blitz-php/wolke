@@ -25,7 +25,6 @@ use BlitzPHP\Utilities\Pagination\Paginator;
 use BlitzPHP\Wolke\Builder;
 use BlitzPHP\Wolke\Model;
 use InvalidArgumentException;
-use PDO;
 
 /**
  * @template TValue of Model|object|static
@@ -146,13 +145,7 @@ trait BuildsQueries
      */
     public function first(array|string $columns = ['*'])
     {
-        $attributes = $this->limit(1)->select($columns)->first(PDO::FETCH_ASSOC);
-
-		if ($attributes === null || $attributes === []) {
-			return null;
-		} 
-
-		return $this->model->unguarded(fn() => $this->newModelInstance($attributes));
+		return $this->limit(1)->get($columns)->first();
     }
 
     /**

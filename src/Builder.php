@@ -986,7 +986,7 @@ class Builder
     {
         $column = $column instanceof Expression ? $column->getValue() : $column;
 
-        $results = new IterableCollection($this->toBase()->values($column));
+        $results = new IterableCollection($this->toBase()->pluck($column, $key));
 
         $column = Text::after($column, "{$this->model->getTable()}.");
 
@@ -1966,6 +1966,8 @@ class Builder
 
         if ($result instanceof BaseBuilder) {
             $this->query = $result;
+
+			return $this;
         }
 
         return $result;
