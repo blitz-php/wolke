@@ -15,6 +15,7 @@ use BlitzPHP\Contracts\Container\ContainerInterface;
 use BlitzPHP\Contracts\Database\ConnectionResolverInterface;
 use BlitzPHP\Contracts\Event\EventListenerInterface;
 use BlitzPHP\Contracts\Event\EventManagerInterface;
+use BlitzPHP\Contracts\Security\EncrypterInterface;
 use BlitzPHP\Contracts\View\RendererInterface;
 use BlitzPHP\Database\Connection\BaseConnection;
 use BlitzPHP\Utilities\Iterable\Arr;
@@ -46,6 +47,7 @@ class Listener implements EventListenerInterface
             AbstractPaginator::currentPageResolver(fn ($pageName) => Arr::get($this->request->getQueryParams(), $pageName, 1));
             AbstractPaginator::viewFactoryResolver(fn () => $this->container->get(RendererInterface::class));
             Model::setConnectionResolver($this->container->get(ConnectionResolverInterface::class));
+			Model::encryptUsing($this->container->get(EncrypterInterface::class));
         });
     }
 }
