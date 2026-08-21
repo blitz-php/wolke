@@ -16,6 +16,7 @@ use BlitzPHP\Contracts\Container\ContainerInterface;
 use BlitzPHP\Contracts\Database\ConnectionResolverInterface;
 use BlitzPHP\Contracts\Event\EventListenerInterface;
 use BlitzPHP\Contracts\Event\EventManagerInterface;
+use BlitzPHP\Contracts\Security\EncrypterInterface;
 use BlitzPHP\Utilities\Pagination\PaginationState;
 use BlitzPHP\Wolke\Attributes\Observe;
 use BlitzPHP\Wolke\Model;
@@ -35,6 +36,7 @@ class Listener implements EventListenerInterface
     {
         $event->on('app:init', function () {
             Model::setConnectionResolver($this->container->get(ConnectionResolverInterface::class));
+            Model::encryptUsing($this->container->get(EncrypterInterface::class));
             PaginationState::resolveUsing($this->container);
 
             $this->bootObservables($this->container->get(LocatorInterface::class));
