@@ -1464,7 +1464,7 @@ trait HasAttributes
     public function getCasts(): array
     {
         foreach ($this->casts as $key => $cast) {
-            if (in_array($cast, ['boolean', 'bool'], true)) {
+            if (in_array($cast, ['boolean', 'bool', '?boolean', '?bool'], true)) {
                 $this->casts[$key] = AsIntBool::class;
             }
         }
